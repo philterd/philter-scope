@@ -1,0 +1,27 @@
+# Binaries
+philterscope
+philterscope.exe
+bin/
+
+# Reports and logs
+report.html
+report.json
+*.log
+.philterscope
+
+# Go
+go.sum
+vendor/
+
+# Test
+*.test
+*.out
+coverage.txt
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
