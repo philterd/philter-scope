@@ -50,8 +50,11 @@ func NewMongoDBStorage(ctx context.Context) (*MongoDBStorage, error) {
 		dbName = "philterscope"
 	}
 
-	// Always use collection name audits
+	// Default collection
 	collName := "audits"
+	if u.Query().Has("collection") {
+		collName = u.Query().Get("collection")
+	}
 
 	client, err := mongo.Connect(options.Client().ApplyURI(connStr))
 	if err != nil {

@@ -47,11 +47,9 @@ type Explanation struct {
 
 // PhilterClient makes calls to the Philter API.
 type PhilterClient struct {
-	BaseURL    string
-	Token      string
-	Context    string
-	DocumentId string
-	Policy     string
+	BaseURL string
+	Token   string
+	Policy  string
 }
 
 // Redact calls the Philter API's explain endpoint to get redacted text and spans.
@@ -101,8 +99,6 @@ func (c *PhilterClient) Explain(text string) (ExplainResponse, error) {
 	}
 
 	params := url.Values{}
-	params.Add("c", c.Context)
-	params.Add("d", c.DocumentId)
 	params.Add("p", c.Policy)
 	u.RawQuery = params.Encode()
 

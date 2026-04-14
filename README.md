@@ -45,6 +45,48 @@ Get actionable policy recommendations in your terminal:
 ./philterscope suggest --report report.json
 ```
 
+## Golden Dataset Formats
+
+PhilterScope supports two formats for the golden dataset:
+
+### 1. Tagged Text
+
+The simplest format is to wrap PII in your raw text files with tags. PhilterScope will automatically parse these:
+
+```text
+My name is <NAME>John Doe</NAME> and I live at <ADDRESS>123 Main St</ADDRESS>.
+```
+
+### 2. JSON Spans (`golden.json`)
+
+Alternatively, you can provide a `golden.json` file that defines the text and the character offsets for each PII entity:
+
+```json
+{
+  "text": "My name is John Doe and I live at 123 Main St.",
+  "labels": [
+    {
+      "text": "John Doe",
+      "start": 11,
+      "end": 19,
+      "label": "NAME"
+    },
+    {
+      "text": "123 Main St",
+      "start": 34,
+      "end": 45,
+      "label": "ADDRESS"
+    }
+  ]
+}
+```
+
+The `labels` array contains objects with the following fields:
+- `text`: The literal text being labeled.
+- `start`: The starting character index (0-based).
+- `end`: The ending character index (exclusive).
+- `label`: The entity type (e.g., `NAME`, `ADDRESS`, `PHONE_NUMBER`).
+
 ## Storage
 
 By default, audit results are stored locally in the `.philterscope` directory. You can optionally store results in a MongoDB database by setting the following environment variable:

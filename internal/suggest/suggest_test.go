@@ -65,7 +65,7 @@ func TestGetSuggestions(t *testing.T) {
 	}
 	// This function prints to stdout, so we just check it doesn't panic
 	// and maybe later capture stdout if needed.
-	GetSuggestions(result)
+	GetSuggestions(result, 0.5)
 }
 
 func TestGetSuggestions_Empty(t *testing.T) {
@@ -74,7 +74,7 @@ func TestGetSuggestions_Empty(t *testing.T) {
 			"NAME": 0.9,
 		},
 	}
-	GetSuggestions(result)
+	GetSuggestions(result, 0.5)
 }
 
 func TestGenerateSnippet(t *testing.T) {

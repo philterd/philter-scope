@@ -66,11 +66,11 @@ func generateSnippet(entity string) string {
 }
 
 // GetSuggestions is a helper for the suggest command (existing from previous work).
-func GetSuggestions(result model.AuditResult) {
-	s := NewBasicSuggester(0.5)
+func GetSuggestions(result model.AuditResult, threshold float64) {
+	s := NewBasicSuggester(threshold)
 	recs := s.Suggest(result)
 	if len(recs) == 0 {
-		fmt.Println("No suggestions. Philter is performing well!")
+		fmt.Println("No suggestions.")
 		return
 	}
 

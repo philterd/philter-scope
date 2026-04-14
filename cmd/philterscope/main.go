@@ -35,13 +35,12 @@ import (
 var (
 	philterURL     string
 	philterToken   string
-	philterContext string
-	philterDocId   string
 	philterPolicy  string
 	inputDir       string
 	goldenFile     string
 	outputFile     string
 	port           int
+	threshold      float64
 )
 
 func main() {
@@ -55,12 +54,11 @@ func main() {
 
 	auditCmd.Flags().StringVar(&philterURL, "url", "http://localhost:8080", "Philter API URL")
 	auditCmd.Flags().StringVar(&philterToken, "token", "", "Philter API Token")
-	auditCmd.Flags().StringVar(&philterContext, "context", "philterscope", "Philter context")
-	auditCmd.Flags().StringVar(&philterDocId, "docid", "", "Philter document ID")
 	auditCmd.Flags().StringVar(&philterPolicy, "policy", "default", "Philter policy name")
 	auditCmd.Flags().StringVar(&inputDir, "input", "./raw", "Directory of raw text files")
 	auditCmd.Flags().StringVar(&goldenFile, "golden", "golden.json", "Golden dataset JSON file")
 	auditCmd.Flags().StringVar(&outputFile, "output", "report.html", "Path to export HTML report")
+	auditCmd.Flags().Float64Var(&threshold, "threshold", 0.5, "Recall threshold for suggestions (0.0 to 1.0)")
 
 	var serveCmd = &cobra.Command{
 		Use:   "serve",
@@ -76,6 +74,7 @@ func main() {
 		RunE:  runSuggest,
 	}
 	suggestCmd.Flags().StringVar(&goldenFile, "report", "report.json", "JSON report to analyze")
+	suggestCmd.Flags().Float64Var(&threshold, "threshold", 0.5, "Recall threshold for suggestions (0.0 to 1.0)")
 
 	var historyCmd = &cobra.Command{
 		Use:   "history",
@@ -95,8 +94,6 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	client := &philter.PhilterClient{
 		BaseURL:    philterURL,
 		Token:      philterToken,
-		Context:    philterContext,
-		DocumentId: philterDocId,
 		Policy:     philterPolicy,
 	}
 
@@ -175,7 +172,7 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Generate suggestions
-	suggester := suggest.NewBasicSuggester(0.5)
+	suggester := suggest.NewBasicSuggester(threshold)
 	auditResult.Recommendations = suggester.Suggest(auditResult)
 
 	// Export results
@@ -224,7 +221,7 @@ func runSuggest(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal(data, &res); err != nil {
 		return err
 	}
-	suggest.GetSuggestions(res)
+	suggest.GetSuggestions(res, threshold)
 	return nil
 }
 
