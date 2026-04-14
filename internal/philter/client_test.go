@@ -1,3 +1,17 @@
+// Copyright 2026 Philterd, LLC.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package philter
 
 import (
@@ -14,17 +28,19 @@ func TestRedact(t *testing.T) {
 		if r.Method != "POST" {
 			t.Errorf("Expected POST, got %s", r.Method)
 		}
-		if r.URL.Path != "/api/filter" {
-			t.Errorf("Expected path /api/filter, got %s", r.URL.Path)
+		if r.URL.Path != "/api/explain" {
+			t.Errorf("Expected path /api/explain, got %s", r.URL.Path)
 		}
 		if r.Header.Get("Authorization") != "Bearer test-token" {
 			t.Errorf("Expected auth token test-token, got %s", r.Header.Get("Authorization"))
 		}
 
-		resp := PhilterResponse{
-			Value: "Hello REDACTED",
-			Spans: []model.Span{
-				{Text: "World", Start: 6, End: 11, Label: "NAME"},
+		resp := ExplainResponse{
+			FilteredText: "Hello REDACTED",
+			Explanation: Explanation{
+				AppliedSpans: []model.Span{
+					{Text: "World", CharacterStart: 6, CharacterEnd: 11, FilterType: "NAME"},
+				},
 			},
 		}
 		json.NewEncoder(w).Encode(resp)
@@ -47,6 +63,9 @@ func TestRedact(t *testing.T) {
 	if len(spans) != 1 || spans[0].Text != "World" {
 		t.Errorf("Unexpected spans: %v", spans)
 	}
+	if spans[0].Start != 6 || spans[0].End != 11 || spans[0].Label != "NAME" {
+		t.Errorf("Compatibility fields not mapped: %v", spans[0])
+	}
 }
 
 func TestRedact_Error(t *testing.T) {
@@ -68,25 +87,23 @@ func TestGetPolicy(t *testing.T) {
 		if r.Method != "GET" {
 			t.Errorf("Expected GET, got %s", r.Method)
 		}
-		if r.URL.Path != "/api/policy" {
-			t.Errorf("Expected path /api/policy, got %s", r.URL.Path)
+		if r.URL.Path != "/api/policies/test-policy" {
+			t.Errorf("Expected path /api/policies/test-policy, got %s", r.URL.Path)
 		}
 
-		policy := map[string]any{
-			"name": "test-policy",
-		}
-		json.NewEncoder(w).Encode(policy)
+		policy := `{"name": "test-policy"}`
+		w.Write([]byte(policy))
 	}))
 	defer ts.Close()
 
 	client := &PhilterClient{BaseURL: ts.URL}
-	policy, err := client.GetPolicy()
+	policy, err := client.GetPolicy("test-policy")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	if policy["name"] != "test-policy" {
-		t.Errorf("Expected policy name 'test-policy', got %v", policy["name"])
+	if policy != `{"name": "test-policy"}` {
+		t.Errorf("Expected policy '{\"name\": \"test-policy\"}', got %s", policy)
 	}
 }
 
@@ -97,7 +114,7 @@ func TestGetPolicy_Error(t *testing.T) {
 	defer ts.Close()
 
 	client := &PhilterClient{BaseURL: ts.URL}
-	_, err := client.GetPolicy()
+	_, err := client.GetPolicy("test-policy")
 	if err == nil {
 		t.Error("Expected error for 500 status, got nil")
 	}

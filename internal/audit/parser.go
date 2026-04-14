@@ -1,3 +1,17 @@
+// Copyright 2026 Philterd, LLC.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package audit
 
 import (
@@ -60,10 +74,13 @@ func ParseTaggedText(input string) (string, []model.Span) {
 		end := len(cleanText)
 
 		spans = append(spans, model.Span{
-			Text:  content,
-			Start: start,
-			End:   end,
-			Label: tagName,
+			Text:           content,
+			Start:          start,
+			CharacterStart: start,
+			End:            end,
+			CharacterEnd:   end,
+			Label:          tagName,
+			FilterType:     tagName,
 		})
 
 		i = endTagEnd
@@ -89,6 +106,15 @@ func ParseJSONSpans(data []byte) (string, []model.Span, error) {
 
 	// Sort spans by start offset for consistency
 	sort.Slice(js.Labels, func(i, j int) bool {
+		// Populate compatibility fields
+		js.Labels[i].CharacterStart = js.Labels[i].Start
+		js.Labels[i].CharacterEnd = js.Labels[i].End
+		js.Labels[i].FilterType = js.Labels[i].Label
+
+		js.Labels[j].CharacterStart = js.Labels[j].Start
+		js.Labels[j].CharacterEnd = js.Labels[j].End
+		js.Labels[j].FilterType = js.Labels[j].Label
+
 		return js.Labels[i].Start < js.Labels[j].Start
 	})
 

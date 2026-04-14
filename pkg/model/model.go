@@ -1,3 +1,17 @@
+// Copyright 2026 Philterd, LLC.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package model
 
 import "time"
@@ -56,7 +70,19 @@ type Result struct {
 
 // Span represents a labeled PII fragment.
 type Span struct {
-	Text  string `json:"text"`
+	Id             string  `json:"id"`
+	CharacterStart int     `json:"characterStart"`
+	CharacterEnd   int     `json:"characterEnd"`
+	FilterType     string  `json:"filterType"`
+	Context        string  `json:"context"`
+	DocumentId     string  `json:"documentId"`
+	Confidence     float64 `json:"confidence"`
+	Text           string  `json:"text"`
+	Replacement    string  `json:"replacement"`
+	Salt           string  `json:"salt"`
+	Ignored        bool    `json:"ignored"`
+
+	// Compatibility aliases for the audit engine and UI
 	Start int    `json:"start"`
 	End   int    `json:"end"`
 	Label string `json:"label"`

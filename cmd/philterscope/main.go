@@ -1,6 +1,21 @@
+// Copyright 2026 Philterd, LLC.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,18 +26,22 @@ import (
 	"github.com/philterd/philterscope/internal/audit"
 	"github.com/philterd/philterscope/internal/philter"
 	"github.com/philterd/philterscope/internal/server"
+	"github.com/philterd/philterscope/internal/storage"
 	"github.com/philterd/philterscope/internal/suggest"
 	"github.com/philterd/philterscope/pkg/model"
 	"github.com/spf13/cobra"
 )
 
 var (
-	philterURL   string
-	philterToken string
-	inputDir     string
-	goldenFile   string
-	outputFile   string
-	port         int
+	philterURL     string
+	philterToken   string
+	philterContext string
+	philterDocId   string
+	philterPolicy  string
+	inputDir       string
+	goldenFile     string
+	outputFile     string
+	port           int
 )
 
 func main() {
@@ -36,6 +55,9 @@ func main() {
 
 	auditCmd.Flags().StringVar(&philterURL, "url", "http://localhost:8080", "Philter API URL")
 	auditCmd.Flags().StringVar(&philterToken, "token", "", "Philter API Token")
+	auditCmd.Flags().StringVar(&philterContext, "context", "philterscope", "Philter context")
+	auditCmd.Flags().StringVar(&philterDocId, "docid", "", "Philter document ID")
+	auditCmd.Flags().StringVar(&philterPolicy, "policy", "default", "Philter policy name")
 	auditCmd.Flags().StringVar(&inputDir, "input", "./raw", "Directory of raw text files")
 	auditCmd.Flags().StringVar(&goldenFile, "golden", "golden.json", "Golden dataset JSON file")
 	auditCmd.Flags().StringVar(&outputFile, "output", "report.html", "Path to export HTML report")
@@ -55,8 +77,6 @@ func main() {
 	}
 	suggestCmd.Flags().StringVar(&goldenFile, "report", "report.json", "JSON report to analyze")
 
-	rootCmd.AddCommand(auditCmd, serveCmd, suggestCmd)
-
 	var historyCmd = &cobra.Command{
 		Use:   "history",
 		Short: "List past audits",
@@ -73,8 +93,11 @@ func main() {
 
 func runAudit(cmd *cobra.Command, args []string) error {
 	client := &philter.PhilterClient{
-		BaseURL: philterURL,
-		Token:   philterToken,
+		BaseURL:    philterURL,
+		Token:      philterToken,
+		Context:    philterContext,
+		DocumentId: philterDocId,
+		Policy:     philterPolicy,
 	}
 
 	files, err := os.ReadDir(inputDir)
@@ -144,8 +167,11 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	auditResult.Timestamp = time.Now()
 
 	// Try to get policy from Philter
-	if policy, err := client.GetPolicy(); err == nil {
-		auditResult.Policy = policy
+	if policyStr, err := client.GetPolicy(philterPolicy); err == nil {
+		var policy map[string]any
+		if err := json.Unmarshal([]byte(policyStr), &policy); err == nil {
+			auditResult.Policy = policy
+		}
 	}
 
 	// Generate suggestions
@@ -166,8 +192,8 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	jsonReport, _ := json.MarshalIndent(auditResult, "", "  ")
 	os.WriteFile("report.json", jsonReport, 0644)
 
-	// Policy Versioning: Save snapshot to .philterscope folder
-	if err := saveToHistory(auditResult); err != nil {
+	// Policy Versioning: Save snapshot to .philterscope folder or MongoDB
+	if err := saveToHistory(cmd.Context(), auditResult); err != nil {
 		fmt.Printf("Warning: failed to save to history: %v\n", err)
 	}
 
@@ -202,7 +228,23 @@ func runSuggest(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func saveToHistory(res model.AuditResult) error {
+func saveToHistory(ctx context.Context, res model.AuditResult) error {
+	// Try MongoDB first if configured
+	if os.Getenv("PHILTERSCOPE_MONGODB_CONNECTION_STRING") != "" {
+		m, err := storage.NewMongoDBStorage(ctx)
+		if err == nil {
+			defer m.Close(ctx)
+			if err := m.SaveAuditResult(ctx, res); err == nil {
+				return nil
+			} else {
+				fmt.Printf("Warning: failed to save to MongoDB: %v\n", err)
+			}
+		} else {
+			fmt.Printf("Warning: failed to connect to MongoDB: %v\n", err)
+		}
+	}
+
+	// Fallback to local storage
 	historyDir := ".philterscope"
 	if _, err := os.Stat(historyDir); os.IsNotExist(err) {
 		if err := os.Mkdir(historyDir, 0755); err != nil {
@@ -220,40 +262,61 @@ func saveToHistory(res model.AuditResult) error {
 }
 
 func runHistory(cmd *cobra.Command, args []string) error {
-	historyDir := ".philterscope"
-	if _, err := os.Stat(historyDir); os.IsNotExist(err) {
-		fmt.Println("No audit history found.")
-		return nil
-	}
-
-	files, err := os.ReadDir(historyDir)
-	if err != nil {
-		return err
-	}
-
 	var history []model.HistoryEntry
-	for _, f := range files {
-		if filepath.Ext(f.Name()) != ".json" {
-			continue
+	ctx := cmd.Context()
+
+	// Try MongoDB first if configured
+	if os.Getenv("PHILTERSCOPE_MONGODB_CONNECTION_STRING") != "" {
+		m, err := storage.NewMongoDBStorage(ctx)
+		if err == nil {
+			defer m.Close(ctx)
+			h, err := m.GetHistory(ctx)
+			if err == nil {
+				history = h
+			} else {
+				fmt.Printf("Warning: failed to fetch history from MongoDB: %v\n", err)
+			}
+		} else {
+			fmt.Printf("Warning: failed to connect to MongoDB: %v\n", err)
+		}
+	}
+
+	// If MongoDB didn't provide history (or not configured), try local storage
+	if len(history) == 0 {
+		historyDir := ".philterscope"
+		if _, err := os.Stat(historyDir); os.IsNotExist(err) {
+			fmt.Println("No audit history found.")
+			return nil
 		}
 
-		data, err := os.ReadFile(filepath.Join(historyDir, f.Name()))
+		files, err := os.ReadDir(historyDir)
 		if err != nil {
-			continue
+			return err
 		}
 
-		var res model.AuditResult
-		if err := json.Unmarshal(data, &res); err != nil {
-			continue
-		}
+		for _, f := range files {
+			if filepath.Ext(f.Name()) != ".json" {
+				continue
+			}
 
-		history = append(history, model.HistoryEntry{
-			Timestamp: res.Timestamp,
-			Precision: res.Precision,
-			Recall:    res.Recall,
-			F1Score:   res.F1Score,
-			Policy:    res.Policy,
-		})
+			data, err := os.ReadFile(filepath.Join(historyDir, f.Name()))
+			if err != nil {
+				continue
+			}
+
+			var res model.AuditResult
+			if err := json.Unmarshal(data, &res); err != nil {
+				continue
+			}
+
+			history = append(history, model.HistoryEntry{
+				Timestamp: res.Timestamp,
+				Precision: res.Precision,
+				Recall:    res.Recall,
+				F1Score:   res.F1Score,
+				Policy:    res.Policy,
+			})
+		}
 	}
 
 	if len(history) == 0 {

@@ -45,6 +45,12 @@ Get actionable policy recommendations in your terminal:
 ./philterscope suggest --report report.json
 ```
 
+## Storage
+
+By default, audit results are stored locally in the `.philterscope` directory. You can optionally store results in a MongoDB database by setting the following environment variable:
+
+- `PHILTERSCOPE_MONGODB_CONNECTION_STRING`: The MongoDB connection string (e.g., `mongodb://localhost:27017/philterscope`).
+
 ## Development
 
 - **Tests**: Run `go test ./...` to execute the test suite.
@@ -53,4 +59,6 @@ Get actionable policy recommendations in your terminal:
 
 ## License
 
-Apache License 2.0
+Copyright 2026 Philterd, LLC. "Philter" is a registered trademark of Philterd, LLC. All rights reserved.
+
+Licensed under the Apache License, Version 2.0.
