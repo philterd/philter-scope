@@ -32,6 +32,7 @@ type AuditResult struct {
 	Policy          map[string]interface{} `json:"policy"`          // Philter JSON configuration
 	Recommendations []Recommendation       `json:"recommendations"` // Suggested policy changes
 	EntityMetrics   map[string]float64     `json:"entity_metrics"`  // Recall per entity type
+	Threshold       float64                `json:"threshold"`       // Threshold used for suggestions
 }
 
 // HistoryEntry represents a past audit result.

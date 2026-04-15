@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/philterd/philterscope/internal/audit"
@@ -38,7 +39,7 @@ var (
 	philterPolicy string
 	inputDir      string
 	goldenFile    string
-	outputFile    string
+	outputDir     string
 	port          int
 	threshold     float64
 )
@@ -57,12 +58,12 @@ func main() {
 	auditCmd.Flags().StringVar(&philterPolicy, "policy", "default", "Philter policy name")
 	auditCmd.Flags().StringVar(&inputDir, "input", "./raw", "Directory of raw text files")
 	auditCmd.Flags().StringVar(&goldenFile, "golden", "golden.json", "Golden dataset JSON file")
-	auditCmd.Flags().StringVar(&outputFile, "output", "report.html", "Path to export HTML report")
+	auditCmd.Flags().StringVar(&outputDir, "output", ".", "Directory to export reports")
 	auditCmd.Flags().Float64Var(&threshold, "threshold", 0.5, "Recall threshold for suggestions (0.0 to 1.0)")
 
 	var serveCmd = &cobra.Command{
 		Use:   "serve",
-		Short: "Launch Privacy Lab UI",
+		Short: "Launch Evaluation UI",
 		RunE:  runServe,
 	}
 	serveCmd.Flags().IntVar(&port, "port", 5000, "Port for the UI")
@@ -117,22 +118,69 @@ func runAudit(cmd *cobra.Command, args []string) error {
 
 		// Determine golden format and parse
 		// We expect golden file to be in a specific format or in a 'golden' directory
-		// Let's assume for now golden file is either a single JSON file or we look for <filename>.golden in inputDir
 		// The requirement said "A simple text file" or "A JSON format"
 
 		var goldenSpans []model.Span
 		var originalText string
 
-		goldenPath := filepath.Join(inputDir, f.Name()+".golden")
-		if _, err := os.Stat(goldenPath); err == nil {
-			// Found a .golden file for this raw file
-			gContent, _ := os.ReadFile(goldenPath)
-			if filepath.Ext(goldenPath) == ".json" {
-				originalText, goldenSpans, _ = audit.ParseJSONSpans(gContent)
-			} else {
-				originalText, goldenSpans = audit.ParseTaggedText(string(gContent))
+		// Try to find a matching golden file
+		// 1. If --golden points to a single file, try it for all input files (if it contains labels for all, or matches filename)
+		// 2. If --golden points to a directory, look for matches there
+		// 3. Check for <filename>.golden in inputDir
+		// 4. Check for golden/<filename>
+		goldenPaths := []string{}
+
+		if goldenFile != "" {
+			info, err := os.Stat(goldenFile)
+			if err == nil {
+				if info.IsDir() {
+					// It's a directory, look for matching filenames
+					goldenPaths = append(goldenPaths, filepath.Join(goldenFile, f.Name()))
+					if filepath.Ext(f.Name()) == ".json" {
+						if strings.HasPrefix(f.Name(), "redacted") {
+							goldenName := strings.Replace(f.Name(), "redacted", "golden", 1)
+							goldenPaths = append(goldenPaths, filepath.Join(goldenFile, goldenName))
+						}
+					}
+				} else {
+					// It's a single file
+					goldenPaths = append(goldenPaths, goldenFile)
+				}
 			}
-		} else {
+		}
+
+		// Always add traditional fallbacks
+		goldenPaths = append(goldenPaths,
+			filepath.Join(inputDir, f.Name()+".golden"),
+			filepath.Join(filepath.Dir(inputDir), "golden", f.Name()),
+		)
+		if filepath.Ext(f.Name()) == ".json" {
+			goldenPaths = append(goldenPaths, filepath.Join(filepath.Dir(inputDir), "golden", f.Name()))
+			if strings.HasPrefix(f.Name(), "redacted") {
+				goldenName := strings.Replace(f.Name(), "redacted", "golden", 1)
+				goldenPaths = append(goldenPaths, filepath.Join(filepath.Dir(inputDir), "golden", goldenName))
+			}
+		}
+
+		foundGolden := false
+		for _, gp := range goldenPaths {
+			if _, err := os.Stat(gp); err == nil {
+				gContent, _ := os.ReadFile(gp)
+				if filepath.Ext(gp) == ".json" {
+					originalText, goldenSpans, err = audit.ParseJSONSpans(gContent)
+					if err == nil {
+						foundGolden = true
+						break
+					}
+				} else {
+					originalText, goldenSpans = audit.ParseTaggedText(string(gContent))
+					foundGolden = true
+					break
+				}
+			}
+		}
+
+		if !foundGolden {
 			// Fallback: check if the input file itself is tagged (self-labeled)
 			originalText, goldenSpans = audit.ParseTaggedText(string(rawContent))
 			// Use the clean text for Philter
@@ -176,6 +224,7 @@ func runAudit(cmd *cobra.Command, args []string) error {
 
 	auditResult := audit.GenerateAuditResult(results)
 	auditResult.Timestamp = time.Now()
+	auditResult.Threshold = threshold
 
 	// Try to get policy from Philter
 	if policyStr, err := client.GetPolicy(philterPolicy); err == nil {
@@ -195,13 +244,21 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to generate HTML report: %w", err)
 	}
 
-	if err := os.WriteFile(outputFile, []byte(htmlReport), 0644); err != nil {
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	htmlPath := filepath.Join(outputDir, "report.html")
+	if err := os.WriteFile(htmlPath, []byte(htmlReport), 0644); err != nil {
 		return fmt.Errorf("failed to write HTML report: %w", err)
 	}
 
 	// Also save as JSON for serve/suggest commands
+	jsonReportPath := filepath.Join(outputDir, "report.json")
 	jsonReport, _ := json.MarshalIndent(auditResult, "", "  ")
-	os.WriteFile("report.json", jsonReport, 0644)
+	if err := os.WriteFile(jsonReportPath, jsonReport, 0644); err != nil {
+		fmt.Printf("Warning: failed to write JSON report: %v\n", err)
+	}
 
 	// Policy Versioning: Save snapshot to .philterscope folder or MongoDB
 	if err := saveToHistory(cmd.Context(), auditResult); err != nil {
@@ -209,7 +266,7 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Audit complete. Precision: %.2f, Recall: %.2f, F1: %.2f\n", auditResult.Precision, auditResult.Recall, auditResult.F1Score)
-	fmt.Printf("HTML report exported to %s\n", outputFile)
+	fmt.Printf("Reports exported to %s\n", outputDir)
 
 	return nil
 }
@@ -223,7 +280,9 @@ func runServe(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal(data, &res); err != nil {
 		return err
 	}
-	return server.StartServer(port, res)
+	res.Threshold = threshold
+	server.StartServer(port, res)
+	return nil
 }
 
 func runSuggest(cmd *cobra.Command, args []string) error {
@@ -235,6 +294,7 @@ func runSuggest(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal(data, &res); err != nil {
 		return err
 	}
+	res.Threshold = threshold
 	suggest.GetSuggestions(res, threshold)
 	return nil
 }

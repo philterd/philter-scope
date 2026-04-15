@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-04-15T08:48:11.085408337-04:00",
+  "total_documents": 1,
+  "precision": 1,
+  "recall": 1,
+  "f1_score": 1,
+  "details": [
+    {
+      "filename": "redacted1.json",
+      "expected": "My name is John Doe and I live at 123 Main St.",
+      "actual": "My name is John Doe and I live at 123 Main St.",
+      "spans": [
+        {
+          "id": "",
+          "characterStart": 11,
+          "characterEnd": 19,
+          "filterType": "NAME",
+          "context": "",
+          "documentId": "",
+          "confidence": 0,
+          "text": "John Doe",
+          "replacement": "",
+          "salt": "",
+          "ignored": false,
+          "start": 11,
+          "end": 19,
+          "label": "NAME"
+        },
+        {
+          "id": "",
+          "characterStart": 34,
+          "characterEnd": 45,
+          "filterType": "ADDRESS",
+          "context": "",
+          "documentId": "",
+          "confidence": 0,
+          "text": "123 Main St",
+          "replacement": "",
+          "salt": "",
+          "ignored": false,
+          "start": 34,
+          "end": 45,
+          "label": "ADDRESS"
+        }
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "overlaps": [
+        {
+          "golden": {
+            "id": "",
+            "characterStart": 11,
+            "characterEnd": 19,
+            "filterType": "NAME",
+            "context": "",
+            "documentId": "",
+            "confidence": 0,
+            "text": "John Doe",
+            "replacement": "",
+            "salt": "",
+            "ignored": false,
+            "start": 11,
+            "end": 19,
+            "label": "NAME"
+          },
+          "actual": {
+            "id": "",
+            "characterStart": 11,
+            "characterEnd": 19,
+            "filterType": "NAME",
+            "context": "",
+            "documentId": "",
+            "confidence": 0,
+            "text": "John Doe",
+            "replacement": "",
+            "salt": "",
+            "ignored": false,
+            "start": 11,
+            "end": 19,
+            "label": "NAME"
+          },
+          "type": "EXACT"
+        },
+        {
+          "golden": {
+            "id": "",
+            "characterStart": 34,
+            "characterEnd": 45,
+            "filterType": "ADDRESS",
+            "context": "",
+            "documentId": "",
+            "confidence": 0,
+            "text": "123 Main St",
+            "replacement": "",
+            "salt": "",
+            "ignored": false,
+            "start": 34,
+            "end": 45,
+            "label": "ADDRESS"
+          },
+          "actual": {
+            "id": "",
+            "characterStart": 34,
+            "characterEnd": 45,
+            "filterType": "ADDRESS",
+            "context": "",
+            "documentId": "",
+            "confidence": 0,
+            "text": "123 Main St",
+            "replacement": "",
+            "salt": "",
+            "ignored": false,
+            "start": 34,
+            "end": 45,
+            "label": "ADDRESS"
+          },
+          "type": "EXACT"
+        }
+      ]
+    }
+  ],
+  "policy": null,
+  "recommendations": null,
+  "entity_metrics": {
+    "ADDRESS": 1,
+    "NAME": 1
+  },
+  "threshold": 0.75
+}

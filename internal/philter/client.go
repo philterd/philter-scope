@@ -62,9 +62,24 @@ func (c *PhilterClient) Redact(text string) (string, []model.Span, error) {
 	// Map CharacterStart/CharacterEnd/FilterType to Start/End/Label for compatibility
 	for i := range explainResponse.Explanation.AppliedSpans {
 		s := &explainResponse.Explanation.AppliedSpans[i]
-		s.Start = s.CharacterStart
-		s.End = s.CharacterEnd
-		s.Label = s.FilterType
+		if s.CharacterStart == 0 && s.Start != 0 {
+			s.CharacterStart = s.Start
+		}
+		if s.CharacterEnd == 0 && s.End != 0 {
+			s.CharacterEnd = s.End
+		}
+		if s.Start == 0 && s.CharacterStart != 0 {
+			s.Start = s.CharacterStart
+		}
+		if s.End == 0 && s.CharacterEnd != 0 {
+			s.End = s.CharacterEnd
+		}
+		if s.FilterType == "" && s.Label != "" {
+			s.FilterType = s.Label
+		}
+		if s.Label == "" && s.FilterType != "" {
+			s.Label = s.FilterType
+		}
 	}
 
 	return explainResponse.FilteredText, explainResponse.Explanation.AppliedSpans, nil

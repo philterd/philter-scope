@@ -3,6 +3,11 @@ CMD_PATH=./cmd/philterscope
 
 all: build
 
+audit:
+	make build
+	./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
+	xdg-open ./examples/report.html
+
 deps:
 	go mod download
 	go mod tidy

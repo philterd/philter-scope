@@ -22,7 +22,7 @@
             </div>
         </header>
 
-        <!-- Metrics Dashboard -->
+        
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Recall</h3>
@@ -41,9 +41,9 @@
             </div>
         </div>
 
-        <!-- Main Content -->
+        
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- File List -->
+            
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
@@ -51,12 +51,12 @@
                         <span class="text-xs text-gray-400">Red highlights indicate 'Leaks' (False Negatives)</span>
                     </div>
                     <div class="divide-y divide-gray-100" id="fileList">
-                        <!-- Files injected here -->
+                        
                     </div>
                 </div>
             </div>
 
-            <!-- Policy Section -->
+            
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-8">
                     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
@@ -80,7 +80,7 @@
         </div>
     </div>
 
-    <!-- Modal for details (optional enhancement) -->
+    
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div class="px-6 py-4 border-b flex justify-between items-center">
@@ -90,19 +90,19 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto" id="modalContent">
-                <!-- Content injected here -->
+                
             </div>
         </div>
     </div>
 
     <script id="reportData" type="application/json">
-        {{.ReportJSON}}
+        {"timestamp":"2026-04-15T08:48:11.085408337-04:00","total_documents":1,"precision":1,"recall":1,"f1_score":1,"details":[{"filename":"redacted1.json","expected":"My name is John Doe and I live at 123 Main St.","actual":"My name is John Doe and I live at 123 Main St.","spans":[{"id":"","characterStart":11,"characterEnd":19,"filterType":"NAME","context":"","documentId":"","confidence":0,"text":"John Doe","replacement":"","salt":"","ignored":false,"start":11,"end":19,"label":"NAME"},{"id":"","characterStart":34,"characterEnd":45,"filterType":"ADDRESS","context":"","documentId":"","confidence":0,"text":"123 Main St","replacement":"","salt":"","ignored":false,"start":34,"end":45,"label":"ADDRESS"}],"tp":2,"fp":0,"fn":0,"overlaps":[{"golden":{"id":"","characterStart":11,"characterEnd":19,"filterType":"NAME","context":"","documentId":"","confidence":0,"text":"John Doe","replacement":"","salt":"","ignored":false,"start":11,"end":19,"label":"NAME"},"actual":{"id":"","characterStart":11,"characterEnd":19,"filterType":"NAME","context":"","documentId":"","confidence":0,"text":"John Doe","replacement":"","salt":"","ignored":false,"start":11,"end":19,"label":"NAME"},"type":"EXACT"},{"golden":{"id":"","characterStart":34,"characterEnd":45,"filterType":"ADDRESS","context":"","documentId":"","confidence":0,"text":"123 Main St","replacement":"","salt":"","ignored":false,"start":34,"end":45,"label":"ADDRESS"},"actual":{"id":"","characterStart":34,"characterEnd":45,"filterType":"ADDRESS","context":"","documentId":"","confidence":0,"text":"123 Main St","replacement":"","salt":"","ignored":false,"start":34,"end":45,"label":"ADDRESS"},"type":"EXACT"}]}],"policy":null,"recommendations":null,"entity_metrics":{"ADDRESS":1,"NAME":1},"threshold":0.75}
     </script>
     <script>
         const reportData = JSON.parse(document.getElementById('reportData').textContent);
 
         function init() {
-            // Summary
+            
             document.getElementById('reportTimestamp').innerText = `Generated on ${new Date(reportData.timestamp).toLocaleString()}`;
             document.getElementById('docCount').innerText = `${reportData.total_documents} Documents Audited`;
             
@@ -114,12 +114,12 @@
             animateValue('precisionVal', reportData.precision * 100);
             animateValue('f1Val', reportData.f1_score * 100);
 
-            // Policy
+            
             if (reportData.policy) {
                 document.getElementById('policyContent').innerText = JSON.stringify(reportData.policy, null, 2);
             }
 
-            // Recommendations
+            
             if (reportData.recommendations && reportData.recommendations.length > 0) {
                 const recList = document.getElementById('recommendationsList');
                 recList.innerHTML = '';
@@ -139,7 +139,7 @@
                 });
             }
 
-            // File List
+            
             const list = document.getElementById('fileList');
             reportData.details.forEach((res, idx) => {
                 const item = document.createElement('div');
@@ -170,17 +170,17 @@
 
         function highlightLeaks(res) {
             let text = res.expected;
-            // Sort FN overlaps descending by start to avoid index shifting if we were doing replacements
-            // But here we just want a preview.
+            
+            
             const leaks = res.overlaps.filter(o => o.type === 'NONE' && o.golden && o.golden.text);
             
-            // Simple approach for preview: just show a snippet or highlight
-            // To be accurate we should use spans.
+            
+            
             let highlighted = text;
-            // For simple preview, just use the first few leaks if many
+            
             const firstLeaks = leaks.slice(0, 3);
             
-            // We'll just show the actual text for now, but in the modal we'll do full highlighting
+            
             return text.length > 150 ? text.substring(0, 150) + '...' : text;
         }
 
@@ -231,7 +231,7 @@
         function renderAnnotatedText(res, type) {
             if (type === 'actual') return res.actual;
             
-            // Highlight leaks in expected text
+            
             let text = res.expected;
             let offset = 0;
             const leaks = res.overlaps

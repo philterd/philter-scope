@@ -28,7 +28,7 @@ import (
 //go:embed index.html
 var staticAssets embed.FS
 
-// StartServer launches the local Privacy Lab UI.
+// StartServer launches the local Evaluation UI.
 func StartServer(port int, result model.AuditResult) error {
 	tmpl, err := template.ParseFS(staticAssets, "index.html")
 	if err != nil {
@@ -45,7 +45,7 @@ func StartServer(port int, result model.AuditResult) error {
 		tmpl.Execute(w, data)
 	})
 
-	fmt.Printf("Privacy Lab UI available at http://localhost:%d\n\n", port)
+	fmt.Printf("Evaluation UI available at http://localhost:%d\n\n", port)
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }
 

@@ -37,7 +37,7 @@ func TestGenerateStandaloneReport(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	if !strings.Contains(report, "<title>PhilterScope Privacy Lab</title>") {
+	if !strings.Contains(report, "<title>PhilterScope Evaluation</title>") {
 		t.Error("Report missing expected title")
 	}
 

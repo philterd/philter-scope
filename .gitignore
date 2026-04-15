@@ -4,8 +4,6 @@ philterscope.exe
 bin/
 
 # Reports and logs
-report.html
-report.json
 *.log
 .philterscope
 

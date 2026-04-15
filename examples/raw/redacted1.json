@@ -1,0 +1,1 @@
+{"filteredText": "My name is John Doe and I live at 123 Main St.", "explanation": {"appliedSpans": [{"text": "John Doe", "start": 11, "end": 19, "label": "NAME"}, {"text": "123 Main St", "start": 34, "end": 45, "label": "ADDRESS"}]}}

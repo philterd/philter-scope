@@ -2,13 +2,6 @@
 
 PhilterScope is a standalone CLI tool for PII redaction auditing and policy optimization. It allows you to audit the performance of [Philter](https://www.philterd.ai/) by comparing its redaction results against a "golden dataset" of labeled PII.
 
-## Core Features
-
-- **Audit**: Compare raw text or Philter `explain` JSON against a golden dataset to calculate Precision, Recall, and F1-Score.
-- **Privacy Lab UI**: A local web server to display interactive, self-contained HTML reports with "Leak" (False Negative) highlighting.
-- **Policy Suggestions**: Automatically suggests Philter policy improvements based on audit results.
-- **Multi-Format Support**: Supports golden datasets in both tagged text (e.g., `<NAME>John Doe</NAME>`) and JSON Span-style formats.
-
 ## Installation
 
 ```bash
@@ -16,6 +9,16 @@ make build
 ```
 
 The binary will be created as `philterscope` in the root directory.
+
+## Quick Start
+
+The following command will compare the raw text in the `examples/raw` directory against the golden dataset in `examples/golden` and generate an HTML report in the `examples/` directory. See below for more details and options for this command.
+
+```
+./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
+```
+
+Check the `examples/report.html` file for an example of the generated report.
 
 ## Usage
 
@@ -29,7 +32,7 @@ Compare files in a directory against their golden counterparts. Input files can 
 
 This generates `report.html` and `report.json`.
 
-### 2. Launch Privacy Lab UI
+### 2. Launch Evaluation UI
 
 View the generated audit results in your browser:
 

@@ -104,17 +104,30 @@ func ParseJSONSpans(data []byte) (string, []model.Span, error) {
 		return "", nil, fmt.Errorf("failed to parse JSON golden dataset: %w", err)
 	}
 
-	// Sort spans by start offset for consistency
+	// Populate compatibility fields
+	for i := range js.Labels {
+		s := &js.Labels[i]
+		if s.CharacterStart == 0 && s.Start != 0 {
+			s.CharacterStart = s.Start
+		}
+		if s.CharacterEnd == 0 && s.End != 0 {
+			s.CharacterEnd = s.End
+		}
+		if s.Start == 0 && s.CharacterStart != 0 {
+			s.Start = s.CharacterStart
+		}
+		if s.End == 0 && s.CharacterEnd != 0 {
+			s.End = s.CharacterEnd
+		}
+		if s.FilterType == "" && s.Label != "" {
+			s.FilterType = s.Label
+		}
+		if s.Label == "" && s.FilterType != "" {
+			s.Label = s.FilterType
+		}
+	}
+
 	sort.Slice(js.Labels, func(i, j int) bool {
-		// Populate compatibility fields
-		js.Labels[i].CharacterStart = js.Labels[i].Start
-		js.Labels[i].CharacterEnd = js.Labels[i].End
-		js.Labels[i].FilterType = js.Labels[i].Label
-
-		js.Labels[j].CharacterStart = js.Labels[j].Start
-		js.Labels[j].CharacterEnd = js.Labels[j].End
-		js.Labels[j].FilterType = js.Labels[j].Label
-
 		return js.Labels[i].Start < js.Labels[j].Start
 	})
 
@@ -141,9 +154,24 @@ func ParsePhilterExplain(data []byte) (string, []model.Span, error) {
 	// Map CharacterStart/CharacterEnd/FilterType to Start/End/Label for compatibility
 	for i := range res.Explanation.AppliedSpans {
 		s := &res.Explanation.AppliedSpans[i]
-		s.Start = s.CharacterStart
-		s.End = s.CharacterEnd
-		s.Label = s.FilterType
+		if s.CharacterStart == 0 && s.Start != 0 {
+			s.CharacterStart = s.Start
+		}
+		if s.CharacterEnd == 0 && s.End != 0 {
+			s.CharacterEnd = s.End
+		}
+		if s.Start == 0 && s.CharacterStart != 0 {
+			s.Start = s.CharacterStart
+		}
+		if s.End == 0 && s.CharacterEnd != 0 {
+			s.End = s.CharacterEnd
+		}
+		if s.FilterType == "" && s.Label != "" {
+			s.FilterType = s.Label
+		}
+		if s.Label == "" && s.FilterType != "" {
+			s.Label = s.FilterType
+		}
 	}
 
 	return res.FilteredText, res.Explanation.AppliedSpans, nil
