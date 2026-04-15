@@ -23,25 +23,27 @@ type Redactor interface {
 
 // AuditResult holds the outcome of an auditing run.
 type AuditResult struct {
-	Timestamp       time.Time              `json:"timestamp"`
-	TotalDocuments  int                    `json:"total_documents"`
-	Precision       float64                `json:"precision"`
-	Recall          float64                `json:"recall"`
-	F1Score         float64                `json:"f1_score"`
-	Details         []Result               `json:"details"`
-	Policy          map[string]interface{} `json:"policy"`          // Philter JSON configuration
-	Recommendations []Recommendation       `json:"recommendations"` // Suggested policy changes
-	EntityMetrics   map[string]float64     `json:"entity_metrics"`  // Recall per entity type
-	Threshold       float64                `json:"threshold"`       // Threshold used for suggestions
+	ID              interface{}            `json:"id" bson:"_id,omitempty"`
+	Timestamp       time.Time              `json:"timestamp" bson:"timestamp"`
+	TotalDocuments  int                    `json:"total_documents" bson:"total_documents"`
+	Precision       float64                `json:"precision" bson:"precision"`
+	Recall          float64                `json:"recall" bson:"recall"`
+	F1Score         float64                `json:"f1_score" bson:"f1_score"`
+	Details         []Result               `json:"details" bson:"details"`
+	Policy          map[string]interface{} `json:"policy" bson:"policy"`                   // Philter JSON configuration
+	Recommendations []Recommendation       `json:"recommendations" bson:"recommendations"` // Suggested policy changes
+	EntityMetrics   map[string]float64     `json:"entity_metrics" bson:"entity_metrics"`   // Recall per entity type
+	Threshold       float64                `json:"threshold" bson:"threshold"`             // Threshold used for suggestions
 }
 
 // HistoryEntry represents a past audit result.
 type HistoryEntry struct {
-	Timestamp time.Time              `json:"timestamp"`
-	Precision float64                `json:"precision"`
-	Recall    float64                `json:"recall"`
-	F1Score   float64                `json:"f1_score"`
-	Policy    map[string]interface{} `json:"policy"`
+	ID        interface{}            `json:"id" bson:"_id,omitempty"`
+	Timestamp time.Time              `json:"timestamp" bson:"timestamp"`
+	Precision float64                `json:"precision" bson:"precision"`
+	Recall    float64                `json:"recall" bson:"recall"`
+	F1Score   float64                `json:"f1_score" bson:"f1_score"`
+	Policy    map[string]interface{} `json:"policy" bson:"policy"`
 }
 
 // AuditHistory represents a collection of past audit results.

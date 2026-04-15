@@ -13,9 +13,16 @@
 <body class="bg-gray-50 text-gray-900 font-sans">
     <div class="max-w-7xl mx-auto px-4 py-8">
         <header class="mb-10 flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-extrabold text-indigo-600">PhilterScope <span class="text-gray-500 font-medium text-xl">| Evaluation</span></h1>
-                <p class="text-gray-500 mt-1" id="reportTimestamp"></p>
+            <div class="flex items-center gap-6">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-indigo-600">PhilterScope <span class="text-gray-500 font-medium text-xl">| Evaluation</span></h1>
+                    <p class="text-gray-500 mt-1" id="reportTimestamp"></p>
+                </div>
+                <div id="auditSelectorContainer" class="hidden flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm">
+                    <label for="auditSelector" class="text-xs font-bold text-gray-400 uppercase">Audit:</label>
+                    <select id="auditSelector" class="text-sm font-medium bg-transparent focus:outline-none pr-4" onchange="loadAudit(this.value)">
+                    </select>
+                </div>
             </div>
             <div class="text-right">
                 <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold" id="docCount"></span>
@@ -96,12 +103,78 @@
     </div>
 
     <script id="reportData" type="application/json">
-        {"timestamp":"2026-04-15T08:48:11.085408337-04:00","total_documents":1,"precision":1,"recall":1,"f1_score":1,"details":[{"filename":"redacted1.json","expected":"My name is John Doe and I live at 123 Main St.","actual":"My name is John Doe and I live at 123 Main St.","spans":[{"id":"","characterStart":11,"characterEnd":19,"filterType":"NAME","context":"","documentId":"","confidence":0,"text":"John Doe","replacement":"","salt":"","ignored":false,"start":11,"end":19,"label":"NAME"},{"id":"","characterStart":34,"characterEnd":45,"filterType":"ADDRESS","context":"","documentId":"","confidence":0,"text":"123 Main St","replacement":"","salt":"","ignored":false,"start":34,"end":45,"label":"ADDRESS"}],"tp":2,"fp":0,"fn":0,"overlaps":[{"golden":{"id":"","characterStart":11,"characterEnd":19,"filterType":"NAME","context":"","documentId":"","confidence":0,"text":"John Doe","replacement":"","salt":"","ignored":false,"start":11,"end":19,"label":"NAME"},"actual":{"id":"","characterStart":11,"characterEnd":19,"filterType":"NAME","context":"","documentId":"","confidence":0,"text":"John Doe","replacement":"","salt":"","ignored":false,"start":11,"end":19,"label":"NAME"},"type":"EXACT"},{"golden":{"id":"","characterStart":34,"characterEnd":45,"filterType":"ADDRESS","context":"","documentId":"","confidence":0,"text":"123 Main St","replacement":"","salt":"","ignored":false,"start":34,"end":45,"label":"ADDRESS"},"actual":{"id":"","characterStart":34,"characterEnd":45,"filterType":"ADDRESS","context":"","documentId":"","confidence":0,"text":"123 Main St","replacement":"","salt":"","ignored":false,"start":34,"end":45,"label":"ADDRESS"},"type":"EXACT"}]}],"policy":null,"recommendations":null,"entity_metrics":{"ADDRESS":1,"NAME":1},"threshold":0.75}
+        {"id":null,"timestamp":"2026-04-15T10:19:49.238246534-04:00","total_documents":1,"precision":1,"recall":1,"f1_score":1,"details":[{"filename":"redacted1.json","expected":"My name is John Doe and I live at 123 Main St.","actual":"My name is John Doe and I live at 123 Main St.","spans":[{"id":"","characterStart":11,"characterEnd":19,"filterType":"NAME","context":"","documentId":"","confidence":0,"text":"John Doe","replacement":"","salt":"","ignored":false,"start":11,"end":19,"label":"NAME"},{"id":"","characterStart":34,"characterEnd":45,"filterType":"ADDRESS","context":"","documentId":"","confidence":0,"text":"123 Main St","replacement":"","salt":"","ignored":false,"start":34,"end":45,"label":"ADDRESS"}],"tp":2,"fp":0,"fn":0,"overlaps":[{"golden":{"id":"","characterStart":11,"characterEnd":19,"filterType":"NAME","context":"","documentId":"","confidence":0,"text":"John Doe","replacement":"","salt":"","ignored":false,"start":11,"end":19,"label":"NAME"},"actual":{"id":"","characterStart":11,"characterEnd":19,"filterType":"NAME","context":"","documentId":"","confidence":0,"text":"John Doe","replacement":"","salt":"","ignored":false,"start":11,"end":19,"label":"NAME"},"type":"EXACT"},{"golden":{"id":"","characterStart":34,"characterEnd":45,"filterType":"ADDRESS","context":"","documentId":"","confidence":0,"text":"123 Main St","replacement":"","salt":"","ignored":false,"start":34,"end":45,"label":"ADDRESS"},"actual":{"id":"","characterStart":34,"characterEnd":45,"filterType":"ADDRESS","context":"","documentId":"","confidence":0,"text":"123 Main St","replacement":"","salt":"","ignored":false,"start":34,"end":45,"label":"ADDRESS"},"type":"EXACT"}]}],"policy":null,"recommendations":null,"entity_metrics":{"ADDRESS":1,"NAME":1},"threshold":0.75}
     </script>
     <script>
-        const reportData = JSON.parse(document.getElementById('reportData').textContent);
+        let reportData = JSON.parse(document.getElementById('reportData').textContent);
 
-        function init() {
+        async function init() {
+            if (!reportData) {
+                
+                try {
+                    const response = await fetch('/api/history');
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Failed to fetch history: ${response.status} ${response.statusText}${errorText ? ' - ' + errorText : ''}`);
+                    }
+                    const history = await response.json();
+                    
+                    if (history && history.length > 0) {
+                        const selector = document.getElementById('auditSelector');
+                        const container = document.getElementById('auditSelectorContainer');
+                        container.classList.remove('hidden');
+                        
+                        history.forEach((entry, idx) => {
+                            const opt = document.createElement('option');
+                            opt.value = entry.id;
+                            const date = new Date(entry.timestamp).toLocaleString();
+                            const f1 = (entry.f1_score * 100).toFixed(1);
+                            
+                            let trend = "";
+                            if (idx < history.length - 1) {
+                                const prevF1 = history[idx + 1].f1_score;
+                                if (entry.f1_score > prevF1) trend = " ↑";
+                                else if (entry.f1_score < prevF1) trend = " ↓";
+                            }
+                            
+                            opt.textContent = `${date} (F1: ${f1}%)${trend}`;
+                            selector.appendChild(opt);
+                        });
+                        
+                        
+                        
+                        loadAudit(history[0].id);
+                    } else {
+                        document.getElementById('reportTimestamp').innerText = "No audit history found in database.";
+                        document.getElementById('docCount').innerText = "0 Documents";
+                    }
+                } catch (err) {
+                    console.error(err);
+                    document.getElementById('reportTimestamp').innerText = "Error loading history: " + err.message;
+                }
+                return;
+            }
+            
+            renderAudit();
+        }
+
+        async function loadAudit(id) {
+            if (!id) return;
+            try {
+                const response = await fetch(`/api/audit?id=${id}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to fetch audit result: ${response.status} ${response.statusText}${errorText ? ' - ' + errorText : ''}`);
+                }
+                reportData = await response.json();
+                renderAudit();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('reportTimestamp').innerText = "Error loading audit: " + err.message;
+            }
+        }
+
+        function renderAudit() {
             
             document.getElementById('reportTimestamp').innerText = `Generated on ${new Date(reportData.timestamp).toLocaleString()}`;
             document.getElementById('docCount').innerText = `${reportData.total_documents} Documents Audited`;
@@ -117,12 +190,14 @@
             
             if (reportData.policy) {
                 document.getElementById('policyContent').innerText = JSON.stringify(reportData.policy, null, 2);
+            } else {
+                document.getElementById('policyContent').innerText = "No policy data available.";
             }
 
             
+            const recList = document.getElementById('recommendationsList');
+            recList.innerHTML = '';
             if (reportData.recommendations && reportData.recommendations.length > 0) {
-                const recList = document.getElementById('recommendationsList');
-                recList.innerHTML = '';
                 reportData.recommendations.forEach(rec => {
                     const div = document.createElement('div');
                     div.className = "p-3 bg-indigo-50 border border-indigo-100 rounded-lg";
@@ -137,35 +212,40 @@
                     `;
                     recList.appendChild(div);
                 });
+            } else {
+                recList.innerHTML = '<p class="text-sm text-gray-500 italic">No recommendations at this time. Philter is performing above threshold.</p>';
             }
 
             
             const list = document.getElementById('fileList');
-            reportData.details.forEach((res, idx) => {
-                const item = document.createElement('div');
-                item.className = "px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors";
-                item.onclick = () => showDetails(idx);
-                
-                const leaks = res.fn > 0;
-                
-                item.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="font-medium text-gray-900">${res.filename}</h4>
-                            <div class="flex gap-4 mt-1 text-xs text-gray-500">
-                                <span>TP: <span class="text-green-600 font-bold">${res.tp}</span></span>
-                                <span>FP: <span class="text-orange-500 font-bold">${res.fp}</span></span>
-                                <span>FN: <span class="text-red-600 font-bold">${res.fn}</span></span>
+            list.innerHTML = '';
+            if (reportData.details) {
+                reportData.details.forEach((res, idx) => {
+                    const item = document.createElement('div');
+                    item.className = "px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors";
+                    item.onclick = () => showDetails(idx);
+                    
+                    const leaks = res.fn > 0;
+                    
+                    item.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-medium text-gray-900">${res.filename}</h4>
+                                <div class="flex gap-4 mt-1 text-xs text-gray-500">
+                                    <span>TP: <span class="text-green-600 font-bold">${res.tp}</span></span>
+                                    <span>FP: <span class="text-orange-500 font-bold">${res.fp}</span></span>
+                                    <span>FN: <span class="text-red-600 font-bold">${res.fn}</span></span>
+                                </div>
                             </div>
+                            ${leaks ? '<span class="bg-red-100 text-red-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Leak Detected</span>' : '<span class="bg-green-100 text-green-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Clean</span>'}
                         </div>
-                        ${leaks ? '<span class="bg-red-100 text-red-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Leak Detected</span>' : '<span class="bg-green-100 text-green-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Clean</span>'}
-                    </div>
-                    <div class="mt-3 text-sm text-gray-600 line-clamp-2 italic">
-                        ${highlightLeaks(res)}
-                    </div>
-                `;
-                list.appendChild(item);
-            });
+                        <div class="mt-3 text-sm text-gray-600 line-clamp-2 italic">
+                            ${highlightLeaks(res)}
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            }
         }
 
         function highlightLeaks(res) {

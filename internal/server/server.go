@@ -16,6 +16,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -28,14 +29,90 @@ import (
 //go:embed index.html
 var staticAssets embed.FS
 
+// Storage defines the interface for data retrieval.
+type Storage interface {
+	GetHistory(ctx context.Context) ([]model.HistoryEntry, error)
+	GetAuditResult(ctx context.Context, id string) (*model.AuditResult, error)
+}
+
 // StartServer launches the local Evaluation UI.
-func StartServer(port int, result model.AuditResult) error {
+func StartServer(port int, store Storage) error {
+	mux := http.NewServeMux()
 	tmpl, err := template.ParseFS(staticAssets, "index.html")
 	if err != nil {
 		return err
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// API to get history
+	mux.HandleFunc("/api/history", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("API Request: %s %s\n", r.Method, r.URL.Path)
+		history, err := store.GetHistory(r.Context())
+		if err != nil {
+			fmt.Printf("Error getting history: %v\n", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(history); err != nil {
+			fmt.Printf("Error encoding history: %v\n", err)
+		}
+	})
+
+	// API to get specific audit
+	mux.HandleFunc("/api/audit", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("API Request: %s %s\n", r.Method, r.URL.Path)
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			http.Error(w, "missing id parameter", http.StatusBadRequest)
+			return
+		}
+		res, err := store.GetAuditResult(r.Context(), id)
+		if err != nil {
+			fmt.Printf("Error getting audit result (id=%s): %v\n", id, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			fmt.Printf("Error encoding audit result: %v\n", err)
+		}
+	})
+
+	// Main UI
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		// For MongoDB mode, we don't pre-populate the report data
+		// The UI will fetch it via API
+		data := struct {
+			ReportJSON template.JS
+		}{
+			ReportJSON: template.JS("null"),
+		}
+		if err := tmpl.Execute(w, data); err != nil {
+			fmt.Printf("Error executing template: %v\n", err)
+		}
+	})
+
+	fmt.Printf("Evaluation UI available at http://localhost:%d\n\n", port)
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
+}
+
+// StartStandaloneServer launches the local Evaluation UI with a single result.
+func StartStandaloneServer(port int, result model.AuditResult) error {
+	mux := http.NewServeMux()
+	tmpl, err := template.ParseFS(staticAssets, "index.html")
+	if err != nil {
+		return err
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
 		reportJSON, _ := json.Marshal(result)
 		data := struct {
 			ReportJSON template.JS
@@ -46,7 +123,7 @@ func StartServer(port int, result model.AuditResult) error {
 	})
 
 	fmt.Printf("Evaluation UI available at http://localhost:%d\n\n", port)
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
 }
 
 // GenerateStandaloneReport creates a self-contained HTML file.

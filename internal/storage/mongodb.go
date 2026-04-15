@@ -81,12 +81,13 @@ func (s *MongoDBStorage) GetHistory(ctx context.Context) ([]model.HistoryEntry, 
 	coll := s.client.Database(s.database).Collection(s.collection)
 
 	opts := options.Find().SetProjection(bson.D{
+		{Key: "_id", Value: 1},
 		{Key: "timestamp", Value: 1},
 		{Key: "precision", Value: 1},
 		{Key: "recall", Value: 1},
 		{Key: "f1_score", Value: 1},
 		{Key: "policy", Value: 1},
-	})
+	}).SetSort(bson.D{{Key: "timestamp", Value: -1}})
 
 	cursor, err := coll.Find(ctx, bson.D{}, opts)
 	if err != nil {
@@ -107,7 +108,28 @@ func (s *MongoDBStorage) GetHistory(ctx context.Context) ([]model.HistoryEntry, 
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
 
+	if history == nil {
+		return []model.HistoryEntry{}, nil
+	}
+
 	return history, nil
+}
+
+func (s *MongoDBStorage) GetAuditResult(ctx context.Context, id string) (*model.AuditResult, error) {
+	coll := s.client.Database(s.database).Collection(s.collection)
+
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid audit ID: %w", err)
+	}
+
+	var res model.AuditResult
+	err = coll.FindOne(ctx, bson.D{{Key: "_id", Value: objID}}).Decode(&res)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find audit result: %w", err)
+	}
+
+	return &res, nil
 }
 
 func (s *MongoDBStorage) Close(ctx context.Context) error {

@@ -272,17 +272,33 @@ func runAudit(cmd *cobra.Command, args []string) error {
 }
 
 func runServe(cmd *cobra.Command, args []string) error {
-	data, err := os.ReadFile(goldenFile)
-	if err != nil {
-		return err
+	ctx := cmd.Context()
+
+	// Try MongoDB if configured
+	if os.Getenv("PHILTERSCOPE_MONGODB_CONNECTION_STRING") != "" {
+		m, err := storage.NewMongoDBStorage(ctx)
+		if err == nil {
+			defer m.Close(ctx)
+			return server.StartServer(port, m)
+		}
+		fmt.Printf("Warning: failed to connect to MongoDB: %v. Falling back to file mode.\n", err)
 	}
-	var res model.AuditResult
-	if err := json.Unmarshal(data, &res); err != nil {
-		return err
+
+	// Fallback to reading from a file if goldenFile is set
+	if goldenFile != "" {
+		data, err := os.ReadFile(goldenFile)
+		if err != nil {
+			return err
+		}
+		var res model.AuditResult
+		if err := json.Unmarshal(data, &res); err != nil {
+			return err
+		}
+		res.Threshold = threshold
+		return server.StartStandaloneServer(port, res)
 	}
-	res.Threshold = threshold
-	server.StartServer(port, res)
-	return nil
+
+	return fmt.Errorf("no MongoDB connection string (PHILTERSCOPE_MONGODB_CONNECTION_STRING) and no input file (--golden) provided")
 }
 
 func runSuggest(cmd *cobra.Command, args []string) error {
