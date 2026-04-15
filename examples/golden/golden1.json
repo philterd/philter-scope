@@ -1,1 +1,24 @@
-{"text": "My name is John Doe and I live at 123 Main St.", "labels": [{"text": "John Doe", "characterStart": 11, "characterEnd": 19, "filterType": "NAME"}, {"text": "123 Main St", "characterStart": 34, "characterEnd": 45, "filterType": "ADDRESS"}]}
+{
+  "text": "John Doe lives at 123 Main St.",
+  "labels": [
+    {
+      "text": "John Doe",
+      "start": 0,
+      "end": 8,
+      "label": "NAME",
+      "characterStart": 0,
+      "characterEnd": 8,
+      "filterType": "NAME"
+    },
+    {
+      "text": "123 Main St",
+      "start": 18,
+      "end": 29,
+      "label": "ADDRESS",
+      "characterStart": 18,
+      "characterEnd": 29,
+      "filterType": "ADDRESS"
+    }
+  ],
+  "filteredText": "***** lives at *****."
+}

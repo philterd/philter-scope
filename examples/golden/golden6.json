@@ -1,0 +1,15 @@
+{
+  "text": "Send invoice to billing@corp.com please.",
+  "labels": [
+    {
+      "text": "billing@corp.com",
+      "start": 16,
+      "end": 32,
+      "label": "EMAIL",
+      "characterStart": 16,
+      "characterEnd": 32,
+      "filterType": "EMAIL"
+    }
+  ],
+  "filteredText": "Send invoice to ***** please."
+}

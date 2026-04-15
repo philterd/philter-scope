@@ -1,0 +1,25 @@
+{
+  "filteredText": "Bob's address is *****.*****",
+  "explanation": {
+    "appliedSpans": [
+      {
+        "text": "*****",
+        "start": 17,
+        "end": 22,
+        "label": "ADDRESS",
+        "characterStart": 17,
+        "characterEnd": 22,
+        "filterType": "ADDRESS"
+      },
+      {
+        "text": "*****",
+        "start": 23,
+        "end": 28,
+        "label": "NAME",
+        "characterStart": 23,
+        "characterEnd": 28,
+        "filterType": "NAME"
+      }
+    ]
+  }
+}

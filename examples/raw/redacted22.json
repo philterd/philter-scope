@@ -1,0 +1,25 @@
+{
+  "filteredText": "My name is ***** and I live i*****go.",
+  "explanation": {
+    "appliedSpans": [
+      {
+        "text": "*****",
+        "start": 11,
+        "end": 16,
+        "label": "NAME",
+        "characterStart": 11,
+        "characterEnd": 16,
+        "filterType": "NAME"
+      },
+      {
+        "text": "*****",
+        "start": 29,
+        "end": 34,
+        "label": "LOCATION",
+        "characterStart": 29,
+        "characterEnd": 34,
+        "filterType": "LOCATION"
+      }
+    ]
+  }
+}

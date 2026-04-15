@@ -1,0 +1,25 @@
+{
+  "filteredText": "J*****'s phone is 5*****.",
+  "explanation": {
+    "appliedSpans": [
+      {
+        "text": "*****",
+        "start": 1,
+        "end": 6,
+        "label": "NAME",
+        "characterStart": 1,
+        "characterEnd": 6,
+        "filterType": "NAME"
+      },
+      {
+        "text": "*****",
+        "start": 19,
+        "end": 24,
+        "label": "PHONE",
+        "characterStart": 19,
+        "characterEnd": 24,
+        "filterType": "PHONE"
+      }
+    ]
+  }
+}

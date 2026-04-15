@@ -1,0 +1,24 @@
+{
+  "text": "My name is Bob Jones and I live in San Jose.",
+  "labels": [
+    {
+      "text": "Bob Jones",
+      "start": 11,
+      "end": 20,
+      "label": "NAME",
+      "characterStart": 11,
+      "characterEnd": 20,
+      "filterType": "NAME"
+    },
+    {
+      "text": "San Jose",
+      "start": 33,
+      "end": 41,
+      "label": "LOCATION",
+      "characterStart": 33,
+      "characterEnd": 41,
+      "filterType": "LOCATION"
+    }
+  ],
+  "filteredText": "My name is ***** and I live i*****se."
+}

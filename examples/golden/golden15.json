@@ -1,0 +1,24 @@
+{
+  "text": "My name is Charlie Brown and I live in Phoenix.",
+  "labels": [
+    {
+      "text": "Charlie Brown",
+      "start": 11,
+      "end": 24,
+      "label": "NAME",
+      "characterStart": 11,
+      "characterEnd": 24,
+      "filterType": "NAME"
+    },
+    {
+      "text": "Phoenix",
+      "start": 37,
+      "end": 44,
+      "label": "LOCATION",
+      "characterStart": 37,
+      "characterEnd": 44,
+      "filterType": "LOCATION"
+    }
+  ],
+  "filteredText": "My name is ***** and I live i*****ix."
+}

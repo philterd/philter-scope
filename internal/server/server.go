@@ -33,6 +33,9 @@ var staticAssets embed.FS
 type Storage interface {
 	GetHistory(ctx context.Context) ([]model.HistoryEntry, error)
 	GetAuditResult(ctx context.Context, id string) (*model.AuditResult, error)
+	DeleteAuditResult(ctx context.Context, id string) error
+	ResolveRecommendation(ctx context.Context, auditID string, entity string) error
+	SaveAuditNotes(ctx context.Context, id string, notes string) error
 }
 
 // StartServer launches the local Evaluation UI.
@@ -45,7 +48,6 @@ func StartServer(port int, store Storage) error {
 
 	// API to get history
 	mux.HandleFunc("/api/history", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("API Request: %s %s\n", r.Method, r.URL.Path)
 		history, err := store.GetHistory(r.Context())
 		if err != nil {
 			fmt.Printf("Error getting history: %v\n", err)
@@ -58,24 +60,90 @@ func StartServer(port int, store Storage) error {
 		}
 	})
 
-	// API to get specific audit
+	// API to get or delete specific audit
 	mux.HandleFunc("/api/audit", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("API Request: %s %s\n", r.Method, r.URL.Path)
 		id := r.URL.Query().Get("id")
 		if id == "" {
 			http.Error(w, "missing id parameter", http.StatusBadRequest)
 			return
 		}
-		res, err := store.GetAuditResult(r.Context(), id)
+
+		switch r.Method {
+		case http.MethodGet:
+			res, err := store.GetAuditResult(r.Context(), id)
+			if err != nil {
+				fmt.Printf("Error getting audit result (id=%s): %v\n", id, err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(res); err != nil {
+				fmt.Printf("Error encoding audit result: %v\n", err)
+			}
+		case http.MethodDelete:
+			err := store.DeleteAuditResult(r.Context(), id)
+			if err != nil {
+				fmt.Printf("Error deleting audit result (id=%s): %v\n", id, err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// API to resolve a recommendation
+	mux.HandleFunc("/api/audit/recommendation/resolve", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		auditID := r.URL.Query().Get("id")
+		entity := r.URL.Query().Get("entity")
+		if auditID == "" || entity == "" {
+			http.Error(w, "missing id or entity parameter", http.StatusBadRequest)
+			return
+		}
+
+		err := store.ResolveRecommendation(r.Context(), auditID, entity)
 		if err != nil {
-			fmt.Printf("Error getting audit result (id=%s): %v\n", id, err)
+			fmt.Printf("Error resolving recommendation (id=%s, entity=%s): %v\n", auditID, entity, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			fmt.Printf("Error encoding audit result: %v\n", err)
+		w.WriteHeader(http.StatusOK)
+	})
+
+	// API to save notes
+	mux.HandleFunc("/api/audit/notes", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
 		}
+
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			http.Error(w, "missing id parameter", http.StatusBadRequest)
+			return
+		}
+
+		var payload struct {
+			Notes string `json:"notes"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		err := store.SaveAuditNotes(r.Context(), id, payload.Notes)
+		if err != nil {
+			fmt.Printf("Error saving notes (id=%s): %v\n", id, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	})
 
 	// Main UI

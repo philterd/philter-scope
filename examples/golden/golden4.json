@@ -1,0 +1,24 @@
+{
+  "text": "Jane Smith's phone is 555-1212.",
+  "labels": [
+    {
+      "text": "Jane Smith",
+      "start": 0,
+      "end": 10,
+      "label": "NAME",
+      "characterStart": 0,
+      "characterEnd": 10,
+      "filterType": "NAME"
+    },
+    {
+      "text": "555-1212",
+      "start": 22,
+      "end": 30,
+      "label": "PHONE",
+      "characterStart": 22,
+      "characterEnd": 30,
+      "filterType": "PHONE"
+    }
+  ],
+  "filteredText": "*****'s phone is *****."
+}

@@ -34,6 +34,7 @@ type AuditResult struct {
 	Recommendations []Recommendation       `json:"recommendations" bson:"recommendations"` // Suggested policy changes
 	EntityMetrics   map[string]float64     `json:"entity_metrics" bson:"entity_metrics"`   // Recall per entity type
 	Threshold       float64                `json:"threshold" bson:"threshold"`             // Threshold used for suggestions
+	Notes           string                 `json:"notes" bson:"notes"`                     // User-provided notes
 }
 
 // HistoryEntry represents a past audit result.
@@ -57,6 +58,7 @@ type Recommendation struct {
 	Description string `json:"description"`
 	Action      string `json:"action"`
 	Snippet     string `json:"snippet"`
+	Resolved    bool   `json:"resolved" bson:"resolved"` // Mark as resolved in the database
 }
 
 // Result is a single comparison outcome.

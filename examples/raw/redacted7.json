@@ -1,5 +1,5 @@
 {
-  "filteredText": "***** lives at *****.",
+  "filteredText": "***** visited on Dec 12, 2023.",
   "explanation": {
     "appliedSpans": [
       {
@@ -10,15 +10,6 @@
         "characterStart": 0,
         "characterEnd": 5,
         "filterType": "NAME"
-      },
-      {
-        "text": "*****",
-        "start": 15,
-        "end": 20,
-        "label": "ADDRESS",
-        "characterStart": 15,
-        "characterEnd": 20,
-        "filterType": "ADDRESS"
       }
     ]
   }

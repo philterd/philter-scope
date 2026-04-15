@@ -1,0 +1,24 @@
+{
+  "text": "Born on 1990-01-01 in New York.",
+  "labels": [
+    {
+      "text": "1990-01-01",
+      "start": 8,
+      "end": 18,
+      "label": "DATE",
+      "characterStart": 8,
+      "characterEnd": 18,
+      "filterType": "DATE"
+    },
+    {
+      "text": "New York",
+      "start": 22,
+      "end": 30,
+      "label": "LOCATION",
+      "characterStart": 22,
+      "characterEnd": 30,
+      "filterType": "LOCATION"
+    }
+  ],
+  "filteredText": "Born on ***** in *****."
+}

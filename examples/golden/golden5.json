@@ -1,0 +1,15 @@
+{
+  "text": "Meeting at 456 Oak Ave on Monday.",
+  "labels": [
+    {
+      "text": "456 Oak Ave",
+      "start": 11,
+      "end": 22,
+      "label": "ADDRESS",
+      "characterStart": 11,
+      "characterEnd": 22,
+      "filterType": "ADDRESS"
+    }
+  ],
+  "filteredText": "Meeting at ***** on Monday."
+}

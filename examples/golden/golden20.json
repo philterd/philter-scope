@@ -1,0 +1,24 @@
+{
+  "text": "My name is David Wilson and I live in Dallas.",
+  "labels": [
+    {
+      "text": "David Wilson",
+      "start": 11,
+      "end": 23,
+      "label": "NAME",
+      "characterStart": 11,
+      "characterEnd": 23,
+      "filterType": "NAME"
+    },
+    {
+      "text": "Dallas",
+      "start": 36,
+      "end": 42,
+      "label": "LOCATION",
+      "characterStart": 36,
+      "characterEnd": 42,
+      "filterType": "LOCATION"
+    }
+  ],
+  "filteredText": "My name is ***** and I live i*****as."
+}

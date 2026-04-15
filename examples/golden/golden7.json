@@ -1,0 +1,24 @@
+{
+  "text": "Alice Johnson visited on Dec 12, 2023.",
+  "labels": [
+    {
+      "text": "Alice Johnson",
+      "start": 0,
+      "end": 13,
+      "label": "NAME",
+      "characterStart": 0,
+      "characterEnd": 13,
+      "filterType": "NAME"
+    },
+    {
+      "text": "Dec 12, 2023",
+      "start": 25,
+      "end": 37,
+      "label": "DATE",
+      "characterStart": 25,
+      "characterEnd": 37,
+      "filterType": "DATE"
+    }
+  ],
+  "filteredText": "***** visited on *****."
+}

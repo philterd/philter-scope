@@ -132,6 +132,72 @@ func (s *MongoDBStorage) GetAuditResult(ctx context.Context, id string) (*model.
 	return &res, nil
 }
 
+func (s *MongoDBStorage) DeleteAuditResult(ctx context.Context, id string) error {
+	coll := s.client.Database(s.database).Collection(s.collection)
+
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid audit ID: %w", err)
+	}
+
+	_, err = coll.DeleteOne(ctx, bson.D{{Key: "_id", Value: objID}})
+	if err != nil {
+		return fmt.Errorf("failed to delete audit result: %w", err)
+	}
+
+	return nil
+}
+
+func (s *MongoDBStorage) ResolveRecommendation(ctx context.Context, auditID string, entity string) error {
+	coll := s.client.Database(s.database).Collection(s.collection)
+
+	objID, err := bson.ObjectIDFromHex(auditID)
+	if err != nil {
+		return fmt.Errorf("invalid audit ID: %w", err)
+	}
+
+	// Update the recommendation in the array that matches the entity
+	filter := bson.D{
+		{Key: "_id", Value: objID},
+		{Key: "recommendations.entity", Value: entity},
+	}
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "recommendations.$.resolved", Value: true},
+		}},
+	}
+
+	_, err = coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to resolve recommendation: %w", err)
+	}
+
+	return nil
+}
+
+func (s *MongoDBStorage) SaveAuditNotes(ctx context.Context, id string, notes string) error {
+	coll := s.client.Database(s.database).Collection(s.collection)
+
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid audit ID: %w", err)
+	}
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "notes", Value: notes},
+		}},
+	}
+
+	_, err = coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to update audit notes: %w", err)
+	}
+
+	return nil
+}
+
 func (s *MongoDBStorage) Close(ctx context.Context) error {
 	return s.client.Disconnect(ctx)
 }
