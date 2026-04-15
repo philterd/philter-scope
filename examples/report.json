@@ -1,6 +1,6 @@
 {
   "id": null,
-  "timestamp": "2026-04-15T12:30:38.833163171-04:00",
+  "timestamp": "2026-04-15T15:54:18.378368947-04:00",
   "total_documents": 25,
   "precision": 0.8055555555555556,
   "recall": 0.58,
@@ -2900,51 +2900,6 @@
       "resolved": false,
       "dismissed": false,
       "is_ai": false
-    },
-    {
-      "entity": "LOCATION",
-      "description": "[AI] The recall rate for LOCATION (29.4%) is critically low, indicating that the system frequently fails to identify geographical markers (cities, states, countries, specific points of interest).",
-      "action": "Mandate an immediate expansion of the training corpus with diverse and contextual location data. Prioritize training on multi-token location phrases rather than single keywords.",
-      "snippet": "Increase training data set coverage for global location formats: \"[City], [State/Province] [Country]\" and named entities like \"Financial District\", \"South Pole\", etc.",
-      "resolved": false,
-      "dismissed": false,
-      "is_ai": true
-    },
-    {
-      "entity": "DATE",
-      "description": "[AI] The recall rate for DATE (50.0%) suggests difficulty in handling varied date formats and temporal expressions. The model may struggle with ambiguous dates or relative time markers.",
-      "action": "Implement advanced Natural Language Processing (NLP) context handlers to recognize and redact full date ranges and relative dates (e.g., 'last week', 'in Q3 2025').",
-      "snippet": "Expand pattern matching and training examples for diverse formats: 'Month D, YYYY', 'D-M-YY', and phrases like 'by the end of the month' or 'three days ago'.",
-      "resolved": false,
-      "dismissed": false,
-      "is_ai": true
-    },
-    {
-      "entity": "PHONE",
-      "description": "[AI] While recall is moderate (66.7%), the performance suggests insufficient coverage of international phone number formats, which is a significant risk in global document processing.",
-      "action": "Update the entity model to incorporate comprehensive international phone number formatting rules (E.164 standard) and support country calling codes.",
-      "snippet": "Ensure coverage for formats like +1 (202) 555-0123, +44 20 7946 0000, and number sequences that omit standard delimiters.",
-      "resolved": false,
-      "dismissed": false,
-      "is_ai": true
-    },
-    {
-      "entity": "ADDRESS",
-      "description": "[AI] ADDRESS (75.0%) performance is solid but needs refinement. The system must robustly handle structured address components and non-standard abbreviations.",
-      "action": "Introduce stricter component-level parsing. The model must be trained to recognize and link individual elements: building numbers, street names, suite numbers, and postal codes.",
-      "snippet": "Focus training on component recognition: 'Apt #', 'Suite', 'Ste', 'PO Box', and verifying consistency between zip code formats (e.g., 5-digit vs. 5+4).",
-      "resolved": false,
-      "dismissed": false,
-      "is_ai": true
-    },
-    {
-      "entity": "SYSTEM_OVERALL",
-      "description": "[AI] The low Recall (0.58) across the board indicates that the policy/training methodology is more focused on finding obvious PII instances (low False Negatives) rather than maximizing comprehensive coverage.",
-      "action": "Overhaul the training pipeline to emphasize recall maximization through semi-supervised learning techniques, particularly focusing on training examples that contain highly varied and obfuscated PII formats.",
-      "snippet": "Mandate an increase in the quantity and diversity of negatively-labeled (non-PII) data to improve contextual understanding, allowing the model to differentiate between PII and similar textual noise.",
-      "resolved": false,
-      "dismissed": false,
-      "is_ai": true
     }
   ],
   "entity_metrics": {
@@ -2956,5 +2911,7 @@
     "PHONE": 0.6666666666666666
   },
   "threshold": 0.75,
+  "entity_thresholds": {},
+  "group_name": "default",
   "notes": ""
 }

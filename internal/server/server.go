@@ -58,13 +58,15 @@ func NewServerMux(store Storage) *http.ServeMux {
 	// API to get history
 	mux.HandleFunc("/api/history", func(w http.ResponseWriter, r *http.Request) {
 		history, err := store.GetHistory(r.Context())
+		response := model.AuditHistory{
+			Entries: history,
+		}
 		if err != nil {
 			fmt.Printf("Error getting history: %v\n", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			response.Error = err.Error()
 		}
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(history); err != nil {
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			fmt.Printf("Error encoding history: %v\n", err)
 		}
 	})

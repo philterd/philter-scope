@@ -99,9 +99,9 @@ func TestAPIs(t *testing.T) {
 			t.Errorf("Expected status 200, got %d", w.Code)
 		}
 
-		var history []model.HistoryEntry
+		var history model.AuditHistory
 		json.NewDecoder(w.Body).Decode(&history)
-		if len(history) != 1 || history[0].F1Score != 0.85 {
+		if len(history.Entries) != 1 || history.Entries[0].F1Score != 0.85 {
 			t.Errorf("Unexpected history data: %+v", history)
 		}
 	})

@@ -29,12 +29,16 @@ type Suggester interface {
 
 // BasicSuggester implements Suggester with simple threshold logic.
 type BasicSuggester struct {
-	Threshold float64
+	Threshold        float64
+	EntityThresholds map[string]float64
 }
 
 // NewBasicSuggester creates a new BasicSuggester.
-func NewBasicSuggester(threshold float64) *BasicSuggester {
-	return &BasicSuggester{Threshold: threshold}
+func NewBasicSuggester(threshold float64, entityThresholds map[string]float64) *BasicSuggester {
+	return &BasicSuggester{
+		Threshold:        threshold,
+		EntityThresholds: entityThresholds,
+	}
 }
 
 // Suggest returns recommendations based on recall thresholds.
@@ -42,10 +46,15 @@ func (s *BasicSuggester) Suggest(result model.AuditResult) []model.Recommendatio
 	var recs []model.Recommendation
 
 	for entity, recall := range result.EntityMetrics {
-		if recall < s.Threshold {
+		threshold := s.Threshold
+		if et, ok := s.EntityThresholds[entity]; ok {
+			threshold = et
+		}
+
+		if recall < threshold {
 			recs = append(recs, model.Recommendation{
 				Entity:      entity,
-				Description: fmt.Sprintf("Recall for %s is %.1f%%, which is below the %.0f%% threshold.", entity, recall*100, s.Threshold*100),
+				Description: fmt.Sprintf("Recall for %s is %.1f%%, which is below the %.0f%% threshold.", entity, recall*100, threshold*100),
 				Action:      fmt.Sprintf("Enable or strengthen the %s filter.", entity),
 				Snippet:     generateSnippet(entity),
 				IsAI:        false,
@@ -69,8 +78,8 @@ func generateSnippet(entity string) string {
 }
 
 // GetSuggestions is a helper for the suggest command.
-func GetSuggestions(result model.AuditResult, threshold float64) {
-	s := NewBasicSuggester(threshold)
+func GetSuggestions(result model.AuditResult, threshold float64, entityThresholds map[string]float64) {
+	s := NewBasicSuggester(threshold, entityThresholds)
 	recs := s.Suggest(result)
 
 	// Check for Ollama configuration

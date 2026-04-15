@@ -17,9 +17,17 @@
             <div class="flex items-center gap-6">
                 <div>
                     <h1 class="text-3xl font-extrabold text-indigo-600">PhilterScope <span class="text-gray-500 font-medium text-xl">| Evaluation</span></h1>
-                    <p class="text-gray-500 mt-1" id="reportTimestamp"></p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <p class="text-gray-500" id="reportTimestamp"></p>
+                        <span id="groupBadge" class="hidden bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide"></span>
+                    </div>
                 </div>
                 <div id="auditSelectorContainer" class="hidden flex items-center gap-4 bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm">
+                    <div class="flex items-center gap-2 border-r border-gray-100 pr-3">
+                        <label for="groupSelector" class="text-xs font-bold text-gray-400 uppercase">Group:</label>
+                        <select id="groupSelector" class="text-sm font-medium bg-transparent focus:outline-none pr-4" onchange="onGroupChange(this.value)">
+                        </select>
+                    </div>
                     <div class="flex items-center gap-2">
                         <label for="auditSelector" class="text-xs font-bold text-gray-400 uppercase">Audit:</label>
                         <select id="auditSelector" class="text-sm font-medium bg-transparent focus:outline-none pr-4" onchange="loadAudit(this.value)">
@@ -36,7 +44,7 @@
         </header>
 
         <!-- Metrics Dashboard -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div id="metricsDashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-colors duration-300" id="recallBox">
                 <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Recall</h3>
                 <p class="text-4xl font-bold mt-2" id="recallVal">--</p>
@@ -58,15 +66,53 @@
         <!-- Trend Chart Section (MongoDB mode only) -->
         <div id="trendSection" class="hidden mb-10">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Performance Trends</h3>
+                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Performance Trends for Group</h3>
                 <div class="h-64">
                     <canvas id="trendChart"></canvas>
                 </div>
             </div>
         </div>
 
+        <!-- No Audits Found Placeholder (MongoDB mode only) -->
+        <div id="noAuditsMessage" class="hidden mb-10">
+            <div class="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center">
+                <div class="bg-indigo-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2" id="noAuditsTitle">No audits found in the MongoDB database</h2>
+                <p class="text-gray-500 max-w-md mx-auto" id="noAuditsText">Refer to the documentation to start collecting performance data and tracking trends over time.</p>
+            </div>
+        </div>
+
+        <!-- Entity Specific Recall -->
+        <div id="entityRecallSection" class="mb-10 hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h2 class="text-lg font-semibold">PII Recall Performance for Audit</h2>
+                    <span class="text-xs text-gray-400 uppercase font-bold">Metrics per Entity Type</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                                <th class="px-6 py-3">Entity Type</th>
+                                <th class="px-6 py-3">Recall</th>
+                                <th class="px-6 py-3">Threshold</th>
+                                <th class="px-6 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="entityRecallList" class="divide-y divide-gray-100">
+                            <!-- Injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Content -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div id="mainContent" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- File List -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -149,7 +195,7 @@
         </div>
 
         <!-- Notes Section -->
-        <div class="mt-10 mb-6">
+        <div id="notesSection" class="mt-10 mb-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Audit Notes</h3>
                 <textarea id="auditNotes" rows="4" class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm" placeholder="Provide notes about this audit..."></textarea>
@@ -207,6 +253,7 @@
         const recPageSize = 3;
         let currentFileIdxInFiltered = -1;
         let filteredDetails = [];
+        let auditsByGroup = {};
 
         function filterFiles(val) {
             currentFilter = val;
@@ -229,6 +276,40 @@
             renderAudit();
         }
 
+        function onGroupChange(groupName) {
+            const audits = auditsByGroup[groupName] || [];
+            populateAuditSelector(audits);
+            if (audits.length > 0) {
+                loadAudit(audits[0].id);
+            }
+            renderTrendChart(audits);
+        }
+
+        function populateAuditSelector(audits) {
+            const selector = document.getElementById('auditSelector');
+            selector.innerHTML = '';
+            
+            audits.forEach((entry, idx) => {
+                const opt = document.createElement('option');
+                opt.value = entry.id;
+                const date = new Date(entry.timestamp).toLocaleString();
+                const f1 = (entry.f1_score * 100).toFixed(1);
+                
+                let trend = "";
+                // Note: trend calculation needs access to the full history list if it crosses group boundaries,
+                // but usually, it's more relevant within the same group.
+                // Let's keep it simple for now as per-group trend might be what's expected.
+                if (idx < audits.length - 1) {
+                    const prevF1 = audits[idx + 1].f1_score;
+                    if (entry.f1_score > prevF1) trend = " ↑";
+                    else if (entry.f1_score < prevF1) trend = " ↓";
+                }
+                
+                opt.textContent = `${date} (F1: ${f1}%)${trend}`;
+                selector.appendChild(opt);
+            });
+        }
+
         async function init() {
             if (!reportData) {
                 // MongoDB mode
@@ -238,39 +319,70 @@
                         const errorText = await response.text();
                         throw new Error(`Failed to fetch history: ${response.status} ${response.statusText}${errorText ? ' - ' + errorText : ''}`);
                     }
-                    const history = await response.json();
+                    const historyData = await response.json();
+                    const history = historyData.entries;
+                    const error = historyData.error;
                     
+                    if (error) {
+                        document.getElementById('noAuditsTitle').innerText = "MongoDB Connection Error";
+                        document.getElementById('noAuditsText').innerText = "Failed to connect to MongoDB: " + error + ". Please check your connection string and authentication credentials.";
+                        document.getElementById('noAuditsMessage').classList.remove('hidden');
+                        document.getElementById('trendSection').classList.add('hidden');
+                        document.getElementById('entityRecallSection').classList.add('hidden');
+                        document.getElementById('metricsDashboard').classList.add('hidden');
+                        document.getElementById('mainContent').classList.add('hidden');
+                        document.getElementById('notesSection').classList.add('hidden');
+                        document.getElementById('reportTimestamp').innerText = "Error: " + error;
+                        return;
+                    }
+
                     if (history && history.length > 0) {
-                        const selector = document.getElementById('auditSelector');
                         const container = document.getElementById('auditSelectorContainer');
                         container.classList.remove('hidden');
                         
                         document.getElementById('trendSection').classList.remove('hidden');
-                        renderTrendChart(history);
+                        document.getElementById('noAuditsMessage').classList.add('hidden');
+                        document.getElementById('metricsDashboard').classList.remove('hidden');
+                        document.getElementById('mainContent').classList.remove('hidden');
+                        document.getElementById('notesSection').classList.remove('hidden');
 
-                        history.forEach((entry, idx) => {
-                            const opt = document.createElement('option');
-                            opt.value = entry.id;
-                            const date = new Date(entry.timestamp).toLocaleString();
-                            const f1 = (entry.f1_score * 100).toFixed(1);
-                            
-                            let trend = "";
-                            if (idx < history.length - 1) {
-                                const prevF1 = history[idx + 1].f1_score;
-                                if (entry.f1_score > prevF1) trend = " ↑";
-                                else if (entry.f1_score < prevF1) trend = " ↓";
+                        // Group history by group_name
+                        auditsByGroup = {};
+                        history.forEach(entry => {
+                            const groupName = entry.group_name || "default";
+                            if (!auditsByGroup[groupName]) {
+                                auditsByGroup[groupName] = [];
                             }
-                            
-                            opt.textContent = `${date} (F1: ${f1}%)${trend}`;
-                            selector.appendChild(opt);
+                            auditsByGroup[groupName].push(entry);
                         });
+
+                        const groupSelector = document.getElementById('groupSelector');
+                        groupSelector.innerHTML = '';
                         
-                        // Show initial message or just load the first one?
-                        // Let's load the first audit by default
-                        loadAudit(history[0].id);
+                        const groups = Object.keys(auditsByGroup).sort();
+                        groups.forEach(groupName => {
+                            const opt = document.createElement('option');
+                            opt.value = groupName;
+                            opt.textContent = groupName;
+                            groupSelector.appendChild(opt);
+                        });
+
+                        // Default to the first group and its latest audit
+                        if (groups.length > 0) {
+                            const firstGroup = groups[0];
+                            onGroupChange(firstGroup);
+                        }
                     } else {
+                        document.getElementById('noAuditsTitle').innerText = "No audits found in the MongoDB database";
+                        document.getElementById('noAuditsText').innerText = "Refer to the documentation to start collecting performance data and tracking trends over time.";
                         document.getElementById('reportTimestamp').innerText = "No audit history found in database.";
                         document.getElementById('docCount').innerText = "0 Documents";
+                        document.getElementById('noAuditsMessage').classList.remove('hidden');
+                        document.getElementById('trendSection').classList.add('hidden');
+                        document.getElementById('entityRecallSection').classList.add('hidden');
+                        document.getElementById('metricsDashboard').classList.add('hidden');
+                        document.getElementById('mainContent').classList.add('hidden');
+                        document.getElementById('notesSection').classList.add('hidden');
                     }
                 } catch (err) {
                     console.error(err);
@@ -307,8 +419,20 @@
             document.getElementById('reportTimestamp').innerText = `Generated on ${new Date(reportData.timestamp).toLocaleString()}`;
             document.getElementById('docCount').innerText = `${reportData.total_documents} Documents Audited`;
             
+            const groupBadge = document.getElementById('groupBadge');
+            if (reportData.group_name) {
+                groupBadge.innerText = reportData.group_name;
+                groupBadge.classList.remove('hidden');
+            } else {
+                groupBadge.classList.add('hidden');
+            }
+
             if (reportData.threshold) {
                 document.getElementById('thresholdBadge').innerText = `THRESHOLD: ${Math.round(reportData.threshold * 100)}%`;
+            } else if (reportData.entity_thresholds && Object.keys(reportData.entity_thresholds).length > 0) {
+                document.getElementById('thresholdBadge').innerText = `PER-ENTITY THRESHOLDS`;
+            } else {
+                document.getElementById('thresholdBadge').innerText = `NO THRESHOLD`;
             }
             
             const recallBox = document.getElementById('recallBox');
@@ -331,6 +455,64 @@
             animateValue('recallVal', reportData.recall * 100);
             animateValue('precisionVal', reportData.precision * 100);
             animateValue('f1Val', reportData.f1_score * 100);
+
+            // Entity Specific Metrics
+            const entitySection = document.getElementById('entityRecallSection');
+            const entityList = document.getElementById('entityRecallList');
+            const hasMetrics = reportData.entity_metrics && Object.keys(reportData.entity_metrics).length > 0;
+            const hasEntityThresholds = reportData.entity_thresholds && Object.keys(reportData.entity_thresholds).length > 0;
+
+            if (hasMetrics || hasEntityThresholds) {
+                entitySection.classList.remove('hidden');
+                entityList.innerHTML = '';
+                
+                // Get all entities from both metrics and thresholds
+                const metricEntities = reportData.entity_metrics ? Object.keys(reportData.entity_metrics) : [];
+                const thresholdEntities = reportData.entity_thresholds ? Object.keys(reportData.entity_thresholds) : [];
+                const allEntities = [...new Set([...metricEntities, ...thresholdEntities])].sort();
+                
+                allEntities.forEach(entity => {
+                    const hasInstance = reportData.entity_metrics && entity in reportData.entity_metrics;
+                    const recall = hasInstance ? reportData.entity_metrics[entity] : 0;
+                    const threshold = (reportData.entity_thresholds && reportData.entity_thresholds[entity]) 
+                                      ? reportData.entity_thresholds[entity] 
+                                      : reportData.threshold || 0;
+                    
+                    let statusClass, statusText, recallDisplay;
+                    
+                    if (!hasInstance) {
+                        statusClass = 'text-gray-500 bg-gray-100';
+                        statusText = 'NO INSTANCES';
+                        recallDisplay = `<span class="text-gray-400 italic text-xs">No instances in dataset</span>`;
+                    } else {
+                        const isBelow = recall < threshold;
+                        statusClass = isBelow ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50';
+                        statusText = isBelow ? 'FAIL' : 'PASS';
+                        recallDisplay = `
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold">${(recall * 100).toFixed(1)}%</span>
+                                <div class="w-24 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                    <div class="h-full ${isBelow ? 'bg-red-500' : 'bg-green-500'}" style="width: ${recall * 100}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = 'text-sm hover:bg-gray-50 transition-colors';
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 font-medium text-gray-900">${entity}</td>
+                        <td class="px-6 py-4">${recallDisplay}</td>
+                        <td class="px-6 py-4 text-gray-500 font-medium">${(threshold * 100).toFixed(0)}%</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded text-[10px] font-bold tracking-widest ${statusClass}">${statusText}</span>
+                        </td>
+                    `;
+                    entityList.appendChild(tr);
+                });
+            } else {
+                entitySection.classList.add('hidden');
+            }
 
             // Notes
             document.getElementById('auditNotes').value = reportData.notes || "";

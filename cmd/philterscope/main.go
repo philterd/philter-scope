@@ -43,6 +43,8 @@ var (
 	outputDir     string
 	port          int
 	threshold     float64
+	thresholds    string
+	groupName     string
 	enableAI      bool
 )
 
@@ -62,6 +64,8 @@ func main() {
 	auditCmd.Flags().StringVar(&goldenFile, "golden", "golden.json", "Golden dataset JSON file")
 	auditCmd.Flags().StringVar(&outputDir, "output", ".", "Directory to export reports")
 	auditCmd.Flags().Float64Var(&threshold, "threshold", 0.5, "Recall threshold for suggestions (0.0 to 1.0)")
+	auditCmd.Flags().StringVar(&thresholds, "thresholds", "", "Per-entity recall thresholds (e.g., NAME=0.9,SSN=1.0)")
+	auditCmd.Flags().StringVar(&groupName, "group", "default", "Assign a group name to the audit")
 	auditCmd.Flags().BoolVar(&enableAI, "ai", false, "Enable AI-driven policy recommendations")
 
 	var serveCmd = &cobra.Command{
@@ -87,6 +91,20 @@ func main() {
 }
 
 func runAudit(cmd *cobra.Command, args []string) error {
+	entityThresholdMap := make(map[string]float64)
+	if thresholds != "" {
+		pairs := strings.Split(thresholds, ",")
+		for _, pair := range pairs {
+			kv := strings.Split(pair, "=")
+			if len(kv) == 2 {
+				var val float64
+				if _, err := fmt.Sscanf(kv[1], "%f", &val); err == nil {
+					entityThresholdMap[kv[0]] = val
+				}
+			}
+		}
+	}
+
 	client := &philter.PhilterClient{
 		BaseURL: philterURL,
 		Token:   philterToken,
@@ -220,6 +238,8 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	auditResult := audit.GenerateAuditResult(results)
 	auditResult.Timestamp = time.Now()
 	auditResult.Threshold = threshold
+	auditResult.EntityThresholds = entityThresholdMap
+	auditResult.GroupName = groupName
 
 	// Try to get policy from Philter
 	if policyStr, err := client.GetPolicy(philterPolicy); err == nil {
@@ -230,7 +250,7 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Generate suggestions
-	suggester := suggest.NewBasicSuggester(threshold)
+	suggester := suggest.NewBasicSuggester(threshold, entityThresholdMap)
 	auditResult.Recommendations = suggester.Suggest(auditResult)
 
 	// AI recommendations if enabled
@@ -285,13 +305,29 @@ func runAudit(cmd *cobra.Command, args []string) error {
 func runServe(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
+	entityThresholdMap := make(map[string]float64)
+	if thresholds != "" {
+		pairs := strings.Split(thresholds, ",")
+		for _, pair := range pairs {
+			kv := strings.Split(pair, "=")
+			if len(kv) == 2 {
+				var val float64
+				if _, err := fmt.Sscanf(kv[1], "%f", &val); err == nil {
+					entityThresholdMap[kv[0]] = val
+				}
+			}
+		}
+	}
+
 	// Try MongoDB if configured
+	var mongoErr error
 	if os.Getenv("PHILTERSCOPE_MONGODB_CONNECTION_STRING") != "" {
 		m, err := storage.NewMongoDBStorage(ctx)
 		if err == nil {
 			defer m.Close(ctx)
 			return server.StartServer(port, m)
 		}
+		mongoErr = err
 		fmt.Printf("Warning: failed to connect to MongoDB: %v. Falling back to file mode.\n", err)
 	}
 
@@ -306,6 +342,10 @@ func runServe(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		res.Threshold = threshold
+		res.EntityThresholds = entityThresholdMap
+		if mongoErr != nil {
+			res.Notes = fmt.Sprintf("Warning: Failed to connect to MongoDB: %v. %s", mongoErr, res.Notes)
+		}
 		return server.StartStandaloneServer(port, res)
 	}
 

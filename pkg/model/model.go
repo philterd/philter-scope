@@ -23,18 +23,20 @@ type Redactor interface {
 
 // AuditResult holds the outcome of an auditing run.
 type AuditResult struct {
-	ID              interface{}            `json:"id" bson:"_id,omitempty"`
-	Timestamp       time.Time              `json:"timestamp" bson:"timestamp"`
-	TotalDocuments  int                    `json:"total_documents" bson:"total_documents"`
-	Precision       float64                `json:"precision" bson:"precision"`
-	Recall          float64                `json:"recall" bson:"recall"`
-	F1Score         float64                `json:"f1_score" bson:"f1_score"`
-	Details         []Result               `json:"details" bson:"details"`
-	Policy          map[string]interface{} `json:"policy" bson:"policy"`                   // Philter JSON configuration
-	Recommendations []Recommendation       `json:"recommendations" bson:"recommendations"` // Suggested policy changes
-	EntityMetrics   map[string]float64     `json:"entity_metrics" bson:"entity_metrics"`   // Recall per entity type
-	Threshold       float64                `json:"threshold" bson:"threshold"`             // Threshold used for suggestions
-	Notes           string                 `json:"notes" bson:"notes"`                     // User-provided notes
+	ID               interface{}            `json:"id" bson:"_id,omitempty"`
+	Timestamp        time.Time              `json:"timestamp" bson:"timestamp"`
+	TotalDocuments   int                    `json:"total_documents" bson:"total_documents"`
+	Precision        float64                `json:"precision" bson:"precision"`
+	Recall           float64                `json:"recall" bson:"recall"`
+	F1Score          float64                `json:"f1_score" bson:"f1_score"`
+	Details          []Result               `json:"details" bson:"details"`
+	Policy           map[string]interface{} `json:"policy" bson:"policy"`                       // Philter JSON configuration
+	Recommendations  []Recommendation       `json:"recommendations" bson:"recommendations"`     // Suggested policy changes
+	EntityMetrics    map[string]float64     `json:"entity_metrics" bson:"entity_metrics"`       // Recall per entity type
+	Threshold        float64                `json:"threshold" bson:"threshold"`                 // Global threshold used for suggestions
+	EntityThresholds map[string]float64     `json:"entity_thresholds" bson:"entity_thresholds"` // Per-entity thresholds
+	GroupName        string                 `json:"group_name" bson:"group_name"`               // Assigned group name
+	Notes            string                 `json:"notes" bson:"notes"`                         // User-provided notes
 }
 
 // HistoryEntry represents a past audit result.
@@ -45,11 +47,13 @@ type HistoryEntry struct {
 	Recall    float64                `json:"recall" bson:"recall"`
 	F1Score   float64                `json:"f1_score" bson:"f1_score"`
 	Policy    map[string]interface{} `json:"policy" bson:"policy"`
+	GroupName string                 `json:"group_name" bson:"group_name"`
 }
 
 // AuditHistory represents a collection of past audit results.
 type AuditHistory struct {
 	Entries []HistoryEntry `json:"entries"`
+	Error   string         `json:"error,omitempty"` // Connection or authentication error
 }
 
 // Recommendation holds a suggested policy change.

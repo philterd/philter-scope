@@ -9,14 +9,17 @@ help: ## Display available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 audit: build ## Run audit on example files
-	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
+	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --group "CLI-Audit"
 	xdg-open ./examples/report.html
 
 audit-mongodb-ai: build ## Run audit on example files with MongoDB storage and AI policy suggestions
 	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope PHILTERSCOPE_OLLAMA_URL=http://localhost:11434 ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --ai
 
-audit-mongodb: build ## Run audit on example files with MongoDB storage
-	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --ai
+audit-mongodb: build ## Run audit on example files using Docker Compose
+	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
+
+audit-mongodb-thresholds: build ## Run audit on example files with MongoDB storage and specific entity thresholds
+	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --thresholds "NAME=0.9,SSN=1.0"
 
 serve: build ## Launch Evaluation UI using MongoDB storage
 	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope serve
@@ -55,4 +58,4 @@ build-windows: deps ## Build for Windows (amd64)
 test: ## Run unit tests
 	go test ./...
 
-.PHONY: all help audit audit-mongodb serve deps build clean build-all build-linux build-mac build-windows test fmt vet
+.PHONY: all help audit audit-mongodb audit-mongodb-thresholds serve deps build clean build-all build-linux build-mac build-windows test fmt vet docker-build docker-run compose-up compose-down

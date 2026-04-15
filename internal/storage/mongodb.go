@@ -87,6 +87,7 @@ func (s *MongoDBStorage) GetHistory(ctx context.Context) ([]model.HistoryEntry, 
 		{Key: "recall", Value: 1},
 		{Key: "f1_score", Value: 1},
 		{Key: "policy", Value: 1},
+		{Key: "group_name", Value: 1},
 	}).SetSort(bson.D{{Key: "timestamp", Value: -1}})
 
 	cursor, err := coll.Find(ctx, bson.D{}, opts)

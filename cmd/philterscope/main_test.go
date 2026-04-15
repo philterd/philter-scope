@@ -35,6 +35,7 @@ func TestRootCmd(t *testing.T) {
 func TestAuditFlags(t *testing.T) {
 	cmd := &cobra.Command{Use: "audit"}
 	cmd.Flags().StringVar(&philterURL, "url", "http://localhost:8080", "Philter API URL")
+	cmd.Flags().StringVar(&groupName, "group", "default", "Assign a group name to the audit")
 
 	if err := cmd.Flags().Set("url", "http://test:8080"); err != nil {
 		t.Errorf("Failed to set flag: %v", err)
@@ -42,6 +43,14 @@ func TestAuditFlags(t *testing.T) {
 
 	if philterURL != "http://test:8080" {
 		t.Errorf("Expected url http://test:8080, got %s", philterURL)
+	}
+
+	if err := cmd.Flags().Set("group", "test-group"); err != nil {
+		t.Errorf("Failed to set group flag: %v", err)
+	}
+
+	if groupName != "test-group" {
+		t.Errorf("Expected group test-group, got %s", groupName)
 	}
 }
 
