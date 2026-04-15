@@ -20,6 +20,8 @@ The following command will compare the raw text in the `examples/raw` directory 
 
 Check the `examples/report.html` file for an example of the generated report.
 
+See below to learn how to store audit results in a MongoDB database and serve the audit results from the PhilterScope UI.
+
 ## Usage
 
 ### 1. Audit Redaction Quality
