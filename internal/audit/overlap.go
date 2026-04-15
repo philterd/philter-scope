@@ -23,9 +23,13 @@ func CalculateOverlap(golden []model.Span, actual []model.Span) []model.Overlap 
 	var overlaps []model.Overlap
 
 	for _, g := range golden {
+		// Ignore invalid or empty spans where CharacterStart == CharacterEnd
+		if g.CharacterStart == g.CharacterEnd {
+			continue
+		}
 		foundMatch := false
 		for _, a := range actual {
-			if g.Start == a.Start && g.End == a.End {
+			if g.CharacterStart == a.CharacterStart && g.CharacterEnd == a.CharacterEnd {
 				overlaps = append(overlaps, model.Overlap{
 					Golden: g,
 					Actual: a,
@@ -37,7 +41,7 @@ func CalculateOverlap(golden []model.Span, actual []model.Span) []model.Overlap 
 
 			// Check for partial overlap
 			// (StartA < EndB) and (EndA > StartB)
-			if g.Start < a.End && g.End > a.Start {
+			if g.CharacterStart < a.CharacterEnd && g.CharacterEnd > a.CharacterStart {
 				overlaps = append(overlaps, model.Overlap{
 					Golden: g,
 					Actual: a,
@@ -59,9 +63,14 @@ func CalculateOverlap(golden []model.Span, actual []model.Span) []model.Overlap 
 
 	// Also check for False Positives: Philter redacted something that wasn't in Golden
 	for _, a := range actual {
+		// Ignore invalid or empty spans where CharacterStart == CharacterEnd
+		if a.CharacterStart == a.CharacterEnd {
+			continue
+		}
+
 		foundMatch := false
 		for _, g := range golden {
-			if a.Start < g.End && a.End > g.Start {
+			if a.CharacterStart < g.CharacterEnd && a.CharacterEnd > g.CharacterStart {
 				foundMatch = true
 				break
 			}

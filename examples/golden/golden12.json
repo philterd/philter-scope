@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "Ivan Anderson",
-      "start": 11,
-      "end": 24,
       "label": "NAME",
       "characterStart": 11,
       "characterEnd": 24,
@@ -12,8 +10,6 @@
     },
     {
       "text": "Philadelphia",
-      "start": 37,
-      "end": 49,
       "label": "LOCATION",
       "characterStart": 37,
       "characterEnd": 49,

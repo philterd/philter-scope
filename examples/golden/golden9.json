@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "j.doe@email.com",
-      "start": 14,
-      "end": 29,
       "label": "EMAIL",
       "characterStart": 14,
       "characterEnd": 29,
@@ -12,8 +10,6 @@
     },
     {
       "text": "555-8888",
-      "start": 31,
-      "end": 39,
       "label": "PHONE",
       "characterStart": 31,
       "characterEnd": 39,

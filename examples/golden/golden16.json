@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "Judy Thomas",
-      "start": 11,
-      "end": 22,
       "label": "NAME",
       "characterStart": 11,
       "characterEnd": 22,
@@ -12,8 +10,6 @@
     },
     {
       "text": "Philadelphia",
-      "start": 35,
-      "end": 47,
       "label": "LOCATION",
       "characterStart": 35,
       "characterEnd": 47,

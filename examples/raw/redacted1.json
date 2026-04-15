@@ -4,20 +4,16 @@
     "appliedSpans": [
       {
         "text": "*****",
-        "start": 0,
-        "end": 5,
         "label": "NAME",
         "characterStart": 0,
-        "characterEnd": 5,
+        "characterEnd": 8,
         "filterType": "NAME"
       },
       {
         "text": "*****",
-        "start": 15,
-        "end": 20,
         "label": "ADDRESS",
-        "characterStart": 15,
-        "characterEnd": 20,
+        "characterStart": 18,
+        "characterEnd": 29,
         "filterType": "ADDRESS"
       }
     ]

@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "David Wilson",
-      "start": 11,
-      "end": 23,
       "label": "NAME",
       "characterStart": 11,
       "characterEnd": 23,
@@ -12,8 +10,6 @@
     },
     {
       "text": "San Diego",
-      "start": 36,
-      "end": 45,
       "label": "LOCATION",
       "characterStart": 36,
       "characterEnd": 45,

@@ -735,8 +735,8 @@
                                 <tr class="border-t border-gray-100">
                                     <td class="py-2 font-mono">${o.golden ? o.golden.text : (o.actual ? o.actual.text : '-')}</td>
                                     <td class="py-2">${o.golden ? o.golden.label : (o.actual ? o.actual.label : '-')}</td>
-                                    <td class="py-2 text-gray-500">${o.golden ? o.golden.start : (o.actual ? o.actual.start : '-')}</td>
-                                    <td class="py-2 text-gray-500">${o.golden ? o.golden.end : (o.actual ? o.actual.end : '-')}</td>
+                                    <td class="py-2 text-gray-500">${o.golden ? o.golden.characterStart : (o.actual ? o.actual.characterStart : '-')}</td>
+                                    <td class="py-2 text-gray-500">${o.golden ? o.golden.characterEnd : (o.actual ? o.actual.characterEnd : '-')}</td>
                                     <td class="py-2 font-bold ${o.type === 'EXACT' ? 'text-green-600' : (o.type === 'PARTIAL' ? 'text-orange-500' : 'text-red-600')}">
                                         ${o.type === 'NONE' ? (o.golden && o.golden.text ? 'LEAK (FN)' : 'FALSE POSITIVE') : o.type}
                                     </td>
@@ -759,14 +759,14 @@
             const leaks = res.overlaps
                 .filter(o => o.type === 'NONE' && o.golden && o.golden.text)
                 .map(o => o.golden)
-                .sort((a, b) => a.start - b.start);
+                .sort((a, b) => a.characterStart - b.characterStart);
 
             let result = "";
             let lastIdx = 0;
             leaks.forEach(span => {
-                result += text.substring(lastIdx, span.start);
-                result += `<span class="bg-red-200 text-red-800 px-1 rounded font-bold" title="Missed by Philter">${text.substring(span.start, span.end)}</span>`;
-                lastIdx = span.end;
+                result += text.substring(lastIdx, span.characterStart);
+                result += `<span class="bg-red-200 text-red-800 px-1 rounded font-bold" title="Missed by Philter">${text.substring(span.characterStart, span.characterEnd)}</span>`;
+                lastIdx = span.characterEnd;
             });
             result += text.substring(lastIdx);
             return result;

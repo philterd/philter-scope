@@ -26,7 +26,7 @@ func TestCalculateMetricsByOverlap(t *testing.T) {
 		{Type: model.OverlapExact},
 		{Type: model.OverlapPartial},
 		{Type: model.OverlapNone, Golden: model.Span{Text: "Name"}}, // FN
-		{Type: model.OverlapNone, Actual: model.Span{Text: "Key"}},  // FP
+		{Type: model.OverlapNone, Actual: model.Span{Text: "Key", CharacterStart: 10, CharacterEnd: 13}}, // FP
 	}
 
 	tp, fp, fn := CalculateMetricsByOverlap(overlaps)

@@ -4,8 +4,6 @@
     "appliedSpans": [
       {
         "text": "*****",
-        "start": 11,
-        "end": 16,
         "label": "NAME",
         "characterStart": 11,
         "characterEnd": 16,
@@ -13,8 +11,6 @@
       },
       {
         "text": "*****",
-        "start": 29,
-        "end": 34,
         "label": "LOCATION",
         "characterStart": 29,
         "characterEnd": 34,

@@ -75,9 +75,7 @@ func ParseTaggedText(input string) (string, []model.Span) {
 
 		spans = append(spans, model.Span{
 			Text:           content,
-			Start:          start,
 			CharacterStart: start,
-			End:            end,
 			CharacterEnd:   end,
 			Label:          tagName,
 			FilterType:     tagName,
@@ -105,30 +103,26 @@ func ParseJSONSpans(data []byte) (string, []model.Span, error) {
 	}
 
 	// Populate compatibility fields
+	filtered := make([]model.Span, 0, len(js.Labels))
 	for i := range js.Labels {
 		s := &js.Labels[i]
-		if s.CharacterStart == 0 && s.Start != 0 {
-			s.CharacterStart = s.Start
-		}
-		if s.CharacterEnd == 0 && s.End != 0 {
-			s.CharacterEnd = s.End
-		}
-		if s.Start == 0 && s.CharacterStart != 0 {
-			s.Start = s.CharacterStart
-		}
-		if s.End == 0 && s.CharacterEnd != 0 {
-			s.End = s.CharacterEnd
-		}
 		if s.FilterType == "" && s.Label != "" {
 			s.FilterType = s.Label
 		}
 		if s.Label == "" && s.FilterType != "" {
 			s.Label = s.FilterType
 		}
+
+		// Skip invalid 0/0 spans
+		if s.CharacterStart == 0 && s.CharacterEnd == 0 {
+			continue
+		}
+		filtered = append(filtered, *s)
 	}
+	js.Labels = filtered
 
 	sort.Slice(js.Labels, func(i, j int) bool {
-		return js.Labels[i].Start < js.Labels[j].Start
+		return js.Labels[i].CharacterStart < js.Labels[j].CharacterStart
 	})
 
 	return js.Text, js.Labels, nil
@@ -151,28 +145,23 @@ func ParsePhilterExplain(data []byte) (string, []model.Span, error) {
 		return "", nil, fmt.Errorf("failed to parse Philter explain JSON: %w", err)
 	}
 
-	// Map CharacterStart/CharacterEnd/FilterType to Start/End/Label for compatibility
+	// Map FilterType to Label for compatibility
+	filtered := make([]model.Span, 0, len(res.Explanation.AppliedSpans))
 	for i := range res.Explanation.AppliedSpans {
 		s := &res.Explanation.AppliedSpans[i]
-		if s.CharacterStart == 0 && s.Start != 0 {
-			s.CharacterStart = s.Start
-		}
-		if s.CharacterEnd == 0 && s.End != 0 {
-			s.CharacterEnd = s.End
-		}
-		if s.Start == 0 && s.CharacterStart != 0 {
-			s.Start = s.CharacterStart
-		}
-		if s.End == 0 && s.CharacterEnd != 0 {
-			s.End = s.CharacterEnd
-		}
 		if s.FilterType == "" && s.Label != "" {
 			s.FilterType = s.Label
 		}
 		if s.Label == "" && s.FilterType != "" {
 			s.Label = s.FilterType
 		}
+
+		// Skip invalid 0/0 spans
+		if s.CharacterStart == 0 && s.CharacterEnd == 0 {
+			continue
+		}
+		filtered = append(filtered, *s)
 	}
 
-	return res.FilteredText, res.Explanation.AppliedSpans, nil
+	return res.FilteredText, filtered, nil
 }

@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "billing@corp.com",
-      "start": 16,
-      "end": 32,
       "label": "EMAIL",
       "characterStart": 16,
       "characterEnd": 32,

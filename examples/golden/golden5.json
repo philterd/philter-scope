@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "456 Oak Ave",
-      "start": 11,
-      "end": 22,
       "label": "ADDRESS",
       "characterStart": 11,
       "characterEnd": 22,

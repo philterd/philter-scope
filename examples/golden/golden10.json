@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "July 4, 1776",
-      "start": 21,
-      "end": 33,
       "label": "DATE",
       "characterStart": 21,
       "characterEnd": 33,
@@ -12,8 +10,6 @@
     },
     {
       "text": "Philadelphia",
-      "start": 37,
-      "end": 49,
       "label": "LOCATION",
       "characterStart": 37,
       "characterEnd": 49,

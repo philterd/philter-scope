@@ -4,8 +4,6 @@
     "appliedSpans": [
       {
         "text": "*****",
-        "start": 8,
-        "end": 13,
         "label": "DATE",
         "characterStart": 8,
         "characterEnd": 13,
@@ -13,8 +11,6 @@
       },
       {
         "text": "*****",
-        "start": 17,
-        "end": 22,
         "label": "LOCATION",
         "characterStart": 17,
         "characterEnd": 22,
@@ -22,8 +18,6 @@
       },
       {
         "text": "*****",
-        "start": 23,
-        "end": 28,
         "label": "ADDRESS",
         "characterStart": 23,
         "characterEnd": 28,

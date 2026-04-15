@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "Eve Davis",
-      "start": 11,
-      "end": 20,
       "label": "NAME",
       "characterStart": 11,
       "characterEnd": 20,
@@ -12,8 +10,6 @@
     },
     {
       "text": "Dallas",
-      "start": 33,
-      "end": 39,
       "label": "LOCATION",
       "characterStart": 33,
       "characterEnd": 39,

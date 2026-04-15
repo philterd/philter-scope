@@ -24,8 +24,6 @@ func TestSpan_Compatibility(t *testing.T) {
 		CharacterStart: 10,
 		CharacterEnd:   20,
 		FilterType:     "NAME",
-		Start:          10,
-		End:            20,
 		Label:          "NAME",
 	}
 
@@ -39,8 +37,8 @@ func TestSpan_Compatibility(t *testing.T) {
 		t.Fatalf("Failed to unmarshal Span: %v", err)
 	}
 
-	if s2.Start != 10 || s2.End != 20 || s2.Label != "NAME" {
-		t.Errorf("Compatibility fields lost in JSON roundtrip: %+v", s2)
+	if s2.CharacterStart != 10 || s2.CharacterEnd != 20 || s2.Label != "NAME" {
+		t.Errorf("Fields lost in JSON roundtrip: %+v", s2)
 	}
 }
 

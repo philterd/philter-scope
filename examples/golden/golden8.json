@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "789 Pine Rd, Seattle",
-      "start": 17,
-      "end": 37,
       "label": "ADDRESS",
       "characterStart": 17,
       "characterEnd": 37,

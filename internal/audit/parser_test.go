@@ -34,11 +34,11 @@ func TestParseTaggedText(t *testing.T) {
 		t.Fatalf("Expected 2 spans, got %d", len(spans))
 	}
 
-	if spans[0].Text != "John Doe" || spans[0].Label != "NAME" || spans[0].Start != 6 || spans[0].End != 14 {
+	if spans[0].Text != "John Doe" || spans[0].Label != "NAME" || spans[0].CharacterStart != 6 || spans[0].CharacterEnd != 14 {
 		t.Errorf("Unexpected span 0: %+v", spans[0])
 	}
 
-	if spans[1].Text != "New York" || spans[1].Label != "LOCATION" || spans[1].Start != 27 || spans[1].End != 35 {
+	if spans[1].Text != "New York" || spans[1].Label != "LOCATION" || spans[1].CharacterStart != 27 || spans[1].CharacterEnd != 35 {
 		t.Errorf("Unexpected span 1: %+v", spans[1])
 	}
 }
@@ -47,7 +47,7 @@ func TestParseJSONSpans(t *testing.T) {
 	data := []byte(`{
 		"text": "Hello John Doe",
 		"labels": [
-			{"text": "John Doe", "start": 6, "end": 14, "label": "NAME"}
+			{"text": "John Doe", "characterStart": 6, "characterEnd": 14, "label": "NAME"}
 		]
 	}`)
 
@@ -64,21 +64,21 @@ func TestParseJSONSpans(t *testing.T) {
 		t.Fatalf("Expected 1 span, got %d", len(spans))
 	}
 
-	if spans[0].Text != "John Doe" || spans[0].Start != 6 || spans[0].End != 14 {
+	if spans[0].Text != "John Doe" || spans[0].CharacterStart != 6 || spans[0].CharacterEnd != 14 {
 		t.Errorf("Unexpected span: %+v", spans[0])
 	}
 }
 
 func TestCalculateOverlap(t *testing.T) {
 	golden := []model.Span{
-		{Text: "John Doe", Start: 0, End: 8, Label: "NAME"},
-		{Text: "New York", Start: 18, End: 26, Label: "LOC"},
+		{Text: "John Doe", CharacterStart: 0, CharacterEnd: 8, Label: "NAME"},
+		{Text: "New York", CharacterStart: 18, CharacterEnd: 26, Label: "LOC"},
 	}
 
 	actual := []model.Span{
-		{Text: "John Doe", Start: 0, End: 8, Label: "NAME"}, // Exact
-		{Text: "York", Start: 22, End: 26, Label: "LOC"},    // Partial
-		{Text: "Secret", Start: 30, End: 36, Label: "KEY"},  // False Positive
+		{Text: "John Doe", CharacterStart: 0, CharacterEnd: 8, Label: "NAME"}, // Exact
+		{Text: "York", CharacterStart: 22, CharacterEnd: 26, Label: "LOC"},    // Partial
+		{Text: "Secret", CharacterStart: 30, CharacterEnd: 36, Label: "KEY"},  // False Positive
 	}
 
 	overlaps := CalculateOverlap(golden, actual)
@@ -144,7 +144,7 @@ func TestParsePhilterExplain(t *testing.T) {
 		t.Fatalf("Expected 1 span, got %d", len(spans))
 	}
 
-	if spans[0].Text != "John Doe" || spans[0].Start != 6 || spans[0].End != 14 || spans[0].Label != "NAME" {
+	if spans[0].Text != "John Doe" || spans[0].CharacterStart != 6 || spans[0].CharacterEnd != 14 || spans[0].Label != "NAME" {
 		t.Errorf("Unexpected span: %+v", spans[0])
 	}
 }

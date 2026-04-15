@@ -63,8 +63,8 @@ func TestRedact(t *testing.T) {
 	if len(spans) != 1 || spans[0].Text != "World" {
 		t.Errorf("Unexpected spans: %v", spans)
 	}
-	if spans[0].Start != 6 || spans[0].End != 11 || spans[0].Label != "NAME" {
-		t.Errorf("Compatibility fields not mapped: %v", spans[0])
+	if spans[0].CharacterStart != 6 || spans[0].CharacterEnd != 11 || spans[0].Label != "NAME" {
+		t.Errorf("Fields not mapped: %v", spans[0])
 	}
 }
 

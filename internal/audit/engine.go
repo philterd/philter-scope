@@ -32,7 +32,7 @@ func CalculateMetricsByOverlap(overlaps []model.Overlap) (tp, fp, fn int) {
 		case model.OverlapNone:
 			if o.Golden.Text != "" {
 				fn++ // Golden existed but not matched -> False Negative
-			} else if o.Actual.Text != "" {
+			} else if o.Actual.Text != "" && o.Actual.CharacterStart != o.Actual.CharacterEnd {
 				fp++ // Actual existed but no Golden -> False Positive
 			}
 		}

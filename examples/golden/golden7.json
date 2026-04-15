@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "Alice Johnson",
-      "start": 0,
-      "end": 13,
       "label": "NAME",
       "characterStart": 0,
       "characterEnd": 13,
@@ -12,8 +10,6 @@
     },
     {
       "text": "Dec 12, 2023",
-      "start": 25,
-      "end": 37,
       "label": "DATE",
       "characterStart": 25,
       "characterEnd": 37,

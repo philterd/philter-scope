@@ -4,8 +4,6 @@
     "appliedSpans": [
       {
         "text": "*****",
-        "start": 15,
-        "end": 20,
         "label": "EMAIL",
         "characterStart": 15,
         "characterEnd": 20,
@@ -13,8 +11,6 @@
       },
       {
         "text": "*****",
-        "start": 23,
-        "end": 28,
         "label": "PHONE",
         "characterStart": 23,
         "characterEnd": 28,

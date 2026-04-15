@@ -3,8 +3,6 @@
   "labels": [
     {
       "text": "John Doe",
-      "start": 0,
-      "end": 8,
       "label": "NAME",
       "characterStart": 0,
       "characterEnd": 8,
@@ -12,8 +10,6 @@
     },
     {
       "text": "123 Main St",
-      "start": 18,
-      "end": 29,
       "label": "ADDRESS",
       "characterStart": 18,
       "characterEnd": 29,

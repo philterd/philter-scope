@@ -69,34 +69,32 @@ type Recommendation struct {
 
 // Result is a single comparison outcome.
 type Result struct {
-	Filename string    `json:"filename"`
-	Expected string    `json:"expected"`
-	Actual   string    `json:"actual"`
-	Spans    []Span    `json:"spans"` // Detected or labeled spans
-	TP       int       `json:"tp"`    // True Positives
-	FP       int       `json:"fp"`    // False Positives
-	FN       int       `json:"fn"`    // False Negatives
-	Overlaps []Overlap `json:"overlaps"`
+	Filename string    `json:"filename" bson:"filename"`
+	Expected string    `json:"expected" bson:"expected"`
+	Actual   string    `json:"actual" bson:"actual"`
+	Spans    []Span    `json:"spans" bson:"spans"` // Detected or labeled spans
+	TP       int       `json:"tp" bson:"tp"`       // True Positives
+	FP       int       `json:"fp" bson:"fp"`       // False Positives
+	FN       int       `json:"fn" bson:"fn"`       // False Negatives
+	Overlaps []Overlap `json:"overlaps" bson:"overlaps"`
 }
 
 // Span represents a labeled PII fragment.
 type Span struct {
-	Id             string  `json:"id"`
-	CharacterStart int     `json:"characterStart"`
-	CharacterEnd   int     `json:"characterEnd"`
-	FilterType     string  `json:"filterType"`
-	Context        string  `json:"context"`
-	DocumentId     string  `json:"documentId"`
-	Confidence     float64 `json:"confidence"`
-	Text           string  `json:"text"`
-	Replacement    string  `json:"replacement"`
-	Salt           string  `json:"salt"`
-	Ignored        bool    `json:"ignored"`
+	Id             string  `json:"id" bson:"id"`
+	CharacterStart int     `json:"characterStart" bson:"characterstart"`
+	CharacterEnd   int     `json:"characterEnd" bson:"characterend"`
+	FilterType     string  `json:"filterType" bson:"filterType"`
+	Context        string  `json:"context" bson:"context"`
+	DocumentId     string  `json:"documentId" bson:"documentId"`
+	Confidence     float64 `json:"confidence" bson:"confidence"`
+	Text           string  `json:"text" bson:"text"`
+	Replacement    string  `json:"replacement" bson:"replacement"`
+	Salt           string  `json:"salt" bson:"salt"`
+	Ignored        bool    `json:"ignored" bson:"ignored"`
 
 	// Compatibility aliases for the audit engine and UI
-	Start int    `json:"start"`
-	End   int    `json:"end"`
-	Label string `json:"label"`
+	Label string `json:"label" bson:"label"`
 }
 
 // Overlap type
@@ -108,7 +106,7 @@ const (
 
 // Overlap describes the relationship between a Philter span and a Golden span.
 type Overlap struct {
-	Golden Span   `json:"golden"`
-	Actual Span   `json:"actual"`
-	Type   string `json:"type"` // EXACT, PARTIAL, NONE
+	Golden Span   `json:"golden" bson:"golden"`
+	Actual Span   `json:"actual" bson:"actual"`
+	Type   string `json:"type" bson:"type"` // EXACT, PARTIAL, NONE
 }
