@@ -271,6 +271,11 @@
 
         function renderLeakAnalysisRows(res) {
             return res.overlaps.filter(o => {
+                // Ignore empty overlaps
+                const goldenEmpty = !o.golden || (o.golden.characterStart === o.golden.characterEnd && !o.golden.text);
+                const actualEmpty = !o.actual || (o.actual.characterStart === o.actual.characterEnd && !o.actual.text);
+                if (goldenEmpty && actualEmpty) return false;
+
                 if (o.type === 'EXACT') return leakFilters['EXACT'];
                 if (o.type === 'PARTIAL') return leakFilters['PARTIAL'];
                 if (o.type === 'NONE') {
@@ -278,17 +283,22 @@
                     return leakFilters['FP'];
                 }
                 return true;
-            }).map(o => `
+            }).map(o => {
+                const isFP = o.type === 'NONE' && (!o.golden || !o.golden.text);
+                const displaySpan = isFP ? o.actual : o.golden;
+                const status = o.type === 'NONE' ? (o.golden && o.golden.text ? 'LEAK (FN)' : 'FALSE POSITIVE') : o.type;
+                
+                return `
                 <tr class="border-t border-gray-100">
-                    <td class="py-2 font-mono">${o.golden ? o.golden.text : (o.actual ? o.actual.text : '-')}</td>
-                    <td class="py-2">${o.golden ? o.golden.label : (o.actual ? o.actual.label : '-')}</td>
-                    <td class="py-2 text-gray-500">${o.golden ? o.golden.characterStart : (o.actual ? o.actual.characterStart : '-')}</td>
-                    <td class="py-2 text-gray-500">${o.golden ? o.golden.characterEnd : (o.actual ? o.actual.characterEnd : '-')}</td>
+                    <td class="py-2 font-mono">${displaySpan.text || '-'}</td>
+                    <td class="py-2">${displaySpan.label || '-'}</td>
+                    <td class="py-2 text-gray-500">${displaySpan.characterStart !== undefined ? displaySpan.characterStart : '-'}</td>
+                    <td class="py-2 text-gray-500">${displaySpan.characterEnd !== undefined ? displaySpan.characterEnd : '-'}</td>
                     <td class="py-2 font-bold ${o.type === 'EXACT' ? 'text-green-600' : (o.type === 'PARTIAL' ? 'text-orange-500' : 'text-red-600')}">
-                        ${o.type === 'NONE' ? (o.golden && o.golden.text ? 'LEAK (FN)' : 'FALSE POSITIVE') : o.type}
+                        ${status}
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         function filterFiles(val) {

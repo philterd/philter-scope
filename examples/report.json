@@ -1,6 +1,6 @@
 {
   "id": null,
-  "timestamp": "2026-04-15T16:42:48.634922356-04:00",
+  "timestamp": "2026-04-15T16:58:09.124967395-04:00",
   "total_documents": 27,
   "precision": 0.8243243243243243,
   "recall": 0.6777777777777778,
@@ -4594,19 +4594,19 @@
       "is_ai": false
     },
     {
-      "entity": "LOCATION",
-      "description": "Recall for LOCATION is 43.3%, which is below the 75% threshold.",
-      "action": "Enable or strengthen the LOCATION filter.",
-      "snippet": "{\n  \"filters\": [\n    {\n      \"filterType\": \"LOCATION\",\n      \"strategy\": \"REDACT\"\n    }\n  ]\n}",
+      "entity": "PHONE",
+      "description": "Recall for PHONE is 66.7%, which is below the 75% threshold.",
+      "action": "Enable or strengthen the PHONE filter.",
+      "snippet": "{\n  \"filters\": [\n    {\n      \"filterType\": \"PHONE\",\n      \"strategy\": \"REDACT\"\n    }\n  ]\n}",
       "resolved": false,
       "dismissed": false,
       "is_ai": false
     },
     {
-      "entity": "PHONE",
-      "description": "Recall for PHONE is 66.7%, which is below the 75% threshold.",
-      "action": "Enable or strengthen the PHONE filter.",
-      "snippet": "{\n  \"filters\": [\n    {\n      \"filterType\": \"PHONE\",\n      \"strategy\": \"REDACT\"\n    }\n  ]\n}",
+      "entity": "LOCATION",
+      "description": "Recall for LOCATION is 43.3%, which is below the 75% threshold.",
+      "action": "Enable or strengthen the LOCATION filter.",
+      "snippet": "{\n  \"filters\": [\n    {\n      \"filterType\": \"LOCATION\",\n      \"strategy\": \"REDACT\"\n    }\n  ]\n}",
       "resolved": false,
       "dismissed": false,
       "is_ai": false
