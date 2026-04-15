@@ -254,6 +254,42 @@
         let currentFileIdxInFiltered = -1;
         let filteredDetails = [];
         let auditsByGroup = {};
+        let leakFilters = {
+            'EXACT': true,
+            'PARTIAL': true,
+            'LEAK': true,
+            'FP': true
+        };
+        let currentResForModal = null;
+
+        function toggleLeakFilter(type, checked) {
+            leakFilters[type] = checked;
+            if (currentResForModal) {
+                document.getElementById('leakAnalysisBody').innerHTML = renderLeakAnalysisRows(currentResForModal);
+            }
+        }
+
+        function renderLeakAnalysisRows(res) {
+            return res.overlaps.filter(o => {
+                if (o.type === 'EXACT') return leakFilters['EXACT'];
+                if (o.type === 'PARTIAL') return leakFilters['PARTIAL'];
+                if (o.type === 'NONE') {
+                    if (o.golden && o.golden.text) return leakFilters['LEAK'];
+                    return leakFilters['FP'];
+                }
+                return true;
+            }).map(o => `
+                <tr class="border-t border-gray-100">
+                    <td class="py-2 font-mono">${o.golden ? o.golden.text : (o.actual ? o.actual.text : '-')}</td>
+                    <td class="py-2">${o.golden ? o.golden.label : (o.actual ? o.actual.label : '-')}</td>
+                    <td class="py-2 text-gray-500">${o.golden ? o.golden.characterStart : (o.actual ? o.actual.characterStart : '-')}</td>
+                    <td class="py-2 text-gray-500">${o.golden ? o.golden.characterEnd : (o.actual ? o.actual.characterEnd : '-')}</td>
+                    <td class="py-2 font-bold ${o.type === 'EXACT' ? 'text-green-600' : (o.type === 'PARTIAL' ? 'text-orange-500' : 'text-red-600')}">
+                        ${o.type === 'NONE' ? (o.golden && o.golden.text ? 'LEAK (FN)' : 'FALSE POSITIVE') : o.type}
+                    </td>
+                </tr>
+            `).join('');
+        }
 
         function filterFiles(val) {
             currentFilter = val;
@@ -689,6 +725,7 @@
 
         function showDetails(idx) {
             const res = reportData.details[idx];
+            currentResForModal = res;
             document.getElementById('modalFilename').innerText = res.filename;
             
             const content = document.getElementById('modalContent');
@@ -719,7 +756,27 @@
                     </div>
                 </div>
                 <div class="mt-8">
-                    <h5 class="text-sm font-bold text-gray-500 uppercase mb-2">Leak Analysis</h5>
+                    <div class="flex justify-between items-center mb-2">
+                        <h5 class="text-sm font-bold text-gray-500 uppercase">Leak Analysis</h5>
+                        <div class="flex gap-2">
+                            <label class="flex items-center gap-1 text-[10px] font-bold text-gray-500 uppercase cursor-pointer">
+                                <input type="checkbox" checked onchange="toggleLeakFilter('EXACT', this.checked)" class="w-3 h-3 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                Exact
+                            </label>
+                            <label class="flex items-center gap-1 text-[10px] font-bold text-gray-500 uppercase cursor-pointer">
+                                <input type="checkbox" checked onchange="toggleLeakFilter('PARTIAL', this.checked)" class="w-3 h-3 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                Partial
+                            </label>
+                            <label class="flex items-center gap-1 text-[10px] font-bold text-gray-500 uppercase cursor-pointer">
+                                <input type="checkbox" checked onchange="toggleLeakFilter('LEAK', this.checked)" class="w-3 h-3 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                Leak
+                            </label>
+                            <label class="flex items-center gap-1 text-[10px] font-bold text-gray-500 uppercase cursor-pointer">
+                                <input type="checkbox" checked onchange="toggleLeakFilter('FP', this.checked)" class="w-3 h-3 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                FP
+                            </label>
+                        </div>
+                    </div>
                     <table class="min-w-full divide-y divide-gray-200 text-xs">
                         <thead>
                             <tr>
@@ -730,18 +787,8 @@
                                 <th class="text-left py-2">Status</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${res.overlaps.map(o => `
-                                <tr class="border-t border-gray-100">
-                                    <td class="py-2 font-mono">${o.golden ? o.golden.text : (o.actual ? o.actual.text : '-')}</td>
-                                    <td class="py-2">${o.golden ? o.golden.label : (o.actual ? o.actual.label : '-')}</td>
-                                    <td class="py-2 text-gray-500">${o.golden ? o.golden.characterStart : (o.actual ? o.actual.characterStart : '-')}</td>
-                                    <td class="py-2 text-gray-500">${o.golden ? o.golden.characterEnd : (o.actual ? o.actual.characterEnd : '-')}</td>
-                                    <td class="py-2 font-bold ${o.type === 'EXACT' ? 'text-green-600' : (o.type === 'PARTIAL' ? 'text-orange-500' : 'text-red-600')}">
-                                        ${o.type === 'NONE' ? (o.golden && o.golden.text ? 'LEAK (FN)' : 'FALSE POSITIVE') : o.type}
-                                    </td>
-                                </tr>
-                            `).join('')}
+                        <tbody id="leakAnalysisBody">
+                            ${renderLeakAnalysisRows(res)}
                         </tbody>
                     </table>
                 </div>
