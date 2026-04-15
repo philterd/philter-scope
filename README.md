@@ -4,6 +4,8 @@ PhilterScope is a standalone CLI tool for PII redaction auditing and policy opti
 
 PhilterScope is a core part of our framework for implementing PII/PHI redaction solutions. To learn more, visit us at [Philterd](https://www.philterd.ai).
 
+![PhilterScope dashboard](docs/dashboard.png)
+
 ## Installation
 
 ```bash
