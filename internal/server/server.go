@@ -42,10 +42,17 @@ type Storage interface {
 
 // StartServer launches the local Evaluation UI.
 func StartServer(port int, store Storage) error {
+	mux := NewServerMux(store)
+	fmt.Printf("Evaluation UI: http://localhost:%d\n", port)
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
+}
+
+// NewServerMux creates a new http.ServeMux with the necessary handlers.
+func NewServerMux(store Storage) *http.ServeMux {
 	mux := http.NewServeMux()
 	tmpl, err := template.ParseFS(staticAssets, "index.html")
 	if err != nil {
-		return err
+		fmt.Printf("Error parsing template: %v\n", err)
 	}
 
 	// API to get history
@@ -189,8 +196,7 @@ func StartServer(port int, store Storage) error {
 		}
 	})
 
-	fmt.Printf("Evaluation UI available at http://localhost:%d\n\n", port)
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
+	return mux
 }
 
 // StartStandaloneServer launches the local Evaluation UI with a single result.

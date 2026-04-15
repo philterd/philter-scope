@@ -15,8 +15,11 @@
 package main
 
 import (
+	"os"
 	"testing"
+	"time"
 
+	"github.com/philterd/philterscope/pkg/model"
 	"github.com/spf13/cobra"
 )
 
@@ -51,5 +54,60 @@ func TestCommandStructure(t *testing.T) {
 
 	if len(root.Commands()) != 3 {
 		t.Errorf("Expected 3 commands, got %d", len(root.Commands()))
+	}
+}
+
+func TestRunHistory_Empty(t *testing.T) {
+	// Test runHistory with no data
+	cmd := &cobra.Command{Use: "history"}
+	err := runHistory(cmd, []string{})
+	if err != nil {
+		t.Errorf("runHistory failed: %v", err)
+	}
+}
+
+func TestSaveToHistory_Local(t *testing.T) {
+	ctx := t.Context()
+	res := model.AuditResult{
+		Timestamp: time.Now(),
+		F1Score:   0.85,
+	}
+
+	// Ensure .philterscope directory exists or is handled
+	err := saveToHistory(ctx, res)
+	if err != nil {
+		t.Fatalf("saveToHistory failed: %v", err)
+	}
+	defer os.RemoveAll(".philterscope")
+
+	// Verify file was created
+	files, err := os.ReadDir(".philterscope")
+	if err != nil || len(files) == 0 {
+		t.Error("No history files created")
+	}
+
+	t.Run("History List", func(t *testing.T) {
+		cmd := &cobra.Command{Use: "history"}
+		err := runHistory(cmd, []string{})
+		if err != nil {
+			t.Errorf("runHistory failed: %v", err)
+		}
+	})
+}
+
+func TestRunServe_Fail(t *testing.T) {
+	cmd := &cobra.Command{Use: "serve"}
+	goldenFile = "non-existent.json"
+	err := runServe(cmd, []string{})
+	if err == nil {
+		t.Error("Expected error for non-existent file, got nil")
+	}
+}
+
+func TestRunAudit_NoInput(t *testing.T) {
+	inputDir = "non-existent-dir"
+	err := runAudit(nil, nil)
+	if err == nil {
+		t.Error("Expected error for non-existent input dir, got nil")
 	}
 }

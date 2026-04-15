@@ -119,3 +119,76 @@ func TestGetPolicy_Error(t *testing.T) {
 		t.Error("Expected error for 500 status, got nil")
 	}
 }
+
+func TestStatus(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" || r.URL.Path != "/api/status" {
+			t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		json.NewEncoder(w).Encode(StatusResponse{Status: "UP"})
+	}))
+	defer ts.Close()
+
+	client := &PhilterClient{BaseURL: ts.URL}
+	resp, err := client.Status()
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if resp.Status != "UP" {
+		t.Errorf("Expected status UP, got %s", resp.Status)
+	}
+}
+
+func TestExplain(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" || r.URL.Path != "/api/explain" {
+			t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		json.NewEncoder(w).Encode(ExplainResponse{FilteredText: "redacted"})
+	}))
+	defer ts.Close()
+
+	client := &PhilterClient{BaseURL: ts.URL}
+	resp, err := client.Explain("test")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if resp.FilteredText != "redacted" {
+		t.Errorf("Expected filtered text 'redacted', got %s", resp.FilteredText)
+	}
+}
+
+func TestGetPolicyNames(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" || r.URL.Path != "/api/policies" {
+			t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		json.NewEncoder(w).Encode([]string{"policy1", "policy2"})
+	}))
+	defer ts.Close()
+
+	client := &PhilterClient{BaseURL: ts.URL}
+	names, err := client.GetPolicyNames()
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if len(names) != 2 || names[0] != "policy1" {
+		t.Errorf("Unexpected names: %v", names)
+	}
+}
+
+func TestUploadPolicy(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" || r.URL.Path != "/api/policies" {
+			t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	client := &PhilterClient{BaseURL: ts.URL}
+	err := client.UploadPolicy("new-policy", `{"content": "here"}`)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+}

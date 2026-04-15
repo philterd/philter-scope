@@ -88,85 +88,7 @@ func (m *mockStorage) SaveRecommendations(ctx context.Context, id string, recs [
 
 func TestAPIs(t *testing.T) {
 	store := &mockStorage{}
-
-	// Test with a real server setup to use the actual handlers
-	mux := http.NewServeMux()
-	// We can't easily call StartServer because it blocks with ListenAndServe
-	// So we'll manually register the same handlers for testing or refactor server.go
-	// Since we already have the handlers in server.go, let's just test the logic by
-	// copying the handler logic or making StartServer return the mux.
-
-	// For now, let's just re-implement the mux setup for testing purposes
-	// (mirroring server.go)
-
-	mux.HandleFunc("/api/history", func(w http.ResponseWriter, r *http.Request) {
-		history, _ := store.GetHistory(r.Context())
-		json.NewEncoder(w).Encode(history)
-	})
-
-	mux.HandleFunc("/api/audit", func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Query().Get("id")
-		if id == "" {
-			http.Error(w, "missing id", http.StatusBadRequest)
-			return
-		}
-		switch r.Method {
-		case http.MethodGet:
-			res, err := store.GetAuditResult(r.Context(), id)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusNotFound)
-				return
-			}
-			json.NewEncoder(w).Encode(res)
-		case http.MethodDelete:
-			store.DeleteAuditResult(r.Context(), id)
-			w.WriteHeader(http.StatusNoContent)
-		}
-	})
-
-	mux.HandleFunc("/api/audit/recommendation/resolve", func(w http.ResponseWriter, r *http.Request) {
-		auditID := r.URL.Query().Get("id")
-		entity := r.URL.Query().Get("entity")
-		if auditID == "" || entity == "" {
-			http.Error(w, "missing id or entity", http.StatusBadRequest)
-			return
-		}
-		store.ResolveRecommendation(r.Context(), auditID, entity)
-		w.WriteHeader(http.StatusOK)
-	})
-
-	mux.HandleFunc("/api/audit/recommendation/dismiss", func(w http.ResponseWriter, r *http.Request) {
-		auditID := r.URL.Query().Get("id")
-		entity := r.URL.Query().Get("entity")
-		if auditID == "" || entity == "" {
-			http.Error(w, "missing id or entity", http.StatusBadRequest)
-			return
-		}
-		store.DismissRecommendation(r.Context(), auditID, entity)
-		w.WriteHeader(http.StatusOK)
-	})
-
-	mux.HandleFunc("/api/audit/notes", func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Query().Get("id")
-		if id == "" {
-			http.Error(w, "missing id", http.StatusBadRequest)
-			return
-		}
-		var payload struct {
-			Notes string `json:"notes"`
-		}
-		json.NewDecoder(r.Body).Decode(&payload)
-		store.SaveAuditNotes(r.Context(), id, payload.Notes)
-		w.WriteHeader(http.StatusOK)
-	})
-
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
-			http.NotFound(w, r)
-			return
-		}
-		fmt.Fprint(w, "index")
-	})
+	mux := NewServerMux(store)
 
 	t.Run("History API", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/api/history", nil)
@@ -282,6 +204,39 @@ func TestAPIs(t *testing.T) {
 
 		if store.saveNotesContent != "This is a test note." {
 			t.Errorf("Expected note 'This is a test note.', got %s", store.saveNotesContent)
+		}
+	})
+
+	t.Run("Index Page", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/", nil)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status 200, got %d", w.Code)
+		}
+		if !strings.Contains(w.Body.String(), "<title>PhilterScope Evaluation</title>") {
+			t.Error("Index page missing title")
+		}
+	})
+
+	t.Run("404 Page", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/not-found", nil)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusNotFound {
+			t.Errorf("Expected status 404, got %d", w.Code)
+		}
+	})
+
+	t.Run("API Error Handling", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/audit?id=not-found", nil)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusInternalServerError {
+			t.Errorf("Expected status 500, got %d", w.Code)
 		}
 	})
 }
