@@ -120,3 +120,31 @@ func ParseJSONSpans(data []byte) (string, []model.Span, error) {
 
 	return js.Text, js.Labels, nil
 }
+
+// ParsePhilterExplain parses a Philter explain JSON response.
+func ParsePhilterExplain(data []byte) (string, []model.Span, error) {
+	// Re-define internal structures to match Philter's API without importing internal/philter
+	type explanation struct {
+		AppliedSpans []model.Span `json:"appliedSpans"`
+		IgnoredSpans []model.Span `json:"ignoredSpans"`
+	}
+	type explainResponse struct {
+		FilteredText string      `json:"filteredText"`
+		Explanation  explanation `json:"explanation"`
+	}
+
+	var res explainResponse
+	if err := json.Unmarshal(data, &res); err != nil {
+		return "", nil, fmt.Errorf("failed to parse Philter explain JSON: %w", err)
+	}
+
+	// Map CharacterStart/CharacterEnd/FilterType to Start/End/Label for compatibility
+	for i := range res.Explanation.AppliedSpans {
+		s := &res.Explanation.AppliedSpans[i]
+		s.Start = s.CharacterStart
+		s.End = s.CharacterEnd
+		s.Label = s.FilterType
+	}
+
+	return res.FilteredText, res.Explanation.AppliedSpans, nil
+}

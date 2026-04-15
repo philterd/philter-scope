@@ -33,14 +33,14 @@ import (
 )
 
 var (
-	philterURL     string
-	philterToken   string
-	philterPolicy  string
-	inputDir       string
-	goldenFile     string
-	outputFile     string
-	port           int
-	threshold      float64
+	philterURL    string
+	philterToken  string
+	philterPolicy string
+	inputDir      string
+	goldenFile    string
+	outputFile    string
+	port          int
+	threshold     float64
 )
 
 func main() {
@@ -92,9 +92,9 @@ func main() {
 
 func runAudit(cmd *cobra.Command, args []string) error {
 	client := &philter.PhilterClient{
-		BaseURL:    philterURL,
-		Token:      philterToken,
-		Policy:     philterPolicy,
+		BaseURL: philterURL,
+		Token:   philterToken,
+		Policy:  philterPolicy,
 	}
 
 	files, err := os.ReadDir(inputDir)
@@ -139,10 +139,24 @@ func runAudit(cmd *cobra.Command, args []string) error {
 			rawContent = []byte(originalText)
 		}
 
-		redacted, actualSpans, err := client.Redact(string(rawContent))
-		if err != nil {
-			fmt.Printf("Warning: failed to redact %s: %v\n", f.Name(), err)
-			continue
+		var redacted string
+		var actualSpans []model.Span
+
+		// If the input file is a JSON file, it might be a Philter explain response
+		if filepath.Ext(f.Name()) == ".json" {
+			if r, s, err := audit.ParsePhilterExplain(rawContent); err == nil {
+				redacted = r
+				actualSpans = s
+			}
+		}
+
+		// If not already set (not a Philter explain JSON), call Philter API
+		if redacted == "" && len(actualSpans) == 0 {
+			redacted, actualSpans, err = client.Redact(string(rawContent))
+			if err != nil {
+				fmt.Printf("Warning: failed to redact %s: %v\n", f.Name(), err)
+				continue
+			}
 		}
 
 		overlaps := audit.CalculateOverlap(goldenSpans, actualSpans)

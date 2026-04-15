@@ -4,7 +4,7 @@ PhilterScope is a standalone CLI tool for PII redaction auditing and policy opti
 
 ## Core Features
 
-- **Audit**: Compare raw text against a golden dataset to calculate Precision, Recall, and F1-Score.
+- **Audit**: Compare raw text or Philter `explain` JSON against a golden dataset to calculate Precision, Recall, and F1-Score.
 - **Privacy Lab UI**: A local web server to display interactive, self-contained HTML reports with "Leak" (False Negative) highlighting.
 - **Policy Suggestions**: Automatically suggests Philter policy improvements based on audit results.
 - **Multi-Format Support**: Supports golden datasets in both tagged text (e.g., `<NAME>John Doe</NAME>`) and JSON Span-style formats.
@@ -21,7 +21,7 @@ The binary will be created as `philterscope` in the root directory.
 
 ### 1. Audit Redaction Quality
 
-Compare files in a directory against their golden counterparts:
+Compare files in a directory against their golden counterparts. Input files can be raw text or Philter `explain` JSON files:
 
 ```bash
 ./philterscope audit --input ./raw --url http://localhost:8080
@@ -86,6 +86,34 @@ The `labels` array contains objects with the following fields:
 - `start`: The starting character index (0-based).
 - `end`: The ending character index (exclusive).
 - `label`: The entity type (e.g., `NAME`, `ADDRESS`, `PHONE_NUMBER`).
+
+### 3. Philter Explain JSON
+
+If you have already redacted text using Philter's `explain` API, you can provide the JSON response directly in the input directory. This allows you to audit pre-redacted data without calling the Philter API again.
+
+PhilterScope recognizes the standard Philter `explain` JSON structure:
+
+```json
+{
+  "filteredText": "Hello [NAME], welcome to [LOCATION].",
+  "explanation": {
+    "appliedSpans": [
+      {
+        "text": "John Doe",
+        "characterStart": 6,
+        "characterEnd": 14,
+        "filterType": "NAME"
+      },
+      {
+        "text": "New York",
+        "characterStart": 27,
+        "characterEnd": 35,
+        "filterType": "LOCATION"
+      }
+    ]
+  }
+}
+```
 
 ## Storage
 

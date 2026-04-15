@@ -120,3 +120,31 @@ func TestCalculateOverlap(t *testing.T) {
 		t.Errorf("Expected 1 none overlap (FP), got %d", noneCount)
 	}
 }
+
+func TestParsePhilterExplain(t *testing.T) {
+	data := []byte(`{
+		"filteredText": "Hello [NAME]",
+		"explanation": {
+			"appliedSpans": [
+				{"text": "John Doe", "characterStart": 6, "characterEnd": 14, "filterType": "NAME"}
+			]
+		}
+	}`)
+
+	text, spans, err := ParsePhilterExplain(data)
+	if err != nil {
+		t.Fatalf("ParsePhilterExplain failed: %v", err)
+	}
+
+	if text != "Hello [NAME]" {
+		t.Errorf("Expected text 'Hello [NAME]', got %q", text)
+	}
+
+	if len(spans) != 1 {
+		t.Fatalf("Expected 1 span, got %d", len(spans))
+	}
+
+	if spans[0].Text != "John Doe" || spans[0].Start != 6 || spans[0].End != 14 || spans[0].Label != "NAME" {
+		t.Errorf("Unexpected span: %+v", spans[0])
+	}
+}
