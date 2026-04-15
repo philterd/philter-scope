@@ -58,7 +58,8 @@ type Recommendation struct {
 	Description string `json:"description"`
 	Action      string `json:"action"`
 	Snippet     string `json:"snippet"`
-	Resolved    bool   `json:"resolved" bson:"resolved"` // Mark as resolved in the database
+	Resolved    bool   `json:"resolved" bson:"resolved"`   // Mark as resolved in the database
+	Dismissed   bool   `json:"dismissed" bson:"dismissed"` // Mark as dismissed in the database
 }
 
 // Result is a single comparison outcome.

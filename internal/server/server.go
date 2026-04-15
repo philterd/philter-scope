@@ -35,6 +35,7 @@ type Storage interface {
 	GetAuditResult(ctx context.Context, id string) (*model.AuditResult, error)
 	DeleteAuditResult(ctx context.Context, id string) error
 	ResolveRecommendation(ctx context.Context, auditID string, entity string) error
+	DismissRecommendation(ctx context.Context, auditID string, entity string) error
 	SaveAuditNotes(ctx context.Context, id string, notes string) error
 }
 
@@ -110,6 +111,29 @@ func StartServer(port int, store Storage) error {
 		err := store.ResolveRecommendation(r.Context(), auditID, entity)
 		if err != nil {
 			fmt.Printf("Error resolving recommendation (id=%s, entity=%s): %v\n", auditID, entity, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+
+	// API to dismiss a recommendation
+	mux.HandleFunc("/api/audit/recommendation/dismiss", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		auditID := r.URL.Query().Get("id")
+		entity := r.URL.Query().Get("entity")
+		if auditID == "" || entity == "" {
+			http.Error(w, "missing id or entity parameter", http.StatusBadRequest)
+			return
+		}
+
+		err := store.DismissRecommendation(r.Context(), auditID, entity)
+		if err != nil {
+			fmt.Printf("Error dismissing recommendation (id=%s, entity=%s): %v\n", auditID, entity, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

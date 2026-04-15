@@ -35,6 +35,9 @@ type mockStorage struct {
 	saveNotesCalled  bool
 	saveNotesAudit   string
 	saveNotesContent string
+	dismissCalled    bool
+	dismissAudit     string
+	dismissEntity    string
 }
 
 func (m *mockStorage) GetHistory(ctx context.Context) ([]model.HistoryEntry, error) {
@@ -67,6 +70,13 @@ func (m *mockStorage) SaveAuditNotes(ctx context.Context, id string, notes strin
 	m.saveNotesCalled = true
 	m.saveNotesAudit = id
 	m.saveNotesContent = notes
+	return nil
+}
+
+func (m *mockStorage) DismissRecommendation(ctx context.Context, auditID string, entity string) error {
+	m.dismissCalled = true
+	m.dismissAudit = auditID
+	m.dismissEntity = entity
 	return nil
 }
 
@@ -116,6 +126,17 @@ func TestAPIs(t *testing.T) {
 			return
 		}
 		store.ResolveRecommendation(r.Context(), auditID, entity)
+		w.WriteHeader(http.StatusOK)
+	})
+
+	mux.HandleFunc("/api/audit/recommendation/dismiss", func(w http.ResponseWriter, r *http.Request) {
+		auditID := r.URL.Query().Get("id")
+		entity := r.URL.Query().Get("entity")
+		if auditID == "" || entity == "" {
+			http.Error(w, "missing id or entity", http.StatusBadRequest)
+			return
+		}
+		store.DismissRecommendation(r.Context(), auditID, entity)
 		w.WriteHeader(http.StatusOK)
 	})
 
@@ -210,6 +231,28 @@ func TestAPIs(t *testing.T) {
 
 		if store.resolveEntity != "DATE" {
 			t.Errorf("Expected entity DATE, got %s", store.resolveEntity)
+		}
+	})
+
+	t.Run("Dismiss Recommendation API", func(t *testing.T) {
+		req := httptest.NewRequest("POST", "/api/audit/recommendation/dismiss?id=507f1f77bcf86cd799439011&entity=PHONE", nil)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status 200, got %d", w.Code)
+		}
+
+		if !store.dismissCalled {
+			t.Error("DismissRecommendation was not called")
+		}
+
+		if store.dismissAudit != "507f1f77bcf86cd799439011" {
+			t.Errorf("Expected audit ID 507f1f77bcf86cd799439011, got %s", store.dismissAudit)
+		}
+
+		if store.dismissEntity != "PHONE" {
+			t.Errorf("Expected entity PHONE, got %s", store.dismissEntity)
 		}
 	})
 
