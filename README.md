@@ -29,10 +29,10 @@ See below to learn how to store audit results in a MongoDB database and serve th
 Compare files in a directory against their golden counterparts. Input files can be raw text or Philter `explain` JSON files:
 
 ```bash
-./philterscope audit --input ./raw --url http://localhost:8080
+./philterscope audit --input ./raw --url http://localhost:8080 --ai
 ```
 
-This generates `report.html` and `report.json`.
+This generates `report.html` and `report.json`. Use the `--ai` flag to include AI-driven policy suggestions (requires Ollama).
 
 ### 2. Launch Evaluation UI
 
@@ -42,13 +42,17 @@ View the generated audit results in your browser:
 ./philterscope serve --report report.json --port 5000
 ```
 
-### 3. Get Policy Suggestions
 
-Get actionable policy recommendations in your terminal:
+## AI Recommendations (Ollama)
 
-```bash
-./philterscope suggest --report report.json
-```
+PhilterScope can generate advanced policy recommendations using a local LLM via [Ollama](https://ollama.com/).
+
+To enable AI-driven recommendations, set the following environment variables:
+
+- `PHILTERSCOPE_OLLAMA_URL`: The URL of your Ollama server (e.g., `http://localhost:11434`).
+- `PHILTERSCOPE_OLLAMA_MODEL`: The LLM model to use (default: `gemma4`).
+
+When configured, the `audit` command with the `--ai` flag will include AI insights.
 
 ## Golden Dataset Formats
 

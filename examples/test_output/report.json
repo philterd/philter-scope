@@ -1,6 +1,6 @@
 {
   "id": null,
-  "timestamp": "2026-04-15T10:50:11.139808855-04:00",
+  "timestamp": "2026-04-15T12:27:45.613650857-04:00",
   "total_documents": 25,
   "precision": 0.8055555555555556,
   "recall": 0.58,
@@ -2876,45 +2876,11 @@
   "recommendations": [
     {
       "entity": "LOCATION",
-      "description": "Recall for LOCATION is 29.4%, which is below the 80% threshold.",
+      "description": "Recall for LOCATION is 29.4%, which is below the 50% threshold.",
       "action": "Enable or strengthen the LOCATION filter.",
       "snippet": "{\n  \"filters\": [\n    {\n      \"filterType\": \"LOCATION\",\n      \"strategy\": \"REDACT\"\n    }\n  ]\n}",
-      "resolved": false
-    },
-    {
-      "entity": "PHONE",
-      "description": "Recall for PHONE is 66.7%, which is below the 80% threshold.",
-      "action": "Enable or strengthen the PHONE filter.",
-      "snippet": "{\n  \"filters\": [\n    {\n      \"filterType\": \"PHONE\",\n      \"strategy\": \"REDACT\"\n    }\n  ]\n}",
-      "resolved": false
-    },
-    {
-      "entity": "DATE",
-      "description": "Recall for DATE is 50.0%, which is below the 80% threshold.",
-      "action": "Enable or strengthen the DATE filter.",
-      "snippet": "{\n  \"filters\": [\n    {\n      \"filterType\": \"DATE\",\n      \"strategy\": \"REDACT\"\n    }\n  ]\n}",
-      "resolved": false
-    },
-    {
-      "entity": "EMAIL",
-      "description": "Recall for EMAIL is 75.0%, which is below the 80% threshold.",
-      "action": "Enable or strengthen the EMAIL filter.",
-      "snippet": "{\n  \"filters\": [\n    {\n      \"filterType\": \"EMAIL\",\n      \"strategy\": \"REDACT\"\n    }\n  ]\n}",
-      "resolved": false
-    },
-    {
-      "entity": "NAME",
-      "description": "Recall for NAME is 77.8%, which is below the 80% threshold.",
-      "action": "Enable or strengthen the NAME filter.",
-      "snippet": "{\n  \"filters\": [\n    {\n      \"filterType\": \"NAME\",\n      \"strategy\": \"REDACT\"\n    }\n  ]\n}",
-      "resolved": false
-    },
-    {
-      "entity": "ADDRESS",
-      "description": "Recall for ADDRESS is 75.0%, which is below the 80% threshold.",
-      "action": "Enable or strengthen the ADDRESS filter.",
-      "snippet": "{\n  \"filters\": [\n    {\n      \"filterType\": \"ADDRESS\",\n      \"strategy\": \"REDACT\"\n    }\n  ]\n}",
-      "resolved": false
+      "resolved": false,
+      "dismissed": false
     }
   ],
   "entity_metrics": {
@@ -2925,5 +2891,6 @@
     "NAME": 0.7777777777777778,
     "PHONE": 0.6666666666666666
   },
-  "threshold": 0.8
+  "threshold": 0.5,
+  "notes": ""
 }

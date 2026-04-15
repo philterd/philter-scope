@@ -16,7 +16,9 @@ package suggest
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/philterd/philterscope/internal/ollama"
 	"github.com/philterd/philterscope/pkg/model"
 )
 
@@ -46,6 +48,7 @@ func (s *BasicSuggester) Suggest(result model.AuditResult) []model.Recommendatio
 				Description: fmt.Sprintf("Recall for %s is %.1f%%, which is below the %.0f%% threshold.", entity, recall*100, s.Threshold*100),
 				Action:      fmt.Sprintf("Enable or strengthen the %s filter.", entity),
 				Snippet:     generateSnippet(entity),
+				IsAI:        false,
 			})
 		}
 	}
@@ -65,10 +68,20 @@ func generateSnippet(entity string) string {
 }`, entity)
 }
 
-// GetSuggestions is a helper for the suggest command (existing from previous work).
+// GetSuggestions is a helper for the suggest command.
 func GetSuggestions(result model.AuditResult, threshold float64) {
 	s := NewBasicSuggester(threshold)
 	recs := s.Suggest(result)
+
+	// Check for Ollama configuration
+	if os.Getenv("PHILTERSCOPE_OLLAMA_URL") != "" {
+		fmt.Println("Generating AI recommendations...")
+		client := ollama.NewClient()
+		ls := NewLLMSuggester(client)
+		aiRecs := ls.Suggest(result)
+		recs = append(recs, aiRecs...)
+	}
+
 	if len(recs) == 0 {
 		fmt.Println("No suggestions.")
 		return

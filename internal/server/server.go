@@ -37,6 +37,7 @@ type Storage interface {
 	ResolveRecommendation(ctx context.Context, auditID string, entity string) error
 	DismissRecommendation(ctx context.Context, auditID string, entity string) error
 	SaveAuditNotes(ctx context.Context, id string, notes string) error
+	SaveRecommendations(ctx context.Context, id string, recs []model.Recommendation) error
 }
 
 // StartServer launches the local Evaluation UI.

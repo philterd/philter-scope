@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/philterd/philterscope/internal/audit"
+	"github.com/philterd/philterscope/internal/ollama"
 	"github.com/philterd/philterscope/internal/philter"
 	"github.com/philterd/philterscope/internal/server"
 	"github.com/philterd/philterscope/internal/storage"
@@ -42,6 +43,7 @@ var (
 	outputDir     string
 	port          int
 	threshold     float64
+	enableAI      bool
 )
 
 func main() {
@@ -60,6 +62,7 @@ func main() {
 	auditCmd.Flags().StringVar(&goldenFile, "golden", "golden.json", "Golden dataset JSON file")
 	auditCmd.Flags().StringVar(&outputDir, "output", ".", "Directory to export reports")
 	auditCmd.Flags().Float64Var(&threshold, "threshold", 0.5, "Recall threshold for suggestions (0.0 to 1.0)")
+	auditCmd.Flags().BoolVar(&enableAI, "ai", false, "Enable AI-driven policy recommendations")
 
 	var serveCmd = &cobra.Command{
 		Use:   "serve",
@@ -69,21 +72,13 @@ func main() {
 	serveCmd.Flags().IntVar(&port, "port", 5000, "Port for the UI")
 	serveCmd.Flags().StringVar(&goldenFile, "report", "report.json", "JSON report to serve")
 
-	var suggestCmd = &cobra.Command{
-		Use:   "suggest",
-		Short: "Suggest policy changes",
-		RunE:  runSuggest,
-	}
-	suggestCmd.Flags().StringVar(&goldenFile, "report", "report.json", "JSON report to analyze")
-	suggestCmd.Flags().Float64Var(&threshold, "threshold", 0.5, "Recall threshold for suggestions (0.0 to 1.0)")
-
 	var historyCmd = &cobra.Command{
 		Use:   "history",
 		Short: "List past audits",
 		RunE:  runHistory,
 	}
 
-	rootCmd.AddCommand(auditCmd, serveCmd, suggestCmd, historyCmd)
+	rootCmd.AddCommand(auditCmd, serveCmd, historyCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -238,6 +233,22 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	suggester := suggest.NewBasicSuggester(threshold)
 	auditResult.Recommendations = suggester.Suggest(auditResult)
 
+	// AI recommendations if enabled
+	if enableAI {
+		if os.Getenv("PHILTERSCOPE_OLLAMA_URL") != "" {
+			fmt.Println("Generating AI recommendations...")
+			client := ollama.NewClient()
+			ls := suggest.NewLLMSuggester(client)
+			aiRecs := ls.Suggest(auditResult)
+			for i := range aiRecs {
+				aiRecs[i].Description = "[AI] " + aiRecs[i].Description
+			}
+			auditResult.Recommendations = append(auditResult.Recommendations, aiRecs...)
+		} else {
+			fmt.Println("Warning: AI suggestions requested but PHILTERSCOPE_OLLAMA_URL is not set.")
+		}
+	}
+
 	// Export results
 	htmlReport, err := server.GenerateStandaloneReport(auditResult)
 	if err != nil {
@@ -299,20 +310,6 @@ func runServe(cmd *cobra.Command, args []string) error {
 	}
 
 	return fmt.Errorf("no MongoDB connection string (PHILTERSCOPE_MONGODB_CONNECTION_STRING) and no input file (--golden) provided")
-}
-
-func runSuggest(cmd *cobra.Command, args []string) error {
-	data, err := os.ReadFile(goldenFile)
-	if err != nil {
-		return err
-	}
-	var res model.AuditResult
-	if err := json.Unmarshal(data, &res); err != nil {
-		return err
-	}
-	res.Threshold = threshold
-	suggest.GetSuggestions(res, threshold)
-	return nil
 }
 
 func saveToHistory(ctx context.Context, res model.AuditResult) error {

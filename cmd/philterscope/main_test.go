@@ -15,7 +15,6 @@
 package main
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -48,32 +47,9 @@ func TestCommandStructure(t *testing.T) {
 	root := &cobra.Command{Use: "philterscope"}
 	root.AddCommand(&cobra.Command{Use: "audit"})
 	root.AddCommand(&cobra.Command{Use: "serve"})
-	root.AddCommand(&cobra.Command{Use: "suggest"})
+	root.AddCommand(&cobra.Command{Use: "history"})
 
 	if len(root.Commands()) != 3 {
 		t.Errorf("Expected 3 commands, got %d", len(root.Commands()))
-	}
-}
-
-func TestRunSuggest_Help(t *testing.T) {
-	// Test if suggest command help works
-	root := &cobra.Command{Use: "philterscope"}
-	suggestCmd := &cobra.Command{
-		Use:   "suggest",
-		Short: "Suggest policy changes",
-		RunE:  runSuggest,
-	}
-	root.AddCommand(suggestCmd)
-
-	buf := new(bytes.Buffer)
-	root.SetOut(buf)
-	root.SetArgs([]string{"suggest", "--help"})
-
-	if err := root.Execute(); err != nil {
-		t.Errorf("Execute failed: %v", err)
-	}
-
-	if !bytes.Contains(buf.Bytes(), []byte("Suggest policy changes")) {
-		t.Errorf("Help output missing expected text")
 	}
 }

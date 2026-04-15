@@ -38,6 +38,7 @@ type mockStorage struct {
 	dismissCalled    bool
 	dismissAudit     string
 	dismissEntity    string
+	saveRecsCalled   bool
 }
 
 func (m *mockStorage) GetHistory(ctx context.Context) ([]model.HistoryEntry, error) {
@@ -77,6 +78,11 @@ func (m *mockStorage) DismissRecommendation(ctx context.Context, auditID string,
 	m.dismissCalled = true
 	m.dismissAudit = auditID
 	m.dismissEntity = entity
+	return nil
+}
+
+func (m *mockStorage) SaveRecommendations(ctx context.Context, id string, recs []model.Recommendation) error {
+	m.saveRecsCalled = true
 	return nil
 }
 

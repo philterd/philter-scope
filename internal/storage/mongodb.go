@@ -225,6 +225,30 @@ func (s *MongoDBStorage) SaveAuditNotes(ctx context.Context, id string, notes st
 	return nil
 }
 
+// SaveRecommendations updates the recommendations for an audit.
+func (s *MongoDBStorage) SaveRecommendations(ctx context.Context, id string, recs []model.Recommendation) error {
+	coll := s.client.Database(s.database).Collection(s.collection)
+
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid audit ID: %w", err)
+	}
+
+	filter := bson.D{{Key: "_id", Value: objID}}
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "recommendations", Value: recs},
+		}},
+	}
+
+	_, err = coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to update recommendations: %w", err)
+	}
+
+	return nil
+}
+
 func (s *MongoDBStorage) Close(ctx context.Context) error {
 	return s.client.Disconnect(ctx)
 }

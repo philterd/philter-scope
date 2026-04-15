@@ -12,8 +12,11 @@ audit: build ## Run audit on example files
 	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
 	xdg-open ./examples/report.html
 
+audit-mongodb-ai: build ## Run audit on example files with MongoDB storage and AI policy suggestions
+	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope PHILTERSCOPE_OLLAMA_URL=http://localhost:11434 ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --ai
+
 audit-mongodb: build ## Run audit on example files with MongoDB storage
-	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
+	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --ai
 
 serve: build ## Launch Evaluation UI using MongoDB storage
 	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope serve

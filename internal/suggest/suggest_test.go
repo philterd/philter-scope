@@ -39,6 +39,10 @@ func TestBasicSuggester_Suggest(t *testing.T) {
 	if recs[0].Entity != "PHONE_NUMBER" {
 		t.Errorf("Expected recommendation for PHONE_NUMBER, got %s", recs[0].Entity)
 	}
+
+	if recs[0].IsAI {
+		t.Error("Expected IsAI to be false for basic recommendation")
+	}
 }
 
 func TestBasicSuggester_Suggest_Empty(t *testing.T) {
