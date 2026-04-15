@@ -11,8 +11,8 @@
     {
       "text": "Dallas",
       "label": "LOCATION",
-      "characterStart": 33,
-      "characterEnd": 39,
+      "characterStart": 35,
+      "characterEnd": 41,
       "filterType": "LOCATION"
     }
   ],

@@ -11,8 +11,8 @@
     {
       "text": "Philadelphia",
       "label": "LOCATION",
-      "characterStart": 37,
-      "characterEnd": 49,
+      "characterStart": 39,
+      "characterEnd": 51,
       "filterType": "LOCATION"
     }
   ],

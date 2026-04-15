@@ -3,14 +3,14 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "Judy Thomas",
         "label": "NAME",
         "characterStart": 11,
-        "characterEnd": 16,
+        "characterEnd": 22,
         "filterType": "NAME"
       },
       {
-        "text": "*****",
+        "text": "ve in",
         "label": "LOCATION",
         "characterStart": 31,
         "characterEnd": 36,

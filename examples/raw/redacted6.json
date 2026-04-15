@@ -3,10 +3,10 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "billing@corp.com",
         "label": "EMAIL",
         "characterStart": 16,
-        "characterEnd": 21,
+        "characterEnd": 32,
         "filterType": "EMAIL"
       }
     ]

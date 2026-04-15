@@ -4,15 +4,15 @@
     {
       "text": "July 4, 1776",
       "label": "DATE",
-      "characterStart": 21,
-      "characterEnd": 33,
+      "characterStart": 20,
+      "characterEnd": 32,
       "filterType": "DATE"
     },
     {
       "text": "Philadelphia",
       "label": "LOCATION",
-      "characterStart": 37,
-      "characterEnd": 49,
+      "characterStart": 36,
+      "characterEnd": 48,
       "filterType": "LOCATION"
     }
   ],

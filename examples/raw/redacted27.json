@@ -1,0 +1,369 @@
+{
+  "appliedSpans": [
+    {
+      "characterStart": 38,
+      "characterEnd": 61,
+      "text": "Jonathan Alexander Smith",
+      "label": "NAME"
+    },
+    {
+      "characterStart": 78,
+      "characterEnd": 87,
+      "text": "01/15/1975",
+      "label": "DATE"
+    },
+    {
+      "characterStart": 129,
+      "characterEnd": 145,
+      "text": "Seattle, WA 98101",
+      "label": "LOCATION"
+    },
+    {
+      "characterStart": 194,
+      "characterEnd": 205,
+      "text": "206-555-0145",
+      "label": "PHONE_NUMBER"
+    },
+    {
+      "characterStart": 214,
+      "characterEnd": 237,
+      "text": "j.smith.alex@example.org",
+      "label": "EMAIL_ADDRESS"
+    },
+    {
+      "characterStart": 263,
+      "characterEnd": 273,
+      "text": "999-00-1234",
+      "label": "SSN"
+    },
+    {
+      "characterStart": 294,
+      "characterEnd": 297,
+      "text": "Mary",
+      "label": "NAME"
+    },
+    {
+      "characterStart": 343,
+      "characterEnd": 354,
+      "text": "206-555-0167",
+      "label": "PHONE_NUMBER"
+    },
+    {
+      "characterStart": 369,
+      "characterEnd": 380,
+      "text": "July 4, 2023",
+      "label": "DATE"
+    },
+    {
+      "characterStart": 392,
+      "characterEnd": 416,
+      "text": "Harborview Medical Center",
+      "label": "LOCATION"
+    },
+    {
+      "characterStart": 489,
+      "characterEnd": 502,
+      "text": "March 12, 2022",
+      "label": "DATE"
+    },
+    {
+      "characterStart": 566,
+      "characterEnd": 574,
+      "text": "Walgreens",
+      "label": "LOCATION"
+    },
+    {
+      "characterStart": 663,
+      "characterEnd": 679,
+      "text": "TechSolutions Inc",
+      "label": "LOCATION"
+    },
+    {
+      "characterStart": 742,
+      "characterEnd": 758,
+      "text": "Redmond, WA 98052",
+      "label": "LOCATION"
+    },
+    {
+      "characterStart": 772,
+      "characterEnd": 783,
+      "text": "425-555-0199",
+      "label": "PHONE_NUMBER"
+    },
+    {
+      "characterStart": 803,
+      "characterEnd": 817,
+      "text": "August 10, 2023",
+      "label": "DATE"
+    },
+    {
+      "characterStart": 845,
+      "characterEnd": 859,
+      "text": "August 11, 2023",
+      "label": "DATE"
+    },
+    {
+      "characterStart": 946,
+      "characterEnd": 960,
+      "text": "August 25, 2023",
+      "label": "DATE"
+    },
+    {
+      "characterStart": 986,
+      "characterEnd": 1017,
+      "text": "789 Maple St, Bellevue, WA 98004",
+      "label": "LOCATION"
+    },
+    {
+      "characterStart": 1105,
+      "characterEnd": 1116,
+      "text": "Robert Smith",
+      "label": "NAME"
+    },
+    {
+      "characterStart": 1129,
+      "characterEnd": 1140,
+      "text": "206-555-0211",
+      "label": "PHONE_NUMBER"
+    },
+    {
+      "characterStart": 1192,
+      "characterEnd": 1208,
+      "text": "September 1, 2023",
+      "label": "DATE"
+    },
+    {
+      "characterStart": 1300,
+      "characterEnd": 1319,
+      "text": "Princeton-Plainsboro",
+      "label": "LOCATION"
+    },
+    {
+      "characterStart": 1339,
+      "characterEnd": 1357,
+      "text": "Princeton, NJ 08540",
+      "label": "LOCATION"
+    },
+    {
+      "characterStart": 1376,
+      "characterEnd": 1393,
+      "text": "September 15, 2023",
+      "label": "DATE"
+    },
+    {
+      "characterStart": 1483,
+      "characterEnd": 1498,
+      "text": "October 20, 2023",
+      "label": "DATE"
+    },
+    {
+      "characterStart": 1508,
+      "characterEnd": 1531,
+      "text": "Lakeside Wellness Center",
+      "label": "LOCATION"
+    },
+    {
+      "characterStart": 1551,
+      "characterEnd": 1574,
+      "text": "Jonathan Alexander Smith",
+      "label": "NAME"
+    },
+    {
+      "characterStart": 540,
+      "characterEnd": 549,
+      "text": "Lisinopril",
+      "label": "LOCATION"
+    },
+    {
+      "characterStart": 692,
+      "characterEnd": 706,
+      "text": "Senior Engineer",
+      "label": "NAME"
+    }
+  ],
+  "filteredText": "Medical Record: #MRN-928374\nPatient: ************************\nDate of Birth: **********\nAddress: 456 Oakwood Avenue, Suite 201, *****************\nPrimary Phone: (206) 555-0123\nSecondary Phone: ************\nEmail: ************************\nSocial Security Number: ***********\nEmergency Contact: **** Smith\nRelationship: Spouse\nEmergency Phone: ************\nAdmitted on: ************\nFacility: *************************\nDoctor: Dr. Elizabeth Blackwell\nDepartment: Cardiology\nPrevious visit: **************\nDiagnosis: Hypertension\nMedication: ********** 10mg\nPharmacy: ********* at 123 Pine St\nInsurance: Blue Cross Blue Shield\nPolicy Number: BCBS-4829301\nEmployer: *****************\nJob Title: ***************\nWork Address: 100 Innovation Way, *****************\nWork Phone: ************\nLab Results from: ***************\nBlood Type: A+\nNotes from ***************:\nPatient reported mild chest pain.\nRecommended follow-up in 2 weeks.\nFollow-up Date: ***************\nLocation for follow-up: ********************************\nTravel History: None recently.\nTobacco Use: No.\nAlcohol Use: Occasional.\nNext of Kin: ************\nKin Phone: ************\nBilling Address: Same as home.\nLast Payment Date: *****************\nAmount Due: $0.00\nReference Number: REF-102938\nReferral from: Dr. Gregory House\nHospital: ********************\nCity of Referral: *******************\nConsultation on: ******************\nNotes from Consultant: Stable condition.\nMedication adjustment: None.\nNext appointment: ****************\nClinic: ************************\nEnd of Record for ************************.",
+  "explanation": {
+    "appliedSpans": [
+      {
+        "characterStart": 38,
+        "characterEnd": 61,
+        "text": "Jonathan Alexander Smith",
+        "label": "NAME"
+      },
+      {
+        "characterStart": 78,
+        "characterEnd": 87,
+        "text": "01/15/1975",
+        "label": "DATE"
+      },
+      {
+        "characterStart": 129,
+        "characterEnd": 145,
+        "text": "Seattle, WA 98101",
+        "label": "LOCATION"
+      },
+      {
+        "characterStart": 194,
+        "characterEnd": 205,
+        "text": "206-555-0145",
+        "label": "PHONE_NUMBER"
+      },
+      {
+        "characterStart": 214,
+        "characterEnd": 237,
+        "text": "j.smith.alex@example.org",
+        "label": "EMAIL_ADDRESS"
+      },
+      {
+        "characterStart": 263,
+        "characterEnd": 273,
+        "text": "999-00-1234",
+        "label": "SSN"
+      },
+      {
+        "characterStart": 294,
+        "characterEnd": 297,
+        "text": "Mary",
+        "label": "NAME"
+      },
+      {
+        "characterStart": 343,
+        "characterEnd": 354,
+        "text": "206-555-0167",
+        "label": "PHONE_NUMBER"
+      },
+      {
+        "characterStart": 369,
+        "characterEnd": 380,
+        "text": "July 4, 2023",
+        "label": "DATE"
+      },
+      {
+        "characterStart": 392,
+        "characterEnd": 416,
+        "text": "Harborview Medical Center",
+        "label": "LOCATION"
+      },
+      {
+        "characterStart": 489,
+        "characterEnd": 502,
+        "text": "March 12, 2022",
+        "label": "DATE"
+      },
+      {
+        "characterStart": 566,
+        "characterEnd": 574,
+        "text": "Walgreens",
+        "label": "LOCATION"
+      },
+      {
+        "characterStart": 663,
+        "characterEnd": 679,
+        "text": "TechSolutions Inc",
+        "label": "LOCATION"
+      },
+      {
+        "characterStart": 742,
+        "characterEnd": 758,
+        "text": "Redmond, WA 98052",
+        "label": "LOCATION"
+      },
+      {
+        "characterStart": 772,
+        "characterEnd": 783,
+        "text": "425-555-0199",
+        "label": "PHONE_NUMBER"
+      },
+      {
+        "characterStart": 803,
+        "characterEnd": 817,
+        "text": "August 10, 2023",
+        "label": "DATE"
+      },
+      {
+        "characterStart": 845,
+        "characterEnd": 859,
+        "text": "August 11, 2023",
+        "label": "DATE"
+      },
+      {
+        "characterStart": 946,
+        "characterEnd": 960,
+        "text": "August 25, 2023",
+        "label": "DATE"
+      },
+      {
+        "characterStart": 986,
+        "characterEnd": 1017,
+        "text": "789 Maple St, Bellevue, WA 98004",
+        "label": "LOCATION"
+      },
+      {
+        "characterStart": 1105,
+        "characterEnd": 1116,
+        "text": "Robert Smith",
+        "label": "NAME"
+      },
+      {
+        "characterStart": 1129,
+        "characterEnd": 1140,
+        "text": "206-555-0211",
+        "label": "PHONE_NUMBER"
+      },
+      {
+        "characterStart": 1192,
+        "characterEnd": 1208,
+        "text": "September 1, 2023",
+        "label": "DATE"
+      },
+      {
+        "characterStart": 1300,
+        "characterEnd": 1319,
+        "text": "Princeton-Plainsboro",
+        "label": "LOCATION"
+      },
+      {
+        "characterStart": 1339,
+        "characterEnd": 1357,
+        "text": "Princeton, NJ 08540",
+        "label": "LOCATION"
+      },
+      {
+        "characterStart": 1376,
+        "characterEnd": 1393,
+        "text": "September 15, 2023",
+        "label": "DATE"
+      },
+      {
+        "characterStart": 1483,
+        "characterEnd": 1498,
+        "text": "October 20, 2023",
+        "label": "DATE"
+      },
+      {
+        "characterStart": 1508,
+        "characterEnd": 1531,
+        "text": "Lakeside Wellness Center",
+        "label": "LOCATION"
+      },
+      {
+        "characterStart": 1551,
+        "characterEnd": 1574,
+        "text": "Jonathan Alexander Smith",
+        "label": "NAME"
+      },
+      {
+        "characterStart": 540,
+        "characterEnd": 549,
+        "text": "Lisinopril",
+        "label": "LOCATION"
+      },
+      {
+        "characterStart": 692,
+        "characterEnd": 706,
+        "text": "Senior Engineer",
+        "label": "NAME"
+      }
+    ]
+  }
+}

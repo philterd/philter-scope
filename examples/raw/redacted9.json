@@ -3,14 +3,14 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": ".doe@",
         "label": "EMAIL",
         "characterStart": 15,
         "characterEnd": 20,
         "filterType": "EMAIL"
       },
       {
-        "text": "*****",
+        "text": "il.co",
         "label": "PHONE",
         "characterStart": 23,
         "characterEnd": 28,

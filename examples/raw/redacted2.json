@@ -3,10 +3,10 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "555-0199",
         "label": "PHONE",
         "characterStart": 12,
-        "characterEnd": 17,
+        "characterEnd": 20,
         "filterType": "PHONE"
       }
     ]

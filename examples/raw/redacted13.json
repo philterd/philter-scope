@@ -3,7 +3,7 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "Bob Jones",
         "label": "NAME",
         "characterStart": 11,
         "characterEnd": 20,

@@ -3,14 +3,14 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "789 Pine Rd, Seattle",
         "label": "ADDRESS",
         "characterStart": 17,
-        "characterEnd": 22,
+        "characterEnd": 37,
         "filterType": "ADDRESS"
       },
       {
-        "text": "*****",
+        "text": "ne Rd",
         "label": "NAME",
         "characterStart": 23,
         "characterEnd": 28,

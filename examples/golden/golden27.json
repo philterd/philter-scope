@@ -1,0 +1,230 @@
+{
+  "text": "Medical Record: #MRN-928374\nPatient: Jonathan Alexander Smith\nDate of Birth: 01/15/1975\nAddress: 456 Oakwood Avenue, Suite 201, Seattle, WA 98101\nPrimary Phone: (206) 555-0123\nSecondary Phone: 206-555-0145\nEmail: j.smith.alex@example.org\nSocial Security Number: 999-00-1234\nEmergency Contact: Mary Smith\nRelationship: Spouse\nEmergency Phone: 206-555-0167\nAdmitted on: July 4, 2023\nFacility: Harborview Medical Center\nDoctor: Dr. Elizabeth Blackwell\nDepartment: Cardiology\nPrevious visit: March 12, 2022\nDiagnosis: Hypertension\nMedication: Lisinopril 10mg\nPharmacy: Walgreens at 123 Pine St\nInsurance: Blue Cross Blue Shield\nPolicy Number: BCBS-4829301\nEmployer: TechSolutions Inc\nJob Title: Senior Engineer\nWork Address: 100 Innovation Way, Redmond, WA 98052\nWork Phone: 425-555-0199\nLab Results from: August 10, 2023\nBlood Type: A+\nNotes from August 11, 2023:\nPatient reported mild chest pain.\nRecommended follow-up in 2 weeks.\nFollow-up Date: August 25, 2023\nLocation for follow-up: 789 Maple St, Bellevue, WA 98004\nTravel History: None recently.\nTobacco Use: No.\nAlcohol Use: Occasional.\nNext of Kin: Robert Smith\nKin Phone: 206-555-0211\nBilling Address: Same as home.\nLast Payment Date: September 1, 2023\nAmount Due: $0.00\nReference Number: REF-102938\nReferral from: Dr. Gregory House\nHospital: Princeton-Plainsboro\nCity of Referral: Princeton, NJ 08540\nConsultation on: September 15, 2023\nNotes from Consultant: Stable condition.\nMedication adjustment: None.\nNext appointment: October 20, 2023\nClinic: Lakeside Wellness Center\nEnd of Record for Jonathan Alexander Smith.",
+  "labels": [
+    {
+      "text": "Jonathan Alexander Smith",
+      "label": "NAME",
+      "characterStart": 38,
+      "characterEnd": 61,
+      "filterType": "NAME"
+    },
+    {
+      "text": "01/15/1975",
+      "label": "DATE",
+      "characterStart": 78,
+      "characterEnd": 87,
+      "filterType": "DATE"
+    },
+    {
+      "text": "456 Oakwood Avenue, Suite 201, Seattle, WA 98101",
+      "label": "LOCATION",
+      "characterStart": 98,
+      "characterEnd": 145,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "(206) 555-0123",
+      "label": "PHONE_NUMBER",
+      "characterStart": 162,
+      "characterEnd": 175,
+      "filterType": "PHONE_NUMBER"
+    },
+    {
+      "text": "206-555-0145",
+      "label": "PHONE_NUMBER",
+      "characterStart": 194,
+      "characterEnd": 205,
+      "filterType": "PHONE_NUMBER"
+    },
+    {
+      "text": "j.smith.alex@example.org",
+      "label": "EMAIL_ADDRESS",
+      "characterStart": 214,
+      "characterEnd": 237,
+      "filterType": "EMAIL_ADDRESS"
+    },
+    {
+      "text": "999-00-1234",
+      "label": "SSN",
+      "characterStart": 263,
+      "characterEnd": 273,
+      "filterType": "SSN"
+    },
+    {
+      "text": "Mary Smith",
+      "label": "NAME",
+      "characterStart": 294,
+      "characterEnd": 303,
+      "filterType": "NAME"
+    },
+    {
+      "text": "206-555-0167",
+      "label": "PHONE_NUMBER",
+      "characterStart": 343,
+      "characterEnd": 354,
+      "filterType": "PHONE_NUMBER"
+    },
+    {
+      "text": "July 4, 2023",
+      "label": "DATE",
+      "characterStart": 369,
+      "characterEnd": 380,
+      "filterType": "DATE"
+    },
+    {
+      "text": "Harborview Medical Center",
+      "label": "LOCATION",
+      "characterStart": 392,
+      "characterEnd": 416,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "Elizabeth Blackwell",
+      "label": "NAME",
+      "characterStart": 430,
+      "characterEnd": 448,
+      "filterType": "NAME"
+    },
+    {
+      "text": "March 12, 2022",
+      "label": "DATE",
+      "characterStart": 489,
+      "characterEnd": 502,
+      "filterType": "DATE"
+    },
+    {
+      "text": "Walgreens",
+      "label": "LOCATION",
+      "characterStart": 566,
+      "characterEnd": 574,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "123 Pine St",
+      "label": "LOCATION",
+      "characterStart": 579,
+      "characterEnd": 589,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "TechSolutions Inc",
+      "label": "LOCATION",
+      "characterStart": 663,
+      "characterEnd": 679,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "100 Innovation Way, Redmond, WA 98052",
+      "label": "LOCATION",
+      "characterStart": 722,
+      "characterEnd": 758,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "425-555-0199",
+      "label": "PHONE_NUMBER",
+      "characterStart": 772,
+      "characterEnd": 783,
+      "filterType": "PHONE_NUMBER"
+    },
+    {
+      "text": "August 10, 2023",
+      "label": "DATE",
+      "characterStart": 803,
+      "characterEnd": 817,
+      "filterType": "DATE"
+    },
+    {
+      "text": "August 11, 2023",
+      "label": "DATE",
+      "characterStart": 845,
+      "characterEnd": 859,
+      "filterType": "DATE"
+    },
+    {
+      "text": "August 25, 2023",
+      "label": "DATE",
+      "characterStart": 946,
+      "characterEnd": 960,
+      "filterType": "DATE"
+    },
+    {
+      "text": "789 Maple St, Bellevue, WA 98004",
+      "label": "LOCATION",
+      "characterStart": 986,
+      "characterEnd": 1017,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "Robert Smith",
+      "label": "NAME",
+      "characterStart": 1105,
+      "characterEnd": 1116,
+      "filterType": "NAME"
+    },
+    {
+      "text": "206-555-0211",
+      "label": "PHONE_NUMBER",
+      "characterStart": 1129,
+      "characterEnd": 1140,
+      "filterType": "PHONE_NUMBER"
+    },
+    {
+      "text": "September 1, 2023",
+      "label": "DATE",
+      "characterStart": 1192,
+      "characterEnd": 1208,
+      "filterType": "DATE"
+    },
+    {
+      "text": "Gregory House",
+      "label": "NAME",
+      "characterStart": 1276,
+      "characterEnd": 1288,
+      "filterType": "NAME"
+    },
+    {
+      "text": "Princeton-Plainsboro",
+      "label": "LOCATION",
+      "characterStart": 1300,
+      "characterEnd": 1319,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "Princeton, NJ 08540",
+      "label": "LOCATION",
+      "characterStart": 1339,
+      "characterEnd": 1357,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "September 15, 2023",
+      "label": "DATE",
+      "characterStart": 1376,
+      "characterEnd": 1393,
+      "filterType": "DATE"
+    },
+    {
+      "text": "October 20, 2023",
+      "label": "DATE",
+      "characterStart": 1483,
+      "characterEnd": 1498,
+      "filterType": "DATE"
+    },
+    {
+      "text": "Lakeside Wellness Center",
+      "label": "LOCATION",
+      "characterStart": 1508,
+      "characterEnd": 1531,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "Jonathan Alexander Smith",
+      "label": "NAME",
+      "characterStart": 1551,
+      "characterEnd": 1574,
+      "filterType": "NAME"
+    }
+  ],
+  "filteredText": "Medical Record: #MRN-928374\nPatient: Jonathan Alexander Smith\nDate of Birth: 01/15/1975\nAddress: 456 Oakwood Avenue, Suite 201, Seattle, WA 98101\nPrimary Phone: (206) 555-0123\nSecondary Phone: 206-555-0145\nEmail: j.smith.alex@example.org\nSocial Security Number: 999-00-1234\nEmergency Contact: Mary Smith\nRelationship: Spouse\nEmergency Phone: 206-555-0167\nAdmitted on: July 4, 2023\nFacility: Harborview Medical Center\nDoctor: Dr. Elizabeth Blackwell\nDepartment: Cardiology\nPrevious visit: March 12, 2022\nDiagnosis: Hypertension\nMedication: Lisinopril 10mg\nPharmacy: Walgreens at 123 Pine St\nInsurance: Blue Cross Blue Shield\nPolicy Number: BCBS-4829301\nEmployer: TechSolutions Inc\nJob Title: Senior Engineer\nWork Address: 100 Innovation Way, Redmond, WA 98052\nWork Phone: 425-555-0199\nLab Results from: August 10, 2023\nBlood Type: A+\nNotes from August 11, 2023:\nPatient reported mild chest pain.\nRecommended follow-up in 2 weeks.\nFollow-up Date: August 25, 2023\nLocation for follow-up: 789 Maple St, Bellevue, WA 98004\nTravel History: None recently.\nTobacco Use: No.\nAlcohol Use: Occasional.\nNext of Kin: Robert Smith\nKin Phone: 206-555-0211\nBilling Address: Same as home.\nLast Payment Date: September 1, 2023\nAmount Due: $0.00\nReference Number: REF-102938\nReferral from: Dr. Gregory House\nHospital: Princeton-Plainsboro\nCity of Referral: Princeton, NJ 08540\nConsultation on: September 15, 2023\nNotes from Consultant: Stable condition.\nMedication adjustment: None.\nNext appointment: October 20, 2023\nClinic: Lakeside Wellness Center\nEnd of Record for Jonathan Alexander Smith."
+}

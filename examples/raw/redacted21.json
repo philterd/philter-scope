@@ -3,21 +3,21 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "Bob Jones",
         "label": "NAME",
         "characterStart": 11,
-        "characterEnd": 16,
+        "characterEnd": 20,
         "filterType": "NAME"
       },
       {
-        "text": "*****",
+        "text": " I li",
         "label": "UNKNOWN",
         "characterStart": 24,
         "characterEnd": 29,
         "filterType": "UNKNOWN"
       },
       {
-        "text": "*****",
+        "text": "e in ",
         "label": "LOCATION",
         "characterStart": 30,
         "characterEnd": 35,

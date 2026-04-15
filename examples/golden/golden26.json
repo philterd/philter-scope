@@ -1,0 +1,76 @@
+{
+  "text": "Dear Dr. Smith,\n\nThis is a follow-up regarding patient Jane Doe (DOB: 05/12/1980). \nShe was seen at St. Jude Medical Center in Memphis on April 10, 2024.\nHer phone number is 555-0199 and her email is jane.doe@example.com.\nPlease send the records to 123 Main St, Springfield, IL 62704.\n\nSincerely,\nNurse Ratched",
+  "labels": [
+    {
+      "text": "Smith",
+      "label": "NAME",
+      "characterStart": 10,
+      "characterEnd": 14,
+      "filterType": "NAME"
+    },
+    {
+      "text": "Jane Doe",
+      "label": "NAME",
+      "characterStart": 56,
+      "characterEnd": 63,
+      "filterType": "NAME"
+    },
+    {
+      "text": "05/12/1980",
+      "label": "DATE",
+      "characterStart": 71,
+      "characterEnd": 80,
+      "filterType": "DATE"
+    },
+    {
+      "text": "St. Jude Medical Center",
+      "label": "LOCATION",
+      "characterStart": 101,
+      "characterEnd": 123,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "Memphis",
+      "label": "LOCATION",
+      "characterStart": 128,
+      "characterEnd": 134,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "April 10, 2024",
+      "label": "DATE",
+      "characterStart": 139,
+      "characterEnd": 152,
+      "filterType": "DATE"
+    },
+    {
+      "text": "555-0199",
+      "label": "PHONE_NUMBER",
+      "characterStart": 175,
+      "characterEnd": 182,
+      "filterType": "PHONE_NUMBER"
+    },
+    {
+      "text": "jane.doe@example.com",
+      "label": "EMAIL_ADDRESS",
+      "characterStart": 201,
+      "characterEnd": 220,
+      "filterType": "EMAIL_ADDRESS"
+    },
+    {
+      "text": "123 Main St, Springfield, IL 62704",
+      "label": "LOCATION",
+      "characterStart": 250,
+      "characterEnd": 283,
+      "filterType": "LOCATION"
+    },
+    {
+      "text": "Nurse Ratched",
+      "label": "NAME",
+      "characterStart": 298,
+      "characterEnd": 310,
+      "filterType": "NAME"
+    }
+  ],
+  "filteredText": "Dear Dr. Smith,\n\nThis is a follow-up regarding patient Jane Doe (DOB: 05/12/1980). \nShe was seen at St. Jude Medical Center in Memphis on April 10, 2024.\nHer phone number is 555-0199 and her email is jane.doe@example.com.\nPlease send the records to 123 Main St, Springfield, IL 62704.\n\nSincerely,\nNurse Ratched"
+}

@@ -3,14 +3,14 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "Ivan Anderson",
         "label": "NAME",
         "characterStart": 11,
-        "characterEnd": 16,
+        "characterEnd": 24,
         "filterType": "NAME"
       },
       {
-        "text": "*****",
+        "text": "I liv",
         "label": "LOCATION",
         "characterStart": 29,
         "characterEnd": 34,

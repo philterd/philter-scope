@@ -3,21 +3,21 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "1990-01-01",
         "label": "DATE",
         "characterStart": 8,
-        "characterEnd": 13,
+        "characterEnd": 18,
         "filterType": "DATE"
       },
       {
-        "text": "*****",
+        "text": "1 in ",
         "label": "LOCATION",
         "characterStart": 17,
         "characterEnd": 22,
         "filterType": "LOCATION"
       },
       {
-        "text": "*****",
+        "text": "ew Yo",
         "label": "ADDRESS",
         "characterStart": 23,
         "characterEnd": 28,

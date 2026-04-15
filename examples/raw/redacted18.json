@@ -3,21 +3,21 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "Heidi Moore",
         "label": "NAME",
         "characterStart": 11,
-        "characterEnd": 16,
+        "characterEnd": 22,
         "filterType": "NAME"
       },
       {
-        "text": "*****",
+        "text": "nd I ",
         "label": "UNKNOWN",
         "characterStart": 24,
         "characterEnd": 29,
         "filterType": "UNKNOWN"
       },
       {
-        "text": "*****",
+        "text": "ive i",
         "label": "LOCATION",
         "characterStart": 30,
         "characterEnd": 35,

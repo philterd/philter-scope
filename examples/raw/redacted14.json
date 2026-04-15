@@ -3,10 +3,10 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "David Wilson",
         "label": "NAME",
         "characterStart": 11,
-        "characterEnd": 16,
+        "characterEnd": 23,
         "filterType": "NAME"
       }
     ]

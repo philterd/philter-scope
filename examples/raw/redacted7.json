@@ -3,10 +3,10 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "Alice Johnson",
         "label": "NAME",
         "characterStart": 0,
-        "characterEnd": 5,
+        "characterEnd": 13,
         "filterType": "NAME"
       }
     ]

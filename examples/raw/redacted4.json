@@ -3,14 +3,14 @@
   "explanation": {
     "appliedSpans": [
       {
-        "text": "*****",
+        "text": "ane S",
         "label": "NAME",
         "characterStart": 1,
         "characterEnd": 6,
         "filterType": "NAME"
       },
       {
-        "text": "*****",
+        "text": "is 55",
         "label": "PHONE",
         "characterStart": 19,
         "characterEnd": 24,
