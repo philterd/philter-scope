@@ -45,7 +45,8 @@ type mockStorage struct {
 
 func (m *mockStorage) GetHistory(ctx context.Context) ([]model.HistoryEntry, error) {
 	return []model.HistoryEntry{
-		{ID: "507f1f77bcf86cd799439011", F1Score: 0.85},
+		{ID: "507f1f77bcf86cd799439011", F1Score: 0.85, Recall: 0.80, Threshold: 0.75},
+		{ID: "507f1f77bcf86cd799439012", F1Score: 0.50, Recall: 0.40, Threshold: 0.75},
 	}, nil
 }
 
@@ -106,7 +107,7 @@ func TestAPIs(t *testing.T) {
 
 		var history model.AuditHistory
 		json.NewDecoder(w.Body).Decode(&history)
-		if len(history.Entries) != 1 || history.Entries[0].F1Score != 0.85 {
+		if len(history.Entries) != 2 || history.Entries[0].F1Score != 0.85 {
 			t.Errorf("Unexpected history data: %+v", history)
 		}
 	})

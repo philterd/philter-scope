@@ -350,8 +350,13 @@
                     if (entry.f1_score > prevF1) trend = " ↑";
                     else if (entry.f1_score < prevF1) trend = " ↓";
                 }
+
+                let status = "";
+                if (entry.threshold && entry.recall < entry.threshold) {
+                    status = " ⚠️";
+                }
                 
-                opt.textContent = `${date} (F1: ${f1}%)${trend}`;
+                opt.textContent = `${date} (F1: ${f1}%)${trend}${status}`;
                 selector.appendChild(opt);
             });
         }

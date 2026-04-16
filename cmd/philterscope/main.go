@@ -440,6 +440,7 @@ func runHistory(cmd *cobra.Command, args []string) error {
 				Precision: res.Precision,
 				Recall:    res.Recall,
 				F1Score:   res.F1Score,
+				Threshold: res.Threshold,
 				Policy:    res.Policy,
 			})
 		}

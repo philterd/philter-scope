@@ -46,6 +46,7 @@ type HistoryEntry struct {
 	Precision float64                `json:"precision" bson:"precision"`
 	Recall    float64                `json:"recall" bson:"recall"`
 	F1Score   float64                `json:"f1_score" bson:"f1_score"`
+	Threshold float64                `json:"threshold" bson:"threshold"`
 	Policy    map[string]interface{} `json:"policy" bson:"policy"`
 	GroupName string                 `json:"group_name" bson:"group_name"`
 }
