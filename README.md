@@ -10,6 +10,7 @@ PhilterScope is a core part of our framework for implementing PII/PHI redaction 
 
 - [Running PhilterScope](docs/running.md): Detailed explanation of commands and flags.
 - [Environment Variables](docs/environment-variables.md): Available environment variables for configuration.
+- [Development](docs/development.md): Instructions for building and testing the project.
 
 ## Quick Start
 
@@ -20,12 +21,6 @@ The following command will compare the raw text in the `examples/raw` directory 
 ```
 
 Check the `examples/report.html` file for an example of the generated report. See the [documentation](docs/running.md) for more details and options.
-
-## Development
-
-- **Tests**: Run `go test ./...` to execute the test suite.
-- **Build**: Use `make build` to compile the binary for your platform.
-- **Makefile**: Supports cross-compilation for Linux, Mac, and Windows.
 
 ## License
 
