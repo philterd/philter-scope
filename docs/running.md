@@ -68,6 +68,8 @@ Thresholds can also be set individually for each entity type:
 
 The `serve` command launches the Evaluation UI, allowing you to view and interact with the results of a previous audit.
 
+Note that PhilterScope is intended to be run locally and not over a network. If running over a network, be sure to use SSL/TLS connection to MongoDB and to the PhilterScope UI.
+
 **Usage:**
 
 ```bash
