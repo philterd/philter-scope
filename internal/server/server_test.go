@@ -39,6 +39,8 @@ type mockStorage struct {
 	dismissAudit     string
 	dismissEntity    string
 	saveRecsCalled   bool
+
+	GetAuditResultFunc func(ctx context.Context, id string) (*model.AuditResult, error)
 }
 
 func (m *mockStorage) GetHistory(ctx context.Context) ([]model.HistoryEntry, error) {
@@ -48,6 +50,9 @@ func (m *mockStorage) GetHistory(ctx context.Context) ([]model.HistoryEntry, err
 }
 
 func (m *mockStorage) GetAuditResult(ctx context.Context, id string) (*model.AuditResult, error) {
+	if m.GetAuditResultFunc != nil {
+		return m.GetAuditResultFunc(ctx, id)
+	}
 	if id == "507f1f77bcf86cd799439011" {
 		return &model.AuditResult{F1Score: 0.85}, nil
 	}
@@ -88,7 +93,7 @@ func (m *mockStorage) SaveRecommendations(ctx context.Context, id string, recs [
 
 func TestAPIs(t *testing.T) {
 	store := &mockStorage{}
-	mux := NewServerMux(store)
+	mux := NewServerMux(store, false)
 
 	t.Run("History API", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/api/history", nil)
@@ -252,7 +257,7 @@ func TestGenerateStandaloneReport(t *testing.T) {
 		},
 	}
 
-	report, err := GenerateStandaloneReport(result)
+	report, err := GenerateStandaloneReport(result, false)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -268,5 +273,84 @@ func TestGenerateStandaloneReport(t *testing.T) {
 	// Check if JSON data is embedded
 	if !strings.Contains(report, `"total_documents":1`) {
 		t.Errorf("Report missing JSON data (checked for '\"total_documents\":1')\nGot: %s", report)
+	}
+}
+
+func TestObfuscateAuditResult(t *testing.T) {
+	res := model.AuditResult{
+		Details: []model.Result{
+			{
+				Filename: "test.txt",
+				Expected: "My name is John Doe.",
+				Actual:   "My name is John Doe.",
+				Spans: []model.Span{
+					{Text: "John Doe", CharacterStart: 11, CharacterEnd: 19, Label: "NAME"},
+				},
+				Overlaps: []model.Overlap{
+					{
+						Golden: model.Span{Text: "John Doe", CharacterStart: 11, CharacterEnd: 19},
+						Actual: model.Span{Text: "John Doe", CharacterStart: 11, CharacterEnd: 19},
+						Type:   "EXACT",
+					},
+				},
+			},
+		},
+	}
+
+	obfuscated := ObfuscateAuditResult(res)
+
+	if obfuscated.Details[0].Expected != "My name is 4c2a9." {
+		t.Errorf("Expected obfuscated 'Expected' text to be 'My name is 4c2a9.', got %q", obfuscated.Details[0].Expected)
+	}
+
+	if obfuscated.Details[0].Actual != "My name is 4c2a9." {
+		t.Errorf("Expected obfuscated 'Actual' text to be 'My name is 4c2a9.', got %q", obfuscated.Details[0].Actual)
+	}
+
+	if obfuscated.Details[0].Spans[0].Text != "4c2a9" {
+		t.Errorf("Expected obfuscated span text to be '4c2a9', got %q", obfuscated.Details[0].Spans[0].Text)
+	}
+
+	if obfuscated.Details[0].Spans[0].CharacterEnd != 16 {
+		t.Errorf("Expected obfuscated span characterEnd to be 16, got %d", obfuscated.Details[0].Spans[0].CharacterEnd)
+	}
+
+	if obfuscated.Details[0].Overlaps[0].Golden.Text != "4c2a9" {
+		t.Errorf("Expected obfuscated golden span text to be '4c2a9', got %q", obfuscated.Details[0].Overlaps[0].Golden.Text)
+	}
+
+	if obfuscated.Details[0].Overlaps[0].Golden.CharacterEnd != 16 {
+		t.Errorf("Expected obfuscated golden span characterEnd to be 16, got %d", obfuscated.Details[0].Overlaps[0].Golden.CharacterEnd)
+	}
+}
+
+func TestPrivacyModeAPI(t *testing.T) {
+	store := &mockStorage{}
+	mux := NewServerMux(store, true) // Enable privacy mode
+
+	req := httptest.NewRequest("GET", "/api/audit?id=507f1f77bcf86cd799439011", nil)
+	w := httptest.NewRecorder()
+
+	// Update mock to return an audit result with PII
+	store.GetAuditResultFunc = func(ctx context.Context, id string) (*model.AuditResult, error) {
+		return &model.AuditResult{
+			Details: []model.Result{
+				{
+					Expected: "PII: Secret",
+					Spans: []model.Span{
+						{Text: "Secret", CharacterStart: 5, CharacterEnd: 11},
+					},
+				},
+			},
+		}, nil
+	}
+
+	mux.ServeHTTP(w, req)
+
+	var res model.AuditResult
+	json.NewDecoder(w.Body).Decode(&res)
+
+	if res.Details[0].Expected != "PII: 1e694" {
+		t.Errorf("API response should be obfuscated, got %q", res.Details[0].Expected)
 	}
 }

@@ -22,7 +22,7 @@ audit-mongodb-thresholds: build ## Run audit on example files with MongoDB stora
 	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --thresholds "NAME=0.9,SSN=1.0"
 
 serve: build ## Launch Evaluation UI using MongoDB storage
-	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope serve
+	PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope serve #--privacy
 
 deps: ## Download and tidy Go dependencies
 	go mod download

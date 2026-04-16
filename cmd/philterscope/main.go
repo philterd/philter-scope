@@ -46,6 +46,7 @@ var (
 	thresholds    string
 	groupName     string
 	enableAI      bool
+	privacy       bool
 )
 
 func main() {
@@ -75,6 +76,7 @@ func main() {
 	}
 	serveCmd.Flags().IntVar(&port, "port", 5000, "Port for the UI")
 	serveCmd.Flags().StringVar(&goldenFile, "report", "report.json", "JSON report to serve")
+	serveCmd.Flags().BoolVar(&privacy, "privacy", false, "Enable privacy mode (obfuscate PII in UI)")
 
 	var historyCmd = &cobra.Command{
 		Use:   "history",
@@ -270,7 +272,7 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Export results
-	htmlReport, err := server.GenerateStandaloneReport(auditResult)
+	htmlReport, err := server.GenerateStandaloneReport(auditResult, false)
 	if err != nil {
 		return fmt.Errorf("failed to generate HTML report: %w", err)
 	}
@@ -325,7 +327,7 @@ func runServe(cmd *cobra.Command, args []string) error {
 		m, err := storage.NewMongoDBStorage(ctx)
 		if err == nil {
 			defer m.Close(ctx)
-			return server.StartServer(port, m)
+			return server.StartServer(port, m, privacy)
 		}
 		mongoErr = err
 		fmt.Printf("Warning: failed to connect to MongoDB: %v. Falling back to file mode.\n", err)
@@ -346,7 +348,7 @@ func runServe(cmd *cobra.Command, args []string) error {
 		if mongoErr != nil {
 			res.Notes = fmt.Sprintf("Warning: Failed to connect to MongoDB: %v. %s", mongoErr, res.Notes)
 		}
-		return server.StartStandaloneServer(port, res)
+		return server.StartStandaloneServer(port, res, privacy)
 	}
 
 	return fmt.Errorf("no MongoDB connection string (PHILTERSCOPE_MONGODB_CONNECTION_STRING) and no input file (--golden) provided")
