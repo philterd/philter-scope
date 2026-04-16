@@ -19,7 +19,7 @@ allows you to run local Large Language Models (LLMs).
 ```bash
 export PHILTERSCOPE_OLLAMA_URL="http://localhost:11434"
 export PHILTERSCOPE_OLLAMA_MODEL="gemma4"
-./philterscope audit --ai
+./philterscope-audit --ai
 ```
 
 If these environment variables are not set and you use the `--ai` flag, PhilterScope will attempt to use the default
@@ -34,8 +34,8 @@ this history across multiple users or machines, you can use a MongoDB database.
 
 ```bash
 export PHILTERSCOPE_MONGODB_CONNECTION_STRING="mongodb://user:password@localhost:27017/philterscope"
-./philterscope audit
+./philterscope-audit
 ```
 
-When this variable is set, every successful `audit` run will automatically save the result to the MongoDB collection.
-The `history` command will also prioritize results from MongoDB.
+When this variable is set, every successful audit run will automatically save the result to the MongoDB collection.
+The history command in philterscope-serve will also prioritize results from MongoDB.

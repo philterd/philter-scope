@@ -17,7 +17,7 @@ PhilterScope is a core part of our framework for implementing PII/PHI redaction 
 The following command will compare the raw text in the `examples/raw` directory against the golden dataset in `examples/golden` and generate an HTML report in the `examples/` directory.
 
 ```
-./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
+./philterscope-audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
 ```
 
 Check the `examples/report.html` file for an example of the generated report. See the [documentation](docs/running.md) for more details and options.

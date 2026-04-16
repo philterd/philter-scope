@@ -3,6 +3,8 @@
 PhilterScope is a standalone CLI tool for PII redaction auditing and policy optimization. This document explains the
 available commands and flags.
 
+Note that PhilterScope is intended to be run locally and not over a network. If running over a network, be sure to use SSL/TLS connection to MongoDB and to the PhilterScope UI.
+
 ## 1. Installation
 
 PhilterScope is written in Go. You can build the binary for your platform using the provided Makefile:
@@ -11,28 +13,28 @@ PhilterScope is written in Go. You can build the binary for your platform using 
 make build
 ```
 
-This will create a `philterscope` binary in the project root.
+This will create `philterscope-audit` and `philterscope-serve` binaries in the project root.
 
 ---
 
 ## 2. Commands
 
-PhilterScope provides three primary commands: `audit`, `serve`, and `history`.
+PhilterScope provides two primary commands: `philterscope-audit` for performing audits and `philterscope-serve` for viewing results.
 
-### `audit`
+### `philterscope-audit`
 
-The `audit` command compares raw text files against a "golden dataset" to evaluate redaction quality.
+The `philterscope-audit` command compares raw text files against a "golden dataset" to evaluate redaction quality.
 
 **Usage:**
 
 ```bash
-PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope audit [flags]
+PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-audit [flags]
 ```
 
 Or without MongoDB:
 
 ```bash
-./philterscope audit [flags]
+./philterscope-audit [flags]
 ```
 
 **Commonly Used Flags:**
@@ -53,13 +55,13 @@ Or without MongoDB:
 **Example:**
 
 ```bash
-./philterscope audit --input ./examples/raw --golden ./examples/golden --output ./examples/ --threshold 0.75 --ai
+./philterscope-audit --input ./examples/raw --golden ./examples/golden --output ./examples/ --threshold 0.75 --ai
 ```
 
 Thresholds can also be set individually for each entity type:
 
 ```bash
-./philterscope audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --thresholds "NAME=0.9,SSN=1.0"
+./philterscope-audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --thresholds "NAME=0.9,SSN=1.0"
 ```
 
 ---
@@ -68,12 +70,10 @@ Thresholds can also be set individually for each entity type:
 
 The `serve` command launches the Evaluation UI, allowing you to view and interact with the results of a previous audit.
 
-Note that PhilterScope is intended to be run locally and not over a network. If running over a network, be sure to use SSL/TLS connection to MongoDB and to the PhilterScope UI.
-
 **Usage:**
 
 ```bash
-./philterscope serve [flags]
+./philterscope-serve serve [flags]
 ```
 
 **Flags:**
@@ -87,29 +87,29 @@ Note that PhilterScope is intended to be run locally and not over a network. If 
 **Example:**
 
 ```bash
-PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope serve --privacy
-````
+PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-serve serve --privacy
+```
 
 Or without MongoDB:
 
 ```bash
-./philterscope serve --report ./examples/report.json --port 5000 --privacy
+./philterscope-serve serve --report ./examples/report.json --port 5000 --privacy
 ```
 
 ---
 
 ### `history`
 
-The `history` command lists past audit results stored in your local directory or MongoDB database.
+The `history` command lists past audit results stored in your local directory or MongoDB database. This command is available in `philterscope-serve`.
 
 **Usage:**
 
 ```bash
-./philterscope history
+./philterscope-serve history
 ```
 
 **Note:**
-Audit results are automatically saved to history whenever you run the `audit` command. By default, they are stored in
+Audit results are automatically saved to history whenever you run an audit. By default, they are stored in
 the `.philterscope` directory. If you have configured MongoDB, the results will be saved there as well.
 
 **Example output:**
@@ -165,7 +165,7 @@ Example JSON Span format:
 
 ### Matching Logic
 
-When you run `audit`, PhilterScope searches for the golden data in this order:
+When you run `philterscope-audit`, PhilterScope searches for the golden data in this order:
 
 1. The path provided by the `--golden` flag (if it's a file).
 2. Matching filenames in the directory provided by `--golden` (if it's a directory).

@@ -1,0 +1,7 @@
+.git
+.philterscope
+examples/test_output
+philterscope
+philterscope-*
+report.html
+report.json
