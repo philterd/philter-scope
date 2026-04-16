@@ -38,4 +38,4 @@ export PHILTERSCOPE_MONGODB_CONNECTION_STRING="mongodb://user:password@localhost
 ```
 
 When this variable is set, every successful audit run will automatically save the result to the MongoDB collection.
-The history command in philterscope-serve will also prioritize results from MongoDB.
+The history feature will also prioritize results from MongoDB.

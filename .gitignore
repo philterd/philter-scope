@@ -1,6 +1,6 @@
 # Binaries
-philterscope
-philterscope.exe
+philterscope-audit
+philterscope-serve
 bin/
 
 # Reports and logs

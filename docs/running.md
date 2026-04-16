@@ -66,14 +66,14 @@ Thresholds can also be set individually for each entity type:
 
 ---
 
-### `serve`
+### `philterscope-serve`
 
-The `serve` command launches the Evaluation UI, allowing you to view and interact with the results of a previous audit.
+The `philterscope-serve` command launches the Evaluation UI, allowing you to view and interact with the results of a previous audit.
 
 **Usage:**
 
 ```bash
-./philterscope-serve serve [flags]
+./philterscope-serve [flags]
 ```
 
 **Flags:**
@@ -87,41 +87,15 @@ The `serve` command launches the Evaluation UI, allowing you to view and interac
 **Example:**
 
 ```bash
-PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-serve serve --privacy
+PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-serve --privacy
 ```
 
 Or without MongoDB:
 
 ```bash
-./philterscope-serve serve --report ./examples/report.json --port 5000 --privacy
+./philterscope-serve --report ./examples/report.json --port 5000 --privacy
 ```
 
----
-
-### `history`
-
-The `history` command lists past audit results stored in your local directory or MongoDB database. This command is available in `philterscope-serve`.
-
-**Usage:**
-
-```bash
-./philterscope-serve history
-```
-
-**Note:**
-Audit results are automatically saved to history whenever you run an audit. By default, they are stored in
-the `.philterscope` directory. If you have configured MongoDB, the results will be saved there as well.
-
-**Example output:**
-
-```text
-Audit History:
-Timestamp            | Precision  | Recall     | F1
----------------------------------------------------------------
-2026-04-10 10:00:00  | 0.85       | 0.78       | 0.81
-2026-04-11 11:30:00  | 0.88       | 0.82       | 0.85 (Improving ↑)
-2026-04-12 14:15:00  | 0.87       | 0.80       | 0.83 (Declining ↓)
-```
 
 ---
 

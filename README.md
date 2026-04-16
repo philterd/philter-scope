@@ -20,7 +20,25 @@ The following command will compare the raw text in the `examples/raw` directory 
 ./philterscope-audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
 ```
 
-Check the `examples/report.html` file for an example of the generated report. See the [documentation](docs/running.md) for more details and options.
+To store the audit in MongoDB database, provide the database connection information:
+
+```
+PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
+```
+
+The following command will launch the evaluation UI on port 5000 and load the report generated in the previous step.
+
+```
+./philterscope-serve --report ./examples/report.json --port 5000
+```
+
+Likewise with audits, to view audit results stored in MongoDB database, provide the database connection information:
+
+```
+PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-serve --report ./examples/report.json --port 5000
+```
+
+See the [documentation](docs/running.md) for more details and options.
 
 ## License
 
