@@ -2,7 +2,7 @@
 
 PhilterScope is a standalone CLI tool for PII redaction auditing and policy optimization. It allows you to audit the performance of [Philter](https://www.github.com/philterd/philter) by comparing its redaction results against a "golden dataset" of labeled PII.
 
-PhilterScope is a core part of our framework for implementing PII/PHI redaction solutions. To learn more, visit us at [Philterd](https://www.philterd.ai).
+PhilterScope is a core part of our framework for implementing PII/PHI redaction solutions. To learn more, visit us at [Philterd](https://www.philterd.ai). Professional services are available for custom PII redaction solutions.
 
 ![PhilterScope dashboard](docs/dashboard.png)
 
