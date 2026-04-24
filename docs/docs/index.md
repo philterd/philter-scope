@@ -4,13 +4,13 @@ PhilterScope is a standalone CLI tool for PII redaction auditing and policy opti
 
 PhilterScope is a core part of our framework for implementing PII/PHI redaction solutions. To learn more, visit us at [Philterd](https://www.philterd.ai). Professional services are available for custom PII redaction solutions.
 
-![PhilterScope dashboard](docs/docs/dashboard.png)
+![PhilterScope dashboard](dashboard.png)
 
 ## Documentation
 
-- [Running PhilterScope](docs/running.md): Detailed explanation of commands and flags.
-- [Environment Variables](docs/environment-variables.md): Available environment variables for configuration.
-- [Development](docs/development.md): Instructions for building and testing the project.
+- [Running PhilterScope](running.md): Detailed explanation of commands and flags.
+- [Environment Variables](environment-variables.md): Available environment variables for configuration.
+- [Development](development.md): Instructions for building and testing the project.
 
 ## Quick Start
 
@@ -38,7 +38,7 @@ Likewise with audits, to view audit results stored in MongoDB database, provide 
 PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-serve --report ./examples/report.json --port 5000
 ```
 
-See the [documentation](docs/running.md) for more details and options.
+See the [documentation](running.md) for more details and options.
 
 ## License
 

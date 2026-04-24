@@ -1,0 +1,17 @@
+site_name: PhilterScope
+repo_url: https://github.com/philterd/philterscope
+site_url: https://philterd.github.io/philterscope/
+edit_uri: '?query=docs/docs/'
+copyright: Copyright 2026 Philterd, LLC
+site_author: philterd
+site_description: User guide for PhilterScope.
+theme:
+  name: material
+  locale: en
+  palette:
+    primary: red
+nav:
+  - Home: index.md
+  - Running PhilterScope: running.md
+  - Environment Variables: environment-variables.md
+  - Development: development.md
