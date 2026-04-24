@@ -39,3 +39,11 @@ export PHILTERSCOPE_MONGODB_CONNECTION_STRING="mongodb://user:password@localhost
 
 When this variable is set, every successful audit run will automatically save the result to the MongoDB collection.
 The history feature will also prioritize results from MongoDB.
+
+## 3. Local Configuration
+
+If no environment variables are set, PhilterScope uses the following defaults:
+
+- **Audit History**: Stored in `$HOME/.philterscope/history`.
+- **Philter API**: Defaults to `http://localhost:8080`.
+- **Ollama API**: Defaults to `http://localhost:11434`.
