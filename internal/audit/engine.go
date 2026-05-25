@@ -65,15 +65,73 @@ func GenerateAuditResult(results []model.Result) model.AuditResult {
 	}
 
 	entityMetrics := CalculateEntityMetrics(results)
+	confusionMatrix := CalculateConfusionMatrix(results)
 
 	return model.AuditResult{
-		TotalDocuments: len(results),
-		Precision:      precision,
-		Recall:         recall,
-		F1Score:        f1,
-		Details:        results,
-		EntityMetrics:  entityMetrics,
+		TotalDocuments:  len(results),
+		Precision:       precision,
+		Recall:          recall,
+		F1Score:         f1,
+		Details:         results,
+		EntityMetrics:   entityMetrics,
+		ConfusionMatrix: confusionMatrix,
 	}
+}
+
+// CalculateConfusionMatrix builds a matrix of expected label -> actual label -> count.
+// For missed entities (FN), the actual label is "(missed)".
+// For spurious detections (FP), the expected label is "(none)".
+func CalculateConfusionMatrix(results []model.Result) map[string]map[string]int {
+	matrix := make(map[string]map[string]int)
+
+	ensure := func(key string) {
+		if matrix[key] == nil {
+			matrix[key] = make(map[string]int)
+		}
+	}
+
+	for _, res := range results {
+		for _, o := range res.Overlaps {
+			switch o.Type {
+			case model.OverlapExact, model.OverlapPartial:
+				expected := entityLabel(o.Golden)
+				actual := entityLabel(o.Actual)
+				if expected == "" {
+					continue
+				}
+				if actual == "" {
+					actual = expected
+				}
+				ensure(expected)
+				matrix[expected][actual]++
+			case model.OverlapNone:
+				if o.Golden.Text != "" {
+					expected := entityLabel(o.Golden)
+					if expected == "" {
+						continue
+					}
+					ensure(expected)
+					matrix[expected]["(missed)"]++
+				} else if o.Actual.Text != "" && o.Actual.CharacterStart != o.Actual.CharacterEnd {
+					actual := entityLabel(o.Actual)
+					if actual == "" {
+						continue
+					}
+					ensure("(none)")
+					matrix["(none)"][actual]++
+				}
+			}
+		}
+	}
+
+	return matrix
+}
+
+func entityLabel(s model.Span) string {
+	if s.Label != "" {
+		return s.Label
+	}
+	return s.FilterType
 }
 
 // CalculateEntityMetrics calculates recall per entity type.

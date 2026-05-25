@@ -111,6 +111,19 @@
             </div>
         </div>
 
+        <!-- Confusion Matrix -->
+        <div id="confusionMatrixSection" class="mb-10 hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h2 class="text-lg font-semibold">Confusion Matrix</h2>
+                    <span class="text-xs text-gray-400 uppercase font-bold">Cross-Entity Misclassifications</span>
+                </div>
+                <div class="p-6 overflow-x-auto">
+                    <table id="confusionMatrixTable" class="w-full text-xs border-collapse"></table>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Content -->
         <div id="mainContent" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- File List -->
@@ -380,6 +393,7 @@
                         document.getElementById('noAuditsMessage').classList.remove('hidden');
                         document.getElementById('trendSection').classList.add('hidden');
                         document.getElementById('entityRecallSection').classList.add('hidden');
+                        document.getElementById('confusionMatrixSection').classList.add('hidden');
                         document.getElementById('metricsDashboard').classList.add('hidden');
                         document.getElementById('mainContent').classList.add('hidden');
                         document.getElementById('notesSection').classList.add('hidden');
@@ -431,6 +445,7 @@
                         document.getElementById('noAuditsMessage').classList.remove('hidden');
                         document.getElementById('trendSection').classList.add('hidden');
                         document.getElementById('entityRecallSection').classList.add('hidden');
+                        document.getElementById('confusionMatrixSection').classList.add('hidden');
                         document.getElementById('metricsDashboard').classList.add('hidden');
                         document.getElementById('mainContent').classList.add('hidden');
                         document.getElementById('notesSection').classList.add('hidden');
@@ -563,6 +578,65 @@
                 });
             } else {
                 entitySection.classList.add('hidden');
+            }
+
+            // Confusion Matrix
+            const cmSection = document.getElementById('confusionMatrixSection');
+            const cmTable = document.getElementById('confusionMatrixTable');
+            const cm = reportData.confusion_matrix;
+
+            if (cm && Object.keys(cm).length > 0) {
+                cmSection.classList.remove('hidden');
+
+                const actualLabels = new Set();
+                const expectedLabels = [];
+                for (const expected of Object.keys(cm)) {
+                    expectedLabels.push(expected);
+                    for (const actual of Object.keys(cm[expected])) {
+                        actualLabels.add(actual);
+                    }
+                }
+
+                const sortLabel = (a, b) => {
+                    if (a === '(none)' || a === '(missed)') return 1;
+                    if (b === '(none)' || b === '(missed)') return -1;
+                    return a.localeCompare(b);
+                };
+                expectedLabels.sort(sortLabel);
+                const colLabels = [...actualLabels].sort(sortLabel);
+
+                let html = '<thead><tr>';
+                html += '<th class="px-3 py-2 text-left font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">Expected \\ Detected</th>';
+                colLabels.forEach(col => {
+                    const isMeta = col === '(missed)' || col === '(none)';
+                    html += `<th class="px-3 py-2 text-center font-bold uppercase tracking-wider border-b border-gray-200 ${isMeta ? 'text-red-400 italic' : 'text-gray-500'}">${col}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+
+                expectedLabels.forEach(expected => {
+                    const isMeta = expected === '(none)' || expected === '(missed)';
+                    html += `<tr class="hover:bg-gray-50"><td class="px-3 py-2 font-medium border-b border-gray-100 ${isMeta ? 'text-red-400 italic' : 'text-gray-900'}">${expected}</td>`;
+                    colLabels.forEach(actual => {
+                        const count = (cm[expected] && cm[expected][actual]) || 0;
+                        let cellClass = 'text-gray-300';
+                        if (count > 0) {
+                            if (expected === actual) {
+                                cellClass = 'text-green-700 bg-green-50 font-bold';
+                            } else if (actual === '(missed)' || expected === '(none)') {
+                                cellClass = 'text-red-600 bg-red-50 font-bold';
+                            } else {
+                                cellClass = 'text-orange-600 bg-orange-50 font-bold';
+                            }
+                        }
+                        html += `<td class="px-3 py-2 text-center border-b border-gray-100 ${cellClass}">${count || '-'}</td>`;
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody>';
+                cmTable.innerHTML = html;
+            } else {
+                cmSection.classList.add('hidden');
             }
 
             // Notes

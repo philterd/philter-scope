@@ -154,3 +154,36 @@ When you run `philterscope-audit`, PhilterScope searches for the golden data in 
 3. `<filename>.golden` in the input directory.
 4. A `golden/` subdirectory within or next to your input directory.
 5. Inline tags within the input file itself.
+
+---
+
+## 4. Understanding the Report
+
+After an audit completes, PhilterScope generates an HTML report and a JSON report containing overall metrics (precision, recall, F1-score), per-entity recall, a confusion matrix, per-document results, and recommended policy changes.
+
+### Confusion Matrix
+
+The confusion matrix shows how each expected entity type was classified by Philter. It is displayed immediately below the PII Recall Performance table in the report.
+
+Each row represents an **expected** entity type from the golden dataset, and each column represents what Philter **detected** it as. The cells contain the count of occurrences.
+
+There are two special labels in the matrix:
+
+- **(missed)** (column): The entity was present in the golden dataset but Philter did not detect it at all. These are false negatives.
+- **(none)** (row): Philter detected an entity that was not present in the golden dataset. These are false positives (spurious detections).
+
+Cells are color-coded:
+
+- **Green**: Correct classifications (expected and detected types match).
+- **Orange**: Misclassifications (Philter detected the entity but assigned the wrong type, e.g., a NAME detected as an ADDRESS).
+- **Red**: Missed entities or spurious detections.
+
+#### Using the Confusion Matrix for Policy Tuning
+
+The confusion matrix helps identify specific weaknesses in your Philter policy:
+
+- **High counts in the (missed) column** for a given entity type indicate that Philter is failing to detect that type. Consider adjusting the policy to add or tune the relevant filter.
+- **Off-diagonal orange cells** reveal type confusion. For example, if LOCATION entities are frequently detected as ADDRESS, the policy may need more specific patterns to distinguish the two.
+- **High counts in the (none) row** indicate false positives. Philter is flagging text that is not PII, which may require tightening filter rules or adjusting confidence thresholds.
+
+The confusion matrix data is also included in the JSON report under the `confusion_matrix` field for programmatic analysis.

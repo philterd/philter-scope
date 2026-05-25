@@ -70,6 +70,38 @@ func TestGenerateAuditResult(t *testing.T) {
 	}
 }
 
+func TestCalculateConfusionMatrix(t *testing.T) {
+	results := []model.Result{
+		{
+			Overlaps: []model.Overlap{
+				// Correct: NAME detected as NAME
+				{Type: model.OverlapExact, Golden: model.Span{Label: "NAME", Text: "John"}, Actual: model.Span{Label: "NAME", Text: "John"}},
+				// Wrong type: NAME detected as ADDRESS
+				{Type: model.OverlapPartial, Golden: model.Span{Label: "NAME", Text: "Jane"}, Actual: model.Span{Label: "ADDRESS", Text: "Jane"}},
+				// Missed: SSN not detected
+				{Type: model.OverlapNone, Golden: model.Span{Label: "SSN", Text: "123-45-6789"}},
+				// False positive: spurious PHONE detection
+				{Type: model.OverlapNone, Actual: model.Span{Label: "PHONE", Text: "555", CharacterStart: 10, CharacterEnd: 13}},
+			},
+		},
+	}
+
+	cm := CalculateConfusionMatrix(results)
+
+	if cm["NAME"]["NAME"] != 1 {
+		t.Errorf("Expected NAME->NAME=1, got %d", cm["NAME"]["NAME"])
+	}
+	if cm["NAME"]["ADDRESS"] != 1 {
+		t.Errorf("Expected NAME->ADDRESS=1, got %d", cm["NAME"]["ADDRESS"])
+	}
+	if cm["SSN"]["(missed)"] != 1 {
+		t.Errorf("Expected SSN->(missed)=1, got %d", cm["SSN"]["(missed)"])
+	}
+	if cm["(none)"]["PHONE"] != 1 {
+		t.Errorf("Expected (none)->PHONE=1, got %d", cm["(none)"]["PHONE"])
+	}
+}
+
 func TestCalculateEntityMetrics(t *testing.T) {
 	results := []model.Result{
 		{

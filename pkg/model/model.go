@@ -32,8 +32,9 @@ type AuditResult struct {
 	Details          []Result               `json:"details" bson:"details"`
 	Policy           map[string]interface{} `json:"policy" bson:"policy"`                       // Philter JSON configuration
 	Recommendations  []Recommendation       `json:"recommendations" bson:"recommendations"`     // Suggested policy changes
-	EntityMetrics    map[string]float64     `json:"entity_metrics" bson:"entity_metrics"`       // Recall per entity type
-	Threshold        float64                `json:"threshold" bson:"threshold"`                 // Global threshold used for suggestions
+	EntityMetrics    map[string]float64        `json:"entity_metrics" bson:"entity_metrics"`       // Recall per entity type
+	ConfusionMatrix  map[string]map[string]int `json:"confusion_matrix" bson:"confusion_matrix"`   // Expected label -> actual label -> count
+	Threshold        float64                   `json:"threshold" bson:"threshold"`                 // Global threshold used for suggestions
 	EntityThresholds map[string]float64     `json:"entity_thresholds" bson:"entity_thresholds"` // Per-entity thresholds
 	GroupName        string                 `json:"group_name" bson:"group_name"`               // Assigned group name
 	Notes            string                 `json:"notes" bson:"notes"`                         // User-provided notes
