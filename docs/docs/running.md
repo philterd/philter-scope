@@ -37,12 +37,14 @@ Or without MongoDB:
 ./philterscope-audit [flags]
 ```
 
+> A Philter API token is required only when PhilterScope communicates with Philter, that is, when it redacts raw input through the API or fetches the policy for the report. Provide it with the `--token` flag or the `PHILTERSCOPE_PHILTER_TOKEN` environment variable (see [Environment Variables](environment-variables.md)). If a token is needed but not set, PhilterScope stops with a clear error. If every input is pre-redacted Philter explain JSON, no Philter calls are made and no token is required.
+
 **Commonly Used Flags:**
 
 | Flag           | Default                 | Description                                                                  |
 |:---------------|:------------------------|:-----------------------------------------------------------------------------|
 | `--url`        | `http://localhost:8080` | The Philter API URL to use for redacting the raw text files.                 |
-| `--token`      | (none)                  | The Philter API Token, if required by your Philter server.                   |
+| `--token`      | (none)                  | The Philter API token (API key). Falls back to the `PHILTERSCOPE_PHILTER_TOKEN` environment variable. Required only when PhilterScope calls Philter (redacting input or fetching the policy). |
 | `--policy`     | `default`               | The name of the Philter policy to use for redaction.                         |
 | `--input`      | `./raw`                 | The directory containing the raw text files or Philter `explain` JSON files. |
 | `--golden`     | `golden.json`           | The path to the golden dataset file or directory.                            |
@@ -118,7 +120,9 @@ The input directory (`--input`) can contain:
 
 1. **Raw Text Files**: Simple `.txt` files that will be sent to the Philter API for redaction.
 2. **Philter Explain JSON**: If you have already redacted text using Philter's `explain` API, you can provide the JSON
-   response directly. This allows you to audit pre-redacted data without calling the Philter API again.
+   response directly. This allows you to audit pre-redacted data without re-redacting it through the Philter API. When
+   every input is pre-redacted explain JSON, PhilterScope makes no Philter calls and no API token is required; the
+   report will omit the policy in that case. (Mixing in raw text files will require a token to redact them.)
 
 ### Golden Datasets
 

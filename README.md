@@ -14,16 +14,19 @@ PhilterScope is a core part of our framework for implementing PII/PHI redaction 
 
 ## Quick Start
 
+A Philter API token is required whenever PhilterScope communicates with Philter (redacting input or fetching the policy), as the examples below do. Set it with the `PHILTERSCOPE_PHILTER_TOKEN` environment variable (or the `--token` flag); PhilterScope stops with a clear error if a token is needed but not provided. No token is needed when every input is pre-redacted Philter explain JSON.
+
 The following command will compare the raw text in the `examples/raw` directory against the golden dataset in `examples/golden` and generate an HTML report in the `examples/` directory.
 
 ```
+export PHILTERSCOPE_PHILTER_TOKEN=sk_your_philter_api_key
 ./philterscope-audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
 ```
 
 To store the audit in MongoDB database, provide the database connection information:
 
 ```
-PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
+PHILTERSCOPE_PHILTER_TOKEN=sk_your_philter_api_key PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75
 ```
 
 The following command will launch the evaluation UI on port 5000 and load the report generated in the previous step.

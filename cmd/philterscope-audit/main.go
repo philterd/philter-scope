@@ -54,7 +54,7 @@ func main() {
 	}
 
 	rootCmd.Flags().StringVar(&philterURL, "url", "http://localhost:8080", "Philter API URL")
-	rootCmd.Flags().StringVar(&philterToken, "token", "", "Philter API Token")
+	rootCmd.Flags().StringVar(&philterToken, "token", "", "Philter API Token (falls back to PHILTERSCOPE_PHILTER_TOKEN; required)")
 	rootCmd.Flags().StringVar(&philterPolicy, "policy", "default", "Philter policy name")
 	rootCmd.Flags().StringVar(&inputDir, "input", "./raw", "Directory of raw text files")
 	rootCmd.Flags().StringVar(&goldenFile, "golden", "golden.json", "Golden dataset JSON file")
@@ -85,6 +85,14 @@ func runAudit(cmd *cobra.Command, args []string) error {
 				}
 			}
 		}
+	}
+
+	// Fall back to the environment variable when --token is not provided. A token is required only
+	// when PhilterScope actually communicates with Philter (to redact text or to fetch the policy).
+	// Auditing pre-redacted Philter explain JSON needs no Philter calls and therefore no token, so
+	// the requirement is enforced at the point of use below rather than unconditionally here.
+	if philterToken == "" {
+		philterToken = os.Getenv("PHILTERSCOPE_PHILTER_TOKEN")
 	}
 
 	client := &philter.PhilterClient{
@@ -179,6 +187,11 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		}
 
 		if redacted == "" && len(actualSpans) == 0 {
+			// This input is not pre-redacted, so it must be sent to Philter to be redacted. That
+			// call requires an API token.
+			if philterToken == "" {
+				return fmt.Errorf("redacting %q requires the Philter API, which needs an API token: pass --token or set PHILTERSCOPE_PHILTER_TOKEN (a token is not required when every input is pre-redacted Philter explain JSON)", f.Name())
+			}
 			redacted, actualSpans, err = client.Redact(string(rawContent))
 			if err != nil {
 				fmt.Printf("Warning: failed to redact %s: %v\n", f.Name(), err)
@@ -207,10 +220,15 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	auditResult.EntityThresholds = entityThresholdMap
 	auditResult.GroupName = groupName
 
-	if policyStr, err := client.GetPolicy(philterPolicy); err == nil {
-		var policy map[string]any
-		if err := json.Unmarshal([]byte(policyStr), &policy); err == nil {
-			auditResult.Policy = policy
+	// Fetching the policy for the report is a Philter call, so only attempt it when a token is
+	// available. Without one (for example a fully offline audit of pre-redacted input), the report
+	// simply omits the policy.
+	if philterToken != "" {
+		if policyStr, err := client.GetPolicy(philterPolicy); err == nil {
+			var policy map[string]any
+			if err := json.Unmarshal([]byte(policyStr), &policy); err == nil {
+				auditResult.Policy = policy
+			}
 		}
 	}
 
