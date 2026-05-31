@@ -16,8 +16,10 @@ package philter
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/philterd/philterscope/pkg/model"
@@ -174,6 +176,49 @@ func TestGetPolicyNames(t *testing.T) {
 	}
 	if len(names) != 2 || names[0] != "policy1" {
 		t.Errorf("Unexpected names: %v", names)
+	}
+}
+
+func TestGetPolicyNames_PagesThroughAllResults(t *testing.T) {
+	// Philter caps each page at 100 names. The client must page until a short page is returned.
+	const total = 230
+	var requestedOffsets []int
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" || r.URL.Path != "/api/policies" {
+			t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+
+		offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+		if limit <= 0 {
+			t.Errorf("Expected a positive limit, got %d", limit)
+		}
+		requestedOffsets = append(requestedOffsets, offset)
+
+		page := []string{}
+		for i := offset; i < offset+limit && i < total; i++ {
+			page = append(page, fmt.Sprintf("policy%d", i))
+		}
+		json.NewEncoder(w).Encode(page)
+	}))
+	defer ts.Close()
+
+	client := &PhilterClient{BaseURL: ts.URL}
+	names, err := client.GetPolicyNames()
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if len(names) != total {
+		t.Fatalf("Expected %d names, got %d", total, len(names))
+	}
+	if names[0] != "policy0" || names[total-1] != fmt.Sprintf("policy%d", total-1) {
+		t.Errorf("Unexpected first/last names: %s ... %s", names[0], names[total-1])
+	}
+	// 230 names at 100/page => offsets 0, 100, 200 (the third page is short and ends paging).
+	if len(requestedOffsets) != 3 {
+		t.Errorf("Expected 3 page requests, got %d (offsets %v)", len(requestedOffsets), requestedOffsets)
 	}
 }
 

@@ -21,6 +21,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/philterd/philterscope/pkg/model"
 )
@@ -125,25 +126,54 @@ func (c *PhilterClient) Explain(text string) (ExplainResponse, error) {
 	return explain, nil
 }
 
-// GetPolicyNames retrieves the names of all Philter policies.
+// GetPolicyNames retrieves the names of all Philter policies. The /api/policies endpoint is
+// paginated (Philter caps each page at 100 names), so this pages through with offset/limit until
+// a short page is returned, collecting every name.
 func (c *PhilterClient) GetPolicyNames() ([]string, error) {
-	req, err := http.NewRequest("GET", c.BaseURL+"/api/policies", nil)
-	if err != nil {
-		return nil, err
+	const pageSize = 100
+
+	var allNames []string
+	offset := 0
+
+	for {
+		u, err := url.Parse(c.BaseURL + "/api/policies")
+		if err != nil {
+			return nil, err
+		}
+
+		params := url.Values{}
+		params.Add("offset", strconv.Itoa(offset))
+		params.Add("limit", strconv.Itoa(pageSize))
+		u.RawQuery = params.Encode()
+
+		req, err := http.NewRequest("GET", u.String(), nil)
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err := c.doRequest(req)
+		if err != nil {
+			return nil, err
+		}
+
+		var page []string
+		if err := json.NewDecoder(resp.Body).Decode(&page); err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		resp.Body.Close()
+
+		allNames = append(allNames, page...)
+
+		// Philter returns at most pageSize names per request, so a short (or empty) page means
+		// there are no more to fetch.
+		if len(page) < pageSize {
+			break
+		}
+		offset += len(page)
 	}
 
-	resp, err := c.doRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var names []string
-	if err := json.NewDecoder(resp.Body).Decode(&names); err != nil {
-		return nil, err
-	}
-
-	return names, nil
+	return allNames, nil
 }
 
 // GetPolicy retrieves a Philter policy by name.
