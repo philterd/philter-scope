@@ -91,9 +91,7 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	// when PhilterScope actually communicates with Philter (to redact text or to fetch the policy).
 	// Auditing pre-redacted Philter explain JSON needs no Philter calls and therefore no token, so
 	// the requirement is enforced at the point of use below rather than unconditionally here.
-	if philterToken == "" {
-		philterToken = os.Getenv("PHILTERSCOPE_PHILTER_TOKEN")
-	}
+	philterToken = resolvePhilterToken(philterToken)
 
 	client := &philter.PhilterClient{
 		BaseURL: philterURL,
@@ -189,8 +187,8 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		if redacted == "" && len(actualSpans) == 0 {
 			// This input is not pre-redacted, so it must be sent to Philter to be redacted. That
 			// call requires an API token.
-			if philterToken == "" {
-				return fmt.Errorf("redacting %q requires the Philter API, which needs an API token: pass --token or set PHILTERSCOPE_PHILTER_TOKEN (a token is not required when every input is pre-redacted Philter explain JSON)", f.Name())
+			if err := requirePhilterToken(philterToken, f.Name()); err != nil {
+				return err
 			}
 			redacted, actualSpans, err = client.Redact(string(rawContent))
 			if err != nil {

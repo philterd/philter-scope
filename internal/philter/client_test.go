@@ -19,7 +19,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/philterd/philterscope/pkg/model"
@@ -84,6 +86,49 @@ func TestRedact_Error(t *testing.T) {
 	}
 }
 
+// TestRedact_DecodesRealPhilterExplainShape guards against contract drift with Philter. The server
+// returns the exact JSON shape Philter's /api/explain emits (a serialized TextFilterResult captured
+// in testdata), rather than re-encoding this package's own structs. If Philter changes that shape
+// (for example dropping the "explanation" wrapper or "filteredText", as happened once), this test
+// fails instead of silently passing a struct round-trip.
+func TestRedact_DecodesRealPhilterExplainShape(t *testing.T) {
+	fixture, err := os.ReadFile("testdata/explain_response.json")
+	if err != nil {
+		t.Fatalf("failed to read fixture: %v", err)
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/explain" {
+			t.Errorf("expected /api/explain, got %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(fixture)
+	}))
+	defer ts.Close()
+
+	client := &PhilterClient{BaseURL: ts.URL, Policy: "default"}
+	redacted, spans, err := client.Redact("John Doe lives in 90210.")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !strings.Contains(redacted, "REDACTED-person") {
+		t.Errorf("filteredText was not decoded from Philter's response: %q", redacted)
+	}
+	if len(spans) != 2 {
+		t.Fatalf("expected 2 applied spans decoded from explanation, got %d", len(spans))
+	}
+	if spans[0].FilterType != "PERSON" {
+		t.Errorf("expected first span filterType PERSON, got %q", spans[0].FilterType)
+	}
+	if spans[0].CharacterStart != 0 || spans[0].CharacterEnd != 8 {
+		t.Errorf("span character offsets not decoded: start=%d end=%d", spans[0].CharacterStart, spans[0].CharacterEnd)
+	}
+	if spans[0].Text != "John Doe" {
+		t.Errorf("span text not decoded: %q", spans[0].Text)
+	}
+}
+
 func TestGetPolicy(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
@@ -127,7 +172,9 @@ func TestStatus(t *testing.T) {
 		if r.Method != "GET" || r.URL.Path != "/api/status" {
 			t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
 		}
-		json.NewEncoder(w).Encode(StatusResponse{Status: "UP"})
+		// Emit the raw shape Philter 4.0.0 actually returns (applicationVersion, not version).
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"status":"Healthy","applicationVersion":"4.0.0","redactionPolicySchemaVersion":"1.0.0","gitCommit":"abc123"}`))
 	}))
 	defer ts.Close()
 
@@ -136,8 +183,11 @@ func TestStatus(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	if resp.Status != "UP" {
-		t.Errorf("Expected status UP, got %s", resp.Status)
+	if resp.Status != "Healthy" {
+		t.Errorf("Expected status Healthy, got %s", resp.Status)
+	}
+	if resp.ApplicationVersion != "4.0.0" {
+		t.Errorf("Expected applicationVersion 4.0.0, got %q", resp.ApplicationVersion)
 	}
 }
 

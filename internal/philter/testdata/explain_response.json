@@ -1,0 +1,32 @@
+{
+  "filteredText": "{{{REDACTED-person}}} lives in {{{REDACTED-zip-code}}}.",
+  "piece": 0,
+  "context": "none",
+  "explanation": {
+    "appliedSpans": [
+      {
+        "characterStart": 0,
+        "characterEnd": 8,
+        "filterType": "PERSON",
+        "context": "none",
+        "confidence": 0.9,
+        "text": "John Doe",
+        "replacement": "{{{REDACTED-person}}}",
+        "ignored": false
+      },
+      {
+        "characterStart": 19,
+        "characterEnd": 24,
+        "filterType": "ZIP_CODE",
+        "context": "none",
+        "confidence": 0.95,
+        "text": "90210",
+        "replacement": "{{{REDACTED-zip-code}}}",
+        "ignored": false
+      }
+    ],
+    "identifiedSpans": []
+  },
+  "tokens": 7,
+  "incrementalRedactions": []
+}
