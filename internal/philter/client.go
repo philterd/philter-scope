@@ -27,8 +27,8 @@ import (
 
 // StatusResponse matches the Philter API status response.
 type StatusResponse struct {
-	Status  string `json:"status"`
-	Version string `json:"version"`
+	Status             string `json:"status"`
+	ApplicationVersion string `json:"applicationVersion"`
 }
 
 // ExplainResponse matches the Philter API explain response.
