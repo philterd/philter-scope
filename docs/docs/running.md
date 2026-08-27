@@ -121,6 +121,35 @@ PhilterScope maintains a history of your audit runs. When using `philterscope-se
 - **Shared Storage**: Use MongoDB for a centralized audit repository across your team.
 - **Privacy Mode**: When `--privacy` is enabled, all PII found in the audit results (both expected and actual) is replaced with a cryptographic hash in the UI.
 
+### Running in Docker
+
+The image carries both binaries. `philterscope-serve` is the default command, the working directory is `/data`, and the container runs as a non-root user. No image is published yet, so build it first:
+
+```bash
+docker build -t philterd/philterscope:local .
+```
+
+Serve a report:
+
+```bash
+docker run --rm -p 5000:5000 \
+  -v "$PWD/examples/report.json:/data/report.json:ro" \
+  philterd/philterscope:local
+```
+
+Setting `PHILTERSCOPE_MONGODB_CONNECTION_STRING` takes precedence over the report file.
+
+Run an audit by overriding the command. `--user` is needed for the non-root container to write the reports back to a bind-mounted directory:
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" \
+  -v "$PWD/examples:/data" \
+  philterd/philterscope:local \
+  philterscope-audit --golden /data/golden/ --input /data/raw/ --output /data/ --threshold 0.75
+```
+
+Pass `--build-arg VERSION=1.2.3` at build time to set the version reported at `/api/health`.
+
 ---
 
 ## 3. Data Formats

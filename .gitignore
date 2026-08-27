@@ -8,7 +8,6 @@ bin/
 .philterscope
 
 # Go
-go.sum
 vendor/
 
 # Test

@@ -1,0 +1,66 @@
+name: Docker
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  # Builds the image so a broken Dockerfile fails a pull request. Publishing is
+  # deliberately not done here: images are pushed by hand. See issue #11.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The version stamped into the binary comes from git describe.
+          fetch-depth: 0
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Determine version
+        id: version
+        run: echo "version=$(git describe --tags --always --dirty)" >> "$GITHUB_OUTPUT"
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: philterd/philterscope:ci
+          build-args: VERSION=${{ steps.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # philterscope-serve needs a report to serve, so the examples report
+      # stands in. Proves the image starts, serves, and reports its version.
+      - name: Smoke test the image
+        run: |
+          docker run -d --name philterscope-smoke -p 5000:5000 \
+            -v "$GITHUB_WORKSPACE/examples/report.json:/data/report.json:ro" \
+            philterd/philterscope:ci
+
+          for _ in $(seq 1 30); do
+            curl -fsS http://localhost:5000/api/health -o health.json && break
+            sleep 1
+          done
+
+          echo "health: $(cat health.json)"
+          grep -q '"status":"UP"' health.json
+          grep -qF "${{ steps.version.outputs.version }}" health.json
+
+      - name: Show the logs on failure
+        if: failure()
+        run: docker logs philterscope-smoke || true
+
+      - name: Stop the container
+        if: always()
+        run: docker rm -f philterscope-smoke || true
+
+      # philterscope-audit is selected by overriding the command, so check that
+      # the other binary in the image is runnable too.
+      - name: Check philterscope-audit is selectable
+        run: docker run --rm philterd/philterscope:ci philterscope-audit --help
