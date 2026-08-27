@@ -125,10 +125,16 @@ PhilterScope maintains a history of your audit runs. When using `philterscope-se
 
 ### Running in Docker
 
-The image carries both binaries. `philterscope-serve` is the default command, the working directory is `/data`, and the container runs as a non-root user. No image is published yet, so build it first:
+The image carries both binaries. `philterscope-serve` is the default command, the working directory is `/data`, and the container runs as a non-root user. It is published on [Docker Hub](https://hub.docker.com/r/philterd/philter-scope) for `linux/amd64` and `linux/arm64`:
 
 ```bash
-docker build -t philterd/philter-scope:local .
+docker pull philterd/philter-scope:latest
+```
+
+`latest` tracks the most recent release. Pin a version for anything you deploy:
+
+```bash
+docker pull philterd/philter-scope:0.1.0
 ```
 
 Serve a report:
@@ -136,7 +142,7 @@ Serve a report:
 ```bash
 docker run --rm -p 5000:5000 \
   -v "$PWD/examples/report.json:/data/report.json:ro" \
-  philterd/philter-scope:local
+  philterd/philter-scope:latest
 ```
 
 Setting `PHILTERSCOPE_MONGODB_CONNECTION_STRING` takes precedence over the report file.
@@ -146,11 +152,11 @@ Run an audit by overriding the command. `--user` is needed for the non-root cont
 ```bash
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD/examples:/data" \
-  philterd/philter-scope:local \
+  philterd/philter-scope:latest \
   philterscope-audit --golden /data/golden/ --input /data/raw/ --output /data/ --threshold 0.75
 ```
 
-Pass `--build-arg VERSION=1.2.3` at build time to set the version reported at `/api/health`.
+The running container reports its version at `/api/health` and from `philterscope-serve --version`. Building the image yourself is covered in the [development guide](development.md).
 
 ---
 
