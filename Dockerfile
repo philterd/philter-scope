@@ -21,7 +21,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" \
  && CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" \
         -o /out/philterscope-audit ./cmd/philterscope-audit
 
-FROM alpine:3.22
+FROM alpine:3.24
 
 # Needed to reach Philter, MongoDB or Ollama over TLS.
 RUN apk add --no-cache ca-certificates \
