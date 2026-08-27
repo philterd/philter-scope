@@ -97,6 +97,22 @@ Or without MongoDB:
 ./philterscope-serve --report ./examples/report.json --port 5000 --privacy
 ```
 
+### Health Endpoint
+
+`philterscope-serve` exposes an unauthenticated health endpoint at `/api/health` for container runtimes, load balancers, and uptime checks. It is a liveness probe: it reports that the server is answering and does not check MongoDB.
+
+```bash
+curl http://localhost:5000/api/health
+```
+
+```json
+{"status": "UP", "applicationVersion": "1.2.3"}
+```
+
+A healthy server returns `200` with `"status": "UP"`. The version comes from the `VERSION` set at build time (`make build VERSION=1.2.3`, or `docker build --build-arg VERSION=1.2.3`); builds made without it report `dev`.
+
+---
+
 ### History and Audit Management
 
 PhilterScope maintains a history of your audit runs. When using `philterscope-serve`, you can browse previous audits and their results.

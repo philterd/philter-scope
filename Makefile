@@ -5,6 +5,11 @@ CMD_SERVE_PATH=./cmd/philterscope-serve
 SOURCE_FILES=$(shell find . -name '*.go')
 HTML_FILES=$(shell find . -name '*.html')
 
+# Reported by the server's health endpoint. Derived from the current git
+# tag/commit; override with `make build VERSION=1.2.3`.
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+LDFLAGS=-X github.com/philterd/philterscope/internal/server.Version=$(VERSION)
+
 all: build
 
 help: ## Display available commands
@@ -31,8 +36,8 @@ deps: ## Download and tidy Go dependencies
 	go mod tidy
 
 build: deps $(SOURCE_FILES) $(HTML_FILES) ## Build the philterscope binaries
-	go build -o $(BINARY_AUDIT) $(CMD_AUDIT_PATH)
-	go build -o $(BINARY_SERVE) $(CMD_SERVE_PATH)
+	go build -ldflags "$(LDFLAGS)" -o $(BINARY_AUDIT) $(CMD_AUDIT_PATH)
+	go build -ldflags "$(LDFLAGS)" -o $(BINARY_SERVE) $(CMD_SERVE_PATH)
 
 clean: ## Remove build artifacts and generated reports
 	rm -f $(BINARY_AUDIT) $(BINARY_SERVE) $(BINARY_AUDIT)-* $(BINARY_SERVE)-* report.html report.json
@@ -49,18 +54,18 @@ vet: ## Run go vet on source files
 build-all: build-linux build-mac build-windows ## Build for all supported platforms
 
 build-linux: deps ## Build for Linux (amd64)
-	GOOS=linux GOARCH=amd64 go build -o $(BINARY_AUDIT)-linux-amd64 $(CMD_AUDIT_PATH)
-	GOOS=linux GOARCH=amd64 go build -o $(BINARY_SERVE)-linux-amd64 $(CMD_SERVE_PATH)
+	GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o $(BINARY_AUDIT)-linux-amd64 $(CMD_AUDIT_PATH)
+	GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o $(BINARY_SERVE)-linux-amd64 $(CMD_SERVE_PATH)
 
 build-mac: deps ## Build for Mac (amd64 and arm64)
-	GOOS=darwin GOARCH=amd64 go build -o $(BINARY_AUDIT)-darwin-amd64 $(CMD_AUDIT_PATH)
-	GOOS=darwin GOARCH=arm64 go build -o $(BINARY_AUDIT)-darwin-arm64 $(CMD_AUDIT_PATH)
-	GOOS=darwin GOARCH=amd64 go build -o $(BINARY_SERVE)-darwin-amd64 $(CMD_SERVE_PATH)
-	GOOS=darwin GOARCH=arm64 go build -o $(BINARY_SERVE)-darwin-arm64 $(CMD_SERVE_PATH)
+	GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o $(BINARY_AUDIT)-darwin-amd64 $(CMD_AUDIT_PATH)
+	GOOS=darwin GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o $(BINARY_AUDIT)-darwin-arm64 $(CMD_AUDIT_PATH)
+	GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o $(BINARY_SERVE)-darwin-amd64 $(CMD_SERVE_PATH)
+	GOOS=darwin GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o $(BINARY_SERVE)-darwin-arm64 $(CMD_SERVE_PATH)
 
 build-windows: deps ## Build for Windows (amd64)
-	GOOS=windows GOARCH=amd64 go build -o $(BINARY_AUDIT)-windows-amd64.exe $(CMD_AUDIT_PATH)
-	GOOS=windows GOARCH=amd64 go build -o $(BINARY_SERVE)-windows-amd64.exe $(CMD_SERVE_PATH)
+	GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o $(BINARY_AUDIT)-windows-amd64.exe $(CMD_AUDIT_PATH)
+	GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o $(BINARY_SERVE)-windows-amd64.exe $(CMD_SERVE_PATH)
 
 test: ## Run unit tests
 	go test ./...

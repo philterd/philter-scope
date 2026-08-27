@@ -12,6 +12,12 @@ make build
 
 The compiled binaries `philterscope-audit` and `philterscope-serve` will be placed in the root of the project. Refer to the `Makefile` for building for other paltforms.
 
+The version reported by the server's `/api/health` endpoint is baked in at build time. It defaults to `git describe`; override it with:
+
+```bash
+make build VERSION=1.2.3
+```
+
 ## Running Tests
 
 To run the unit tests, use:

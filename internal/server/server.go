@@ -59,6 +59,8 @@ func NewServerMux(store Storage, privacyMode bool) *http.ServeMux {
 		fmt.Printf("Error parsing template: %v\n", err)
 	}
 
+	registerHealth(mux)
+
 	// API to get history
 	mux.HandleFunc("/api/history", func(w http.ResponseWriter, r *http.Request) {
 		history, err := store.GetHistory(r.Context())
@@ -212,15 +214,29 @@ func NewServerMux(store Storage, privacyMode bool) *http.ServeMux {
 
 // StartStandaloneServer launches the local Evaluation UI with a single result.
 func StartStandaloneServer(port int, result model.AuditResult, privacyMode bool) error {
+	mux, err := NewStandaloneServerMux(result, privacyMode)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Evaluation UI available at http://localhost:%d\n\n", port)
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
+}
+
+// NewStandaloneServerMux creates an http.ServeMux that serves a single result
+// without any backing storage.
+func NewStandaloneServerMux(result model.AuditResult, privacyMode bool) (*http.ServeMux, error) {
 	mux := http.NewServeMux()
 	tmpl, err := template.ParseFS(staticAssets, "index.html")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if privacyMode {
 		result = ObfuscateAuditResult(result)
 	}
+
+	registerHealth(mux)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
@@ -233,11 +249,12 @@ func StartStandaloneServer(port int, result model.AuditResult, privacyMode bool)
 		}{
 			ReportJSON: template.JS(reportJSON),
 		}
-		tmpl.Execute(w, data)
+		if err := tmpl.Execute(w, data); err != nil {
+			fmt.Printf("Error executing template: %v\n", err)
+		}
 	})
 
-	fmt.Printf("Evaluation UI available at http://localhost:%d\n\n", port)
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
+	return mux, nil
 }
 
 // GenerateStandaloneReport creates a self-contained HTML file.
