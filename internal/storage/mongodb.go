@@ -25,6 +25,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 )
 
 type MongoDBStorage struct {
@@ -248,6 +249,21 @@ func (s *MongoDBStorage) SaveRecommendations(ctx context.Context, id string, rec
 		return fmt.Errorf("failed to update recommendations: %w", err)
 	}
 
+	return nil
+}
+
+// Mode identifies this backend in the readiness response.
+func (s *MongoDBStorage) Mode() string {
+	return "mongodb"
+}
+
+// Ping reports whether MongoDB can be reached. Readiness depends on it: every
+// API route the dashboard uses goes to the database, so a server that cannot
+// reach it can serve the shell and nothing else.
+func (s *MongoDBStorage) Ping(ctx context.Context) error {
+	if err := s.client.Ping(ctx, readpref.Primary()); err != nil {
+		return fmt.Errorf("failed to reach MongoDB: %w", err)
+	}
 	return nil
 }
 

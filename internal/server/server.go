@@ -60,9 +60,13 @@ func NewServerMux(store Storage, privacyMode bool) *http.ServeMux {
 	}
 
 	registerHealth(mux)
+	registerReadiness(mux, store)
+
+	m := newMetrics()
+	m.register(mux)
 
 	// API to get history
-	mux.HandleFunc("/api/history", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/history", m.instrument("/api/history", func(w http.ResponseWriter, r *http.Request) {
 		history, err := store.GetHistory(r.Context())
 		response := model.AuditHistory{
 			Entries: history,
@@ -75,10 +79,10 @@ func NewServerMux(store Storage, privacyMode bool) *http.ServeMux {
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			fmt.Printf("Error encoding history: %v\n", err)
 		}
-	})
+	}))
 
 	// API to get or delete specific audit
-	mux.HandleFunc("/api/audit", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/audit", m.instrument("/api/audit", func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Query().Get("id")
 		if id == "" {
 			http.Error(w, "missing id parameter", http.StatusBadRequest)
@@ -113,10 +117,10 @@ func NewServerMux(store Storage, privacyMode bool) *http.ServeMux {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-	})
+	}))
 
 	// API to resolve a recommendation
-	mux.HandleFunc("/api/audit/recommendation/resolve", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/audit/recommendation/resolve", m.instrument("/api/audit/recommendation/resolve", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -136,10 +140,10 @@ func NewServerMux(store Storage, privacyMode bool) *http.ServeMux {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-	})
+	}))
 
 	// API to dismiss a recommendation
-	mux.HandleFunc("/api/audit/recommendation/dismiss", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/audit/recommendation/dismiss", m.instrument("/api/audit/recommendation/dismiss", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -159,10 +163,10 @@ func NewServerMux(store Storage, privacyMode bool) *http.ServeMux {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-	})
+	}))
 
 	// API to save notes
-	mux.HandleFunc("/api/audit/notes", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/audit/notes", m.instrument("/api/audit/notes", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -189,7 +193,7 @@ func NewServerMux(store Storage, privacyMode bool) *http.ServeMux {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-	})
+	}))
 
 	// Main UI
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -237,6 +241,9 @@ func NewStandaloneServerMux(result model.AuditResult, privacyMode bool) (*http.S
 	}
 
 	registerHealth(mux)
+	// No backing store to check, so this reports ready as soon as it serves.
+	registerReadiness(mux, nil)
+	newMetrics().register(mux)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {

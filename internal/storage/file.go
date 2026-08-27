@@ -315,6 +315,35 @@ func (s *FileStorage) SaveRecommendations(ctx context.Context, id string, recs [
 	return s.write(id, res)
 }
 
+// Mode identifies this backend in the readiness response.
+func (s *FileStorage) Mode() string {
+	return "file"
+}
+
+// Ping reports whether the history directory is usable. A directory that does
+// not exist yet is fine: it is created on the first write. Something that
+// exists but is not a directory, or cannot be read, is not.
+func (s *FileStorage) Ping(ctx context.Context) error {
+	info, err := os.Stat(s.dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("failed to reach the history directory: %w", err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("%s is not a directory", s.dir)
+	}
+
+	// Opening proves it is readable. Listing it would make every probe scan a
+	// directory that grows with each audit.
+	f, err := os.Open(s.dir)
+	if err != nil {
+		return fmt.Errorf("failed to read the history directory: %w", err)
+	}
+	return f.Close()
+}
+
 // Close exists so callers can treat file and MongoDB storage the same way.
 func (s *FileStorage) Close(ctx context.Context) error {
 	return nil

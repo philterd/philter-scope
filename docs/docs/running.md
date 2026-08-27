@@ -121,6 +121,47 @@ curl http://localhost:5000/api/health
 
 A healthy server returns `200` with `"status": "UP"`. The version comes from the `VERSION` set at build time (`make build VERSION=1.2.3`, or `docker build --build-arg VERSION=1.2.3`); builds made without it report `dev`.
 
+This is a liveness check. It reports that the server is answering and deliberately does not touch storage, so a database outage does not make a working server look dead to a container runtime that would restart it. Use the readiness endpoint for that.
+
+### Readiness Endpoint
+
+`GET /api/readyz` reports whether the storage behind the server can be reached. It is unauthenticated.
+
+```bash
+curl http://localhost:5000/api/readyz
+```
+
+```json
+{"status": "READY", "mode": "mongodb"}
+```
+
+`mode` says which backend the server came up with: `mongodb`, `file` for the local `.philterscope` history, or `report` when serving a single report file, which has no backend and is always ready.
+
+When MongoDB is configured but cannot be reached, the endpoint returns `503` and says why:
+
+```json
+{"status": "NOT_READY", "mode": "mongodb", "reason": "failed to reach MongoDB: server selection error..."}
+```
+
+Point a load balancer at `/api/readyz` so it stops sending requests that would fail, and a container runtime's liveness probe at `/api/health` so it only restarts a server that has actually stopped serving.
+
+### Metrics Endpoint
+
+`GET /metrics` exposes Prometheus text format, unauthenticated:
+
+```bash
+curl http://localhost:5000/metrics
+```
+
+Alongside the standard Go runtime and process metrics:
+
+| Metric | Type | Labels | Description |
+|:-------|:-----|:-------|:------------|
+| `philterscope_http_requests_total` | counter | `route`, `method`, `code` | API requests served. |
+| `philterscope_http_request_duration_seconds` | histogram | `route`, `method` | API request duration. |
+
+`route` is the registered route, not the request path, so an audit ID in a query string never becomes a label value. A labelled series appears once the first matching request has been served. The health, readiness and metrics endpoints are not counted: probe and scrape traffic would otherwise swamp the request counts they report.
+
 ---
 
 ### History and Audit Management
@@ -168,10 +209,10 @@ The running container reports its version at `/api/health` and from `philterscop
 
 #### Docker Compose
 
-The repository ships a [`docker-compose.yaml`](https://github.com/philterd/philterscope/blob/main/docker-compose.yaml) that runs both steps in order. The audit runs once and writes its reports into `./data`, then the dashboard starts and serves them on port 5000:
+The repository ships a [`docker-compose.yaml`](https://github.com/philterd/philter-scope/blob/main/docker-compose.yaml) that runs both steps in order. The audit runs once and writes its reports into `./data`, then the dashboard starts and serves them on port 5000:
 
 ```bash
-curl -O https://raw.githubusercontent.com/philterd/philterscope/main/docker-compose.yaml
+curl -O https://raw.githubusercontent.com/philterd/philter-scope/main/docker-compose.yaml
 
 mkdir -p data/golden data/raw   # your golden dataset, and the text to score
 

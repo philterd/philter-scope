@@ -94,7 +94,7 @@ export PHILTER_URL=http://philter.internal:8080
 docker compose up
 ```
 
-`PHILTER_TOKEN`, the image tag, the recall threshold, and the uid and gid the audit writes as are all environment variables the file reads, documented at the top of it and in the [running guide](https://philterd.github.io/philterscope/running/).
+`PHILTER_TOKEN`, the image tag, the recall threshold, and the uid and gid the audit writes as are all environment variables the file reads, documented at the top of it and in the [running guide](https://philterd.github.io/philter-scope/running/).
 
 The server answers health checks at `/api/health`:
 
