@@ -2,7 +2,7 @@
 # philterscope-audit scores redaction output against a golden dataset.
 # The UI is embedded with go:embed, so nothing else is needed at runtime.
 
-FROM golang:1.26-alpine AS build
+FROM golang:1.27-alpine AS build
 
 WORKDIR /src
 
