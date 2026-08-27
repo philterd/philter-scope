@@ -25,12 +25,6 @@ import (
 	"github.com/philterd/philterscope/pkg/model"
 )
 
-// StatusResponse matches the Philter API status response.
-type StatusResponse struct {
-	Status  string `json:"status"`
-	Version string `json:"version"`
-}
-
 // ExplainResponse matches the Philter API explain response.
 type ExplainResponse struct {
 	FilteredText string      `json:"filteredText"`
@@ -71,27 +65,6 @@ func (c *PhilterClient) Redact(text string) (string, []model.Span, error) {
 	}
 
 	return explainResponse.FilteredText, explainResponse.Explanation.AppliedSpans, nil
-}
-
-// Status returns the status of the Philter API.
-func (c *PhilterClient) Status() (StatusResponse, error) {
-	req, err := http.NewRequest("GET", c.BaseURL+"/api/status", nil)
-	if err != nil {
-		return StatusResponse{}, err
-	}
-
-	resp, err := c.doRequest(req)
-	if err != nil {
-		return StatusResponse{}, err
-	}
-	defer resp.Body.Close()
-
-	var status StatusResponse
-	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
-		return StatusResponse{}, err
-	}
-
-	return status, nil
 }
 
 // Explain explains the filtering of the text using the Philter API.
