@@ -1,0 +1,3 @@
+# Vulnerabilities accepted for the published image, checked by push-image.sh.
+# Record one CVE per line with a comment saying why it is accepted and when to
+# revisit it. Empty means nothing is suppressed.

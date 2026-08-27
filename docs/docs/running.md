@@ -51,6 +51,7 @@ Or without MongoDB:
 | `--thresholds` | (none)                  | Per-entity recall thresholds (e.g., `NAME=0.9,SSN=1.0`).                     |
 | `--group`      | `default`               | Assign a group name to the audit for history tracking.                       |
 | `--ai`         | `false`                 | Enable AI-driven policy recommendations (requires Ollama).                   |
+| `--version`    |                         | Print the version stamped in at build time and exit.                         |
 
 **Example:**
 
@@ -84,6 +85,7 @@ The `philterscope-serve` command launches the Evaluation UI, allowing you to vie
 | `--port`    | `5000`        | The port on which the UI will be served.               |
 | `--privacy` | `false`       | Enable privacy mode (obfuscates PII in UI).            |
 | `--id`      | (none)        | The ID of a specific audit result to view from history. |
+| `--version` |               | Print the version stamped in at build time and exit.    |
 
 **Example:**
 
@@ -126,7 +128,7 @@ PhilterScope maintains a history of your audit runs. When using `philterscope-se
 The image carries both binaries. `philterscope-serve` is the default command, the working directory is `/data`, and the container runs as a non-root user. No image is published yet, so build it first:
 
 ```bash
-docker build -t philterd/philterscope:local .
+docker build -t philterd/philter-scope:local .
 ```
 
 Serve a report:
@@ -134,7 +136,7 @@ Serve a report:
 ```bash
 docker run --rm -p 5000:5000 \
   -v "$PWD/examples/report.json:/data/report.json:ro" \
-  philterd/philterscope:local
+  philterd/philter-scope:local
 ```
 
 Setting `PHILTERSCOPE_MONGODB_CONNECTION_STRING` takes precedence over the report file.
@@ -144,7 +146,7 @@ Run an audit by overriding the command. `--user` is needed for the non-root cont
 ```bash
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD/examples:/data" \
-  philterd/philterscope:local \
+  philterd/philter-scope:local \
   philterscope-audit --golden /data/golden/ --input /data/raw/ --output /data/ --threshold 0.75
 ```
 

@@ -23,8 +23,11 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" \
 
 FROM alpine:3.24
 
-# Needed to reach Philter, MongoDB or Ollama over TLS.
-RUN apk add --no-cache ca-certificates \
+# ca-certificates is needed to reach Philter, MongoDB or Ollama over TLS. The
+# upgrade picks up package fixes published after the base image was last built,
+# which the push-image.sh vulnerability scan otherwise blocks a push on.
+RUN apk upgrade --no-cache \
+ && apk add --no-cache ca-certificates \
  && adduser -D -u 65532 philterscope
 
 COPY --from=build /out/philterscope-serve /usr/local/bin/philterscope-serve

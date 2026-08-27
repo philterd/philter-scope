@@ -48,9 +48,10 @@ var (
 
 func main() {
 	var rootCmd = &cobra.Command{
-		Use:   "philterscope-audit",
-		Short: "Audit redaction quality",
-		RunE:  runAudit,
+		Use:     "philterscope-audit",
+		Short:   "Audit redaction quality",
+		Version: server.Version,
+		RunE:    runAudit,
 	}
 
 	rootCmd.Flags().StringVar(&philterURL, "url", "http://localhost:8080", "Philter API URL")

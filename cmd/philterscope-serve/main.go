@@ -36,9 +36,10 @@ var (
 
 func main() {
 	var rootCmd = &cobra.Command{
-		Use:   "philterscope-serve",
-		Short: "Launch Evaluation UI",
-		RunE:  runServe,
+		Use:     "philterscope-serve",
+		Short:   "Launch Evaluation UI",
+		Version: server.Version,
+		RunE:    runServe,
 	}
 
 	rootCmd.Flags().IntVar(&port, "port", 5000, "Port for the UI")

@@ -30,7 +30,7 @@ jobs:
           context: .
           push: false
           load: true
-          tags: philterd/philterscope:ci
+          tags: philterd/philter-scope:ci
           build-args: VERSION=${{ steps.version.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -41,7 +41,7 @@ jobs:
         run: |
           docker run -d --name philterscope-smoke -p 5000:5000 \
             -v "$GITHUB_WORKSPACE/examples/report.json:/data/report.json:ro" \
-            philterd/philterscope:ci
+            philterd/philter-scope:ci
 
           for _ in $(seq 1 30); do
             curl -fsS http://localhost:5000/api/health -o health.json && break
@@ -63,4 +63,4 @@ jobs:
       # philterscope-audit is selected by overriding the command, so check that
       # the other binary in the image is runnable too.
       - name: Check philterscope-audit is selectable
-        run: docker run --rm philterd/philterscope:ci philterscope-audit --help
+        run: docker run --rm philterd/philter-scope:ci philterscope-audit --help
