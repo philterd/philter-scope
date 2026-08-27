@@ -7,7 +7,7 @@ information or for configuring shared resources like a database.
 |:-----------------------------------------|:---------|:------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `PHILTERSCOPE_OLLAMA_URL`                | (none)   | The URL of your [Ollama](https://ollama.com/) server (e.g., `http://localhost:11434`). Required if you use the `--ai` flag.                                 |
 | `PHILTERSCOPE_OLLAMA_MODEL`              | `gemma4` | The LLM model to use for AI-driven policy recommendations.                                                                                                  |
-| `PHILTERSCOPE_MONGODB_CONNECTION_STRING` | (none)   | The MongoDB connection string for storing audit history (e.g., `mongodb://localhost:27017/philterscope`). If not set, audit history is only stored locally. |
+| `PHILTERSCOPE_MONGODB_CONNECTION_STRING` | (none)   | The MongoDB connection string for storing audit history (e.g., `mongodb://localhost:27017/philterscope`). If not set, audit history is stored in a local `.philterscope` directory. |
 
 ## 1. AI Recommendation Engine
 
@@ -44,6 +44,6 @@ The history feature will also prioritize results from MongoDB.
 
 If no environment variables are set, PhilterScope uses the following defaults:
 
-- **Audit History**: Stored in `$HOME/.philterscope/history`.
+- **Audit History**: Stored in a `.philterscope` directory in the current working directory, one JSON file per audit.
 - **Philter API**: Defaults to `http://localhost:8080`.
 - **Ollama API**: Defaults to `http://localhost:11434`.

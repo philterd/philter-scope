@@ -85,8 +85,10 @@ func runServe(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Warning: failed to connect to MongoDB: %v. Falling back to file mode.\n", err)
 	}
 
-	// Fallback to reading from a file if goldenFile is set
-	if goldenFile != "" {
+	// Serve a single report when one was asked for explicitly, or when the
+	// default report.json is sitting there to be served.
+	_, statErr := os.Stat(goldenFile)
+	if goldenFile != "" && (cmd.Flags().Changed("report") || statErr == nil) {
 		data, err := os.ReadFile(goldenFile)
 		if err != nil {
 			return err
@@ -103,5 +105,9 @@ func runServe(cmd *cobra.Command, args []string) error {
 		return server.StartStandaloneServer(port, res, privacy)
 	}
 
-	return fmt.Errorf("no MongoDB connection string (PHILTERSCOPE_MONGODB_CONNECTION_STRING) and no input file (--report) provided")
+	// Otherwise serve the local audit history, so audits saved without MongoDB
+	// are browsable rather than write-only.
+	fs := storage.NewFileStorage("")
+	fmt.Printf("Serving audit history from %s\n", fs.Dir())
+	return server.StartServer(port, fs, privacy)
 }

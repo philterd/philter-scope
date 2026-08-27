@@ -99,6 +99,14 @@ Or without MongoDB:
 ./philterscope-serve --report ./examples/report.json --port 5000 --privacy
 ```
 
+With no arguments, `philterscope-serve` picks a source in this order:
+
+1. MongoDB, if `PHILTERSCOPE_MONGODB_CONNECTION_STRING` is set and reachable.
+2. The report named by `--report`, or a `report.json` in the current directory.
+3. The local `.philterscope` audit history.
+
+Serving a single report shows that one audit. The other two serve the full history, where you can browse past audits, add notes, and resolve or dismiss recommendations.
+
 ### Health Endpoint
 
 `philterscope-serve` exposes an unauthenticated health endpoint at `/api/health` for container runtimes, load balancers, and uptime checks. It is a liveness probe: it reports that the server is answering and does not check MongoDB.
@@ -119,8 +127,8 @@ A healthy server returns `200` with `"status": "UP"`. The version comes from the
 
 PhilterScope maintains a history of your audit runs. When using `philterscope-serve`, you can browse previous audits and their results.
 
-- **Local Storage**: By default, audits are stored in the `.philterscope` directory in your home folder.
-- **Shared Storage**: Use MongoDB for a centralized audit repository across your team.
+- **Local Storage**: By default, audits are stored as one JSON file per audit in a `.philterscope` directory, created in the directory you run the command from. `philterscope-serve` reads that history, so audits are browsable without a database. It assumes a single user on one machine: nothing coordinates concurrent writers.
+- **Shared Storage**: Set `PHILTERSCOPE_MONGODB_CONNECTION_STRING` for a centralized audit repository across your team. It takes precedence over local storage.
 - **Privacy Mode**: When `--privacy` is enabled, all PII found in the audit results (both expected and actual) is replaced with a cryptographic hash in the UI.
 
 ### Running in Docker

@@ -278,18 +278,5 @@ func saveToHistory(ctx context.Context, res model.AuditResult) error {
 		}
 	}
 
-	historyDir := ".philterscope"
-	if _, err := os.Stat(historyDir); os.IsNotExist(err) {
-		if err := os.Mkdir(historyDir, 0755); err != nil {
-			return err
-		}
-	}
-
-	filename := fmt.Sprintf("audit_%s.json", res.Timestamp.Format("20060102_150405"))
-	data, err := json.MarshalIndent(res, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(filepath.Join(historyDir, filename), data, 0644)
+	return storage.NewFileStorage("").SaveAuditResult(ctx, res)
 }
