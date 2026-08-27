@@ -157,6 +157,23 @@ func (c *PhilterClient) UploadPolicy(name string, content string) error {
 	return nil
 }
 
+// ConnectionError is returned when Philter could not be reached at all, as
+// opposed to answering with an error. The two need telling apart: one document
+// Philter rejects is a per-document problem, but a Philter that cannot be
+// reached fails every document and is a problem with the run.
+type ConnectionError struct {
+	URL string
+	Err error
+}
+
+func (e *ConnectionError) Error() string {
+	return fmt.Sprintf("could not reach Philter at %s: %v", e.URL, e.Err)
+}
+
+func (e *ConnectionError) Unwrap() error {
+	return e.Err
+}
+
 func (c *PhilterClient) doRequest(req *http.Request) (*http.Response, error) {
 	if c.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.Token)
@@ -165,7 +182,7 @@ func (c *PhilterClient) doRequest(req *http.Request) (*http.Response, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, &ConnectionError{URL: c.BaseURL, Err: err}
 	}
 
 	if resp.StatusCode != http.StatusOK {

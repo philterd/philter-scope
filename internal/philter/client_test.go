@@ -16,8 +16,10 @@ package philter
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/philterd/philterscope/pkg/model"
@@ -171,5 +173,47 @@ func TestUploadPolicy(t *testing.T) {
 	err := client.UploadPolicy("new-policy", `{"content": "here"}`)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
+	}
+}
+
+// A Philter that cannot be reached has to be distinguishable from one that
+// answers with an error: the first fails every document, the second may fail
+// only this one.
+func TestConnectionErrorForUnreachablePhilter(t *testing.T) {
+	// Port 9 is discard; nothing listens on it.
+	client := &PhilterClient{BaseURL: "http://127.0.0.1:9"}
+
+	_, _, err := client.Redact("some text")
+	if err == nil {
+		t.Fatal("expected an error reaching a dead port")
+	}
+
+	var connErr *ConnectionError
+	if !errors.As(err, &connErr) {
+		t.Fatalf("expected a *ConnectionError, got %T: %v", err, err)
+	}
+	if connErr.URL != "http://127.0.0.1:9" {
+		t.Errorf("expected the URL in the error, got %q", connErr.URL)
+	}
+	if !strings.Contains(err.Error(), "could not reach Philter") {
+		t.Errorf("expected the message to say Philter was unreachable, got %q", err.Error())
+	}
+}
+
+func TestNoConnectionErrorWhenPhilterAnswersWithAnError(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer ts.Close()
+
+	client := &PhilterClient{BaseURL: ts.URL}
+	_, _, err := client.Redact("some text")
+	if err == nil {
+		t.Fatal("expected an error for a 500 response")
+	}
+
+	var connErr *ConnectionError
+	if errors.As(err, &connErr) {
+		t.Error("a 500 response is Philter answering, not a connection failure")
 	}
 }

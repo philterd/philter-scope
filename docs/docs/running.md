@@ -51,6 +51,7 @@ Or without MongoDB:
 | `--thresholds` | (none)                  | Per-entity recall thresholds (e.g., `NAME=0.9,SSN=1.0`).                     |
 | `--group`      | `default`               | Assign a group name to the audit for history tracking.                       |
 | `--ai`         | `false`                 | Enable AI-driven policy recommendations (requires Ollama).                   |
+| `--best-effort`| `false`                 | Score the files that can be scored instead of failing the run.               |
 | `--version`    |                         | Print the version stamped in at build time and exit.                         |
 
 **Example:**
@@ -64,6 +65,22 @@ Thresholds can also be set individually for each entity type:
 ```bash
 ./philterscope-audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --thresholds "NAME=0.9,SSN=1.0"
 ```
+
+#### Exit Codes and Skipped Files
+
+| Code | Meaning |
+|:-----|:--------|
+| `0` | The audit ran and a report was written. |
+| `1` | The audit did not produce a usable result. |
+
+An audit fails rather than reporting a score it cannot stand behind:
+
+- If Philter cannot be reached, the run stops at the first file with one error, instead of warning once per file and then scoring nothing.
+- If no input file could be scored, the run fails rather than writing a report whose precision and recall are zero because nothing was measured.
+
+A file that cannot be read or redacted, while other files can, is skipped and the run continues. Skipped files are counted in the summary line and recorded in the JSON report under `files_skipped` and `skipped`, each with the reason. A skipped file is not the same as a file that scored zero: it contributed nothing to the metrics.
+
+`--best-effort` opts out of both failures, for callers that would rather have a partial score than an error. The report still records what was skipped.
 
 ---
 

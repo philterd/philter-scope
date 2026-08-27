@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -44,6 +45,7 @@ var (
 	thresholds    string
 	groupName     string
 	enableAI      bool
+	bestEffort    bool
 )
 
 func main() {
@@ -64,8 +66,11 @@ func main() {
 	rootCmd.Flags().StringVar(&thresholds, "thresholds", "", "Per-entity recall thresholds (e.g., NAME=0.9,SSN=1.0)")
 	rootCmd.Flags().StringVar(&groupName, "group", "default", "Assign a group name to the audit")
 	rootCmd.Flags().BoolVar(&enableAI, "ai", false, "Enable AI-driven policy recommendations")
+	rootCmd.Flags().BoolVar(&bestEffort, "best-effort", false, "Score the files that can be scored instead of failing the run")
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	// The error is printed once, below, rather than by cobra as well.
+	rootCmd.SilenceErrors = true
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -74,6 +79,10 @@ func main() {
 }
 
 func runAudit(cmd *cobra.Command, args []string) error {
+	// The flags parsed, so anything that fails from here is a failure to run,
+	// not a usage error, and should not be answered with the whole flag list.
+	cmd.SilenceUsage = true
+
 	entityThresholdMap := make(map[string]float64)
 	if thresholds != "" {
 		pairs := strings.Split(thresholds, ",")
@@ -100,15 +109,27 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	}
 
 	var results []model.Result
+	var skipped []model.SkippedFile
+	candidates := 0
+
+	// skip records a file that contributed nothing to the metrics, so a skipped
+	// file stays distinguishable from one that scored zero.
+	skip := func(name string, format string, args ...any) {
+		reason := fmt.Sprintf(format, args...)
+		fmt.Printf("Warning: skipping %s: %s\n", name, reason)
+		skipped = append(skipped, model.SkippedFile{Filename: name, Reason: reason})
+	}
+
 	for _, f := range files {
 		if f.IsDir() {
 			continue
 		}
+		candidates++
 
 		rawPath := filepath.Join(inputDir, f.Name())
 		rawContent, err := os.ReadFile(rawPath)
 		if err != nil {
-			fmt.Printf("Warning: failed to read %s: %v\n", f.Name(), err)
+			skip(f.Name(), "failed to read: %v", err)
 			continue
 		}
 
@@ -182,7 +203,14 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		if redacted == "" && len(actualSpans) == 0 {
 			redacted, actualSpans, err = client.Redact(string(rawContent))
 			if err != nil {
-				fmt.Printf("Warning: failed to redact %s: %v\n", f.Name(), err)
+				// A Philter that cannot be reached fails every remaining file
+				// for the same reason, so stop rather than repeat the warning
+				// once per file and then score whatever is left.
+				var connErr *philter.ConnectionError
+				if errors.As(err, &connErr) && !bestEffort {
+					return fmt.Errorf("%w (use --best-effort to score the files that can be redacted)", connErr)
+				}
+				skip(f.Name(), "failed to redact: %v", err)
 				continue
 			}
 		}
@@ -202,7 +230,14 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		})
 	}
 
+	if len(results) == 0 && candidates > 0 && !bestEffort {
+		return fmt.Errorf("no input file could be scored: %d of %d skipped (use --best-effort to write a report anyway)",
+			len(skipped), candidates)
+	}
+
 	auditResult := audit.GenerateAuditResult(results)
+	auditResult.FilesSkipped = len(skipped)
+	auditResult.Skipped = skipped
 	auditResult.Timestamp = time.Now()
 	auditResult.Threshold = threshold
 	auditResult.EntityThresholds = entityThresholdMap
@@ -257,6 +292,9 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Warning: failed to save to history: %v\n", err)
 	}
 
+	if len(skipped) > 0 {
+		fmt.Printf("Scored %d of %d files. %d skipped.\n", len(results), candidates, len(skipped))
+	}
 	fmt.Printf("Audit complete. Precision: %.2f, Recall: %.2f, F1: %.2f\n", auditResult.Precision, auditResult.Recall, auditResult.F1Score)
 	fmt.Printf("Reports exported to %s\n", outputDir)
 

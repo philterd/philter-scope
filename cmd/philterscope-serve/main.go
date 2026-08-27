@@ -49,6 +49,8 @@ func main() {
 	rootCmd.Flags().StringVar(&thresholds, "thresholds", "", "Per-entity recall thresholds (e.g., NAME=0.9,SSN=1.0)")
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	// The error is printed once, below, rather than by cobra as well.
+	rootCmd.SilenceErrors = true
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -57,6 +59,10 @@ func main() {
 }
 
 func runServe(cmd *cobra.Command, args []string) error {
+	// The flags parsed, so anything that fails from here is a failure to run,
+	// not a usage error, and should not be answered with the whole flag list.
+	cmd.SilenceUsage = true
+
 	ctx := cmd.Context()
 
 	entityThresholdMap := make(map[string]float64)

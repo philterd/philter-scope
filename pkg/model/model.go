@@ -23,21 +23,30 @@ type Redactor interface {
 
 // AuditResult holds the outcome of an auditing run.
 type AuditResult struct {
-	ID               interface{}            `json:"id" bson:"_id,omitempty"`
-	Timestamp        time.Time              `json:"timestamp" bson:"timestamp"`
-	TotalDocuments   int                    `json:"total_documents" bson:"total_documents"`
-	Precision        float64                `json:"precision" bson:"precision"`
-	Recall           float64                `json:"recall" bson:"recall"`
-	F1Score          float64                `json:"f1_score" bson:"f1_score"`
-	Details          []Result               `json:"details" bson:"details"`
-	Policy           map[string]interface{} `json:"policy" bson:"policy"`                       // Philter JSON configuration
-	Recommendations  []Recommendation       `json:"recommendations" bson:"recommendations"`     // Suggested policy changes
+	ID               interface{}               `json:"id" bson:"_id,omitempty"`
+	Timestamp        time.Time                 `json:"timestamp" bson:"timestamp"`
+	TotalDocuments   int                       `json:"total_documents" bson:"total_documents"`
+	Precision        float64                   `json:"precision" bson:"precision"`
+	Recall           float64                   `json:"recall" bson:"recall"`
+	F1Score          float64                   `json:"f1_score" bson:"f1_score"`
+	Details          []Result                  `json:"details" bson:"details"`
+	Policy           map[string]interface{}    `json:"policy" bson:"policy"`                       // Philter JSON configuration
+	Recommendations  []Recommendation          `json:"recommendations" bson:"recommendations"`     // Suggested policy changes
 	EntityMetrics    map[string]float64        `json:"entity_metrics" bson:"entity_metrics"`       // Recall per entity type
 	ConfusionMatrix  map[string]map[string]int `json:"confusion_matrix" bson:"confusion_matrix"`   // Expected label -> actual label -> count
 	Threshold        float64                   `json:"threshold" bson:"threshold"`                 // Global threshold used for suggestions
-	EntityThresholds map[string]float64     `json:"entity_thresholds" bson:"entity_thresholds"` // Per-entity thresholds
-	GroupName        string                 `json:"group_name" bson:"group_name"`               // Assigned group name
-	Notes            string                 `json:"notes" bson:"notes"`                         // User-provided notes
+	EntityThresholds map[string]float64        `json:"entity_thresholds" bson:"entity_thresholds"` // Per-entity thresholds
+	GroupName        string                    `json:"group_name" bson:"group_name"`               // Assigned group name
+	Notes            string                    `json:"notes" bson:"notes"`                         // User-provided notes
+	FilesSkipped     int                       `json:"files_skipped" bson:"files_skipped"`         // Input files that could not be scored
+	Skipped          []SkippedFile             `json:"skipped,omitempty" bson:"skipped,omitempty"` // Why each was skipped
+}
+
+// SkippedFile records an input file that could not be scored. A skipped file is
+// not the same as one that scored zero: it contributed nothing to the metrics.
+type SkippedFile struct {
+	Filename string `json:"filename" bson:"filename"`
+	Reason   string `json:"reason" bson:"reason"`
 }
 
 // HistoryEntry represents a past audit result.
