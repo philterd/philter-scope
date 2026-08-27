@@ -83,6 +83,19 @@ docker run --rm --user "$(id -u):$(id -g)" \
   philterscope-audit --golden /data/golden/ --input /data/raw/ --output /data/ --threshold 0.75
 ```
 
+### Docker Compose
+
+[`docker-compose.yaml`](docker-compose.yaml) runs both steps in order. The audit runs once and writes its reports into `./data`, then the dashboard starts and serves them on port 5000:
+
+```
+mkdir -p data/golden data/raw
+
+export PHILTER_URL=http://philter.internal:8080
+docker compose up
+```
+
+`PHILTER_TOKEN`, the image tag, the recall threshold, and the uid and gid the audit writes as are all environment variables the file reads, documented at the top of it and in the [running guide](https://philterd.github.io/philterscope/running/).
+
 The server answers health checks at `/api/health`:
 
 ```

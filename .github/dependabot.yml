@@ -1,0 +1,36 @@
+version: 2
+
+updates:
+  # GitHub Actions and Docker base images, grouped into one pull request a month
+  # each. Both drift silently: the actions here sat three major versions behind
+  # before anyone noticed, and a base image can carry a fixed CVE for weeks after
+  # the fix lands in the distribution's package repository.
+  #
+  # Go module version updates are deliberately not enabled: routine churn for a
+  # solo maintainer. Dependabot security updates are enabled separately in the
+  # repository settings and cover the case that matters.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "ci"
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      images:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "docker"

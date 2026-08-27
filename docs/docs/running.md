@@ -166,6 +166,30 @@ docker run --rm --user "$(id -u):$(id -g)" \
 
 The running container reports its version at `/api/health` and from `philterscope-serve --version`. Building the image yourself is covered in the [development guide](development.md).
 
+#### Docker Compose
+
+The repository ships a [`docker-compose.yaml`](https://github.com/philterd/philterscope/blob/main/docker-compose.yaml) that runs both steps in order. The audit runs once and writes its reports into `./data`, then the dashboard starts and serves them on port 5000:
+
+```bash
+curl -O https://raw.githubusercontent.com/philterd/philterscope/main/docker-compose.yaml
+
+mkdir -p data/golden data/raw   # your golden dataset, and the text to score
+
+export PHILTER_URL=http://philter.internal:8080
+docker compose up
+```
+
+The file reads its settings from the environment or from a `.env` file next to it.
+
+| Variable                 | Default                 | Description                                                   |
+|:-------------------------|:------------------------|:--------------------------------------------------------------|
+| `PHILTER_URL`            | `http://localhost:8080` | Philter API used to redact the raw text.                      |
+| `PHILTER_TOKEN`          | (none)                  | Philter API token, if your Philter requires one.              |
+| `PHILTERSCOPE_VERSION`   | `0.1.0`                 | Image tag to run.                                             |
+| `PHILTERSCOPE_THRESHOLD` | `0.75`                  | Recall threshold, applied to both the audit and the dashboard. |
+| `PHILTERSCOPE_UID`       | `1000`                  | Your `id -u`, so the audit can write into `./data`.           |
+| `PHILTERSCOPE_GID`       | `1000`                  | Your `id -g`.                                                 |
+
 ---
 
 ## 3. Data Formats

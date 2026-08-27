@@ -56,6 +56,31 @@ The push is gated on a [Trivy](https://trivy.dev) scan of the exact images being
 | `IMAGE` | Override the image name (default `philterd/philter-scope`). |
 | `ARCHES` | Override the architectures (default `amd64 arm64`). |
 
+## Releasing
+
+`latest` and the version tag are two separate pushes. Publishing the version alone leaves `latest` pointing at the previous release, which is the tag the README tells people to pull, so do both:
+
+```bash
+git tag 1.2.3
+git push origin 1.2.3
+
+./build-image.sh 1.2.3
+./push-image.sh 1.2.3
+
+./build-image.sh
+./push-image.sh
+```
+
+Tag first. `build-image.sh` with no version stamps the binaries with `git describe`, so `latest` reports the release version rather than a bare commit only once the tag exists.
+
+Then check what was published:
+
+```bash
+docker run --rm philterd/philter-scope:latest philterscope-audit --version
+```
+
+It should print the version you tagged. If it prints a commit hash, `latest` was built before the tag existed.
+
 ## Running Tests
 
 To run the unit tests, use:

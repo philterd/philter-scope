@@ -1,0 +1,53 @@
+# Scores a redaction policy and then serves the report in a browser.
+#
+#   mkdir -p data/golden data/raw     # your gold standard, and the text to score
+#   export PHILTER_URL=http://philter.internal:8080
+#   docker compose up
+#
+# The audit runs once and writes report.json and report.html into ./data. The
+# dashboard waits for it to finish and then serves the report on port 5000.
+#
+# Override any of these in the environment or in a .env file next to this file:
+#
+#   PHILTER_URL              Philter API to redact the raw text with
+#   PHILTER_TOKEN            Philter API token, if your Philter requires one
+#   PHILTERSCOPE_VERSION     image tag to run
+#   PHILTERSCOPE_THRESHOLD   recall threshold an entity type has to clear
+#   PHILTERSCOPE_UID/_GID    your own id -u and id -g, if they are not 1000
+
+services:
+
+  audit:
+    image: philterd/philter-scope:${PHILTERSCOPE_VERSION:-0.1.0}
+    # The container runs as a non-root user, so the audit needs your own uid and
+    # gid to write the report back to the bind-mounted directory.
+    user: "${PHILTERSCOPE_UID:-1000}:${PHILTERSCOPE_GID:-1000}"
+    volumes:
+      - ./data:/data
+    command:
+      - philterscope-audit
+      # Philter serves HTTPS with a self-signed certificate by default, so point
+      # this at a Philter whose certificate you trust or one started with
+      # SSL_ENABLED=false. Input files that are already Philter explain JSON are
+      # scored without calling Philter at all.
+      - --url=${PHILTER_URL:-http://localhost:8080}
+      - --token=${PHILTER_TOKEN:-}
+      - --golden=/data/golden/
+      - --input=/data/raw/
+      - --output=/data/
+      - --threshold=${PHILTERSCOPE_THRESHOLD:-0.75}
+
+  dashboard:
+    image: philterd/philter-scope:${PHILTERSCOPE_VERSION:-0.1.0}
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/data
+    command:
+      - philterscope-serve
+      # The same threshold the audit used, so the dashboard flags the same
+      # entity types as failing.
+      - --threshold=${PHILTERSCOPE_THRESHOLD:-0.75}
+    depends_on:
+      audit:
+        condition: service_completed_successfully
