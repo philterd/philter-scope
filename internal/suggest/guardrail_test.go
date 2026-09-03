@@ -107,6 +107,10 @@ func TestSuggest_RecallGap_FilterAlreadyEnabled(t *testing.T) {
 	if strings.Contains(strings.ToLower(rec.Action), "enable the") {
 		t.Errorf("action should not ask to enable an enabled filter: %s", rec.Action)
 	}
+	// A snippet enabling the filter would contradict the action line.
+	if strings.Contains(rec.Snippet, `"enabled": true`) {
+		t.Errorf("must not show a snippet enabling an already enabled filter:\n%s", rec.Snippet)
+	}
 }
 
 // A filter present but switched off is a genuine enable.

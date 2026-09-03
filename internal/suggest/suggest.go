@@ -174,9 +174,12 @@ func (s *BasicSuggester) recallGap(result model.AuditResult, policy *policyView,
 			}
 			rec.Snippet = thresholdSnippet(key, entity, current)
 		} else {
+			// The filter is on and takes no threshold, so there is no policy
+			// edit to show. An enable snippet here would contradict the action
+			// line and tell the reader to switch on what is already running.
 			rec.Action = fmt.Sprintf("Review the %s filter, which is already enabled. Widening it needs a model or dictionary change rather than a policy switch.", key)
 			rec.Change = &model.PolicyChange{Type: model.ChangeReviewFilter, Filter: key}
-			rec.Snippet = enableSnippet(key)
+			rec.Snippet = ""
 		}
 	}
 
