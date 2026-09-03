@@ -38,8 +38,8 @@ type Storage interface {
 	GetHistory(ctx context.Context) ([]model.HistoryEntry, error)
 	GetAuditResult(ctx context.Context, id string) (*model.AuditResult, error)
 	DeleteAuditResult(ctx context.Context, id string) error
-	ResolveRecommendation(ctx context.Context, auditID string, entity string) error
-	DismissRecommendation(ctx context.Context, auditID string, entity string) error
+	ResolveRecommendation(ctx context.Context, auditID string, ref string) error
+	DismissRecommendation(ctx context.Context, auditID string, ref string) error
 	SaveAuditNotes(ctx context.Context, id string, notes string) error
 	SaveRecommendations(ctx context.Context, id string, recs []model.Recommendation) error
 }
@@ -127,15 +127,15 @@ func NewServerMux(store Storage, privacyMode bool) *http.ServeMux {
 		}
 
 		auditID := r.URL.Query().Get("id")
-		entity := r.URL.Query().Get("entity")
-		if auditID == "" || entity == "" {
-			http.Error(w, "missing id or entity parameter", http.StatusBadRequest)
+		ref := recommendationRef(r)
+		if auditID == "" || ref == "" {
+			http.Error(w, "missing id or rec parameter", http.StatusBadRequest)
 			return
 		}
 
-		err := store.ResolveRecommendation(r.Context(), auditID, entity)
+		err := store.ResolveRecommendation(r.Context(), auditID, ref)
 		if err != nil {
-			fmt.Printf("Error resolving recommendation (id=%s, entity=%s): %v\n", auditID, entity, err)
+			fmt.Printf("Error resolving recommendation (id=%s, rec=%s): %v\n", auditID, ref, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -150,15 +150,15 @@ func NewServerMux(store Storage, privacyMode bool) *http.ServeMux {
 		}
 
 		auditID := r.URL.Query().Get("id")
-		entity := r.URL.Query().Get("entity")
-		if auditID == "" || entity == "" {
-			http.Error(w, "missing id or entity parameter", http.StatusBadRequest)
+		ref := recommendationRef(r)
+		if auditID == "" || ref == "" {
+			http.Error(w, "missing id or rec parameter", http.StatusBadRequest)
 			return
 		}
 
-		err := store.DismissRecommendation(r.Context(), auditID, entity)
+		err := store.DismissRecommendation(r.Context(), auditID, ref)
 		if err != nil {
-			fmt.Printf("Error dismissing recommendation (id=%s, entity=%s): %v\n", auditID, entity, err)
+			fmt.Printf("Error dismissing recommendation (id=%s, rec=%s): %v\n", auditID, ref, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -262,6 +262,18 @@ func NewStandaloneServerMux(result model.AuditResult, privacyMode bool) (*http.S
 	})
 
 	return mux, nil
+}
+
+// recommendationRef reads which recommendation a request is addressing. The
+// "rec" parameter carries a recommendation ID, which is what identifies one now
+// that an entity can have several. An older client, or a report stored before
+// recommendations had IDs, sends "entity" instead and the storage layer falls
+// back to matching on that.
+func recommendationRef(r *http.Request) string {
+	if ref := r.URL.Query().Get("rec"); ref != "" {
+		return ref
+	}
+	return r.URL.Query().Get("entity")
 }
 
 // GenerateStandaloneReport creates a self-contained HTML file.

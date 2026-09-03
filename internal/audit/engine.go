@@ -64,6 +64,7 @@ func GenerateAuditResult(results []model.Result) model.AuditResult {
 		f1 = 2 * (precision * recall) / (precision + recall)
 	}
 
+	entityStats := CalculateEntityStats(results)
 	entityMetrics := CalculateEntityMetrics(results)
 	confusionMatrix := CalculateConfusionMatrix(results)
 
@@ -74,6 +75,7 @@ func GenerateAuditResult(results []model.Result) model.AuditResult {
 		F1Score:         f1,
 		Details:         results,
 		EntityMetrics:   entityMetrics,
+		EntityStats:     entityStats,
 		ConfusionMatrix: confusionMatrix,
 	}
 }
@@ -134,39 +136,75 @@ func entityLabel(s model.Span) string {
 	return s.FilterType
 }
 
-// CalculateEntityMetrics calculates recall per entity type.
-func CalculateEntityMetrics(results []model.Result) map[string]float64 {
+// CalculateEntityStats counts true positives, false positives, and false
+// negatives per entity type and derives both rates from them.
+//
+// False positives are attributed to the label of the span Philter produced,
+// since a spurious detection has no golden span to take a label from. That is
+// the only place an entity can appear with detections but no golden spans.
+func CalculateEntityStats(results []model.Result) map[string]model.EntityStat {
 	tpCount := make(map[string]int)
+	fpCount := make(map[string]int)
 	fnCount := make(map[string]int)
+	labels := make(map[string]struct{})
+
+	note := func(counts map[string]int, label string) {
+		if label == "" {
+			return
+		}
+		counts[label]++
+		labels[label] = struct{}{}
+	}
 
 	for _, res := range results {
 		for _, o := range res.Overlaps {
-			label := o.Golden.Label
-			if label == "" {
-				continue
-			}
 			switch o.Type {
 			case model.OverlapExact, model.OverlapPartial:
-				tpCount[label]++
+				// A partial counts as found, matching CalculateMetricsByOverlap,
+				// and is credited to the golden label even where Philter gave
+				// the span a different one.
+				note(tpCount, entityLabel(o.Golden))
 			case model.OverlapNone:
 				if o.Golden.Text != "" {
-					fnCount[label]++
+					note(fnCount, entityLabel(o.Golden))
+				} else if o.Actual.Text != "" && o.Actual.CharacterStart != o.Actual.CharacterEnd {
+					note(fpCount, entityLabel(o.Actual))
 				}
 			}
 		}
 	}
 
-	metrics := make(map[string]float64)
-	for label, tp := range tpCount {
-		fn := fnCount[label]
-		metrics[label] = float64(tp) / float64(tp+fn)
-	}
-	// Also include entities that only had FNs
-	for label := range fnCount {
-		if _, ok := tpCount[label]; !ok {
-			metrics[label] = 0.0
+	stats := make(map[string]model.EntityStat, len(labels))
+	for label := range labels {
+		tp, fp, fn := tpCount[label], fpCount[label], fnCount[label]
+		stat := model.EntityStat{
+			TruePositives:  tp,
+			FalsePositives: fp,
+			FalseNegatives: fn,
 		}
+		if tp+fn > 0 {
+			stat.Recall = float64(tp) / float64(tp+fn)
+		}
+		if tp+fp > 0 {
+			stat.Precision = float64(tp) / float64(tp+fp)
+		}
+		stats[label] = stat
 	}
 
+	return stats
+}
+
+// CalculateEntityMetrics calculates recall per entity type.
+//
+// An entity with detections but no golden spans has no recall to report and is
+// left out, so a caller iterating this map is iterating entities the gold
+// standard actually covers. CalculateEntityStats carries the rest.
+func CalculateEntityMetrics(results []model.Result) map[string]float64 {
+	metrics := make(map[string]float64)
+	for label, stat := range CalculateEntityStats(results) {
+		if stat.TruePositives+stat.FalseNegatives > 0 {
+			metrics[label] = stat.Recall
+		}
+	}
 	return metrics
 }

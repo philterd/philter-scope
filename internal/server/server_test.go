@@ -168,6 +168,33 @@ func TestAPIs(t *testing.T) {
 		}
 	})
 
+	t.Run("Resolve Recommendation API By ID", func(t *testing.T) {
+		// A recommendation is addressed by its ID. The entity is no longer
+		// unique, since one entity can raise both a recall gap and a precision
+		// warning, so "rec" is what the dashboard sends.
+		store.resolveEntity = ""
+		req := httptest.NewRequest("POST", "/api/audit/recommendation/resolve?id=507f1f77bcf86cd799439011&rec=precision_collapsed%3APERSON", nil)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status 200, got %d", w.Code)
+		}
+		if store.resolveEntity != "precision_collapsed:PERSON" {
+			t.Errorf("Expected the recommendation ID to be passed through, got %s", store.resolveEntity)
+		}
+	})
+
+	t.Run("Recommendation API Requires A Reference", func(t *testing.T) {
+		req := httptest.NewRequest("POST", "/api/audit/recommendation/resolve?id=507f1f77bcf86cd799439011", nil)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected status 400 with no recommendation named, got %d", w.Code)
+		}
+	})
+
 	t.Run("Dismiss Recommendation API", func(t *testing.T) {
 		req := httptest.NewRequest("POST", "/api/audit/recommendation/dismiss?id=507f1f77bcf86cd799439011&entity=PHONE", nil)
 		w := httptest.NewRecorder()

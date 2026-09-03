@@ -337,3 +337,56 @@ func TestFileStorageIgnoresUnrelatedFiles(t *testing.T) {
 		t.Errorf("expected unparseable and unrelated files to be skipped, got %d entries", len(history))
 	}
 }
+
+// One entity can now carry both a recall gap and a precision warning, so
+// resolving one must not touch the other. Matching on the entity, which is what
+// the earlier version did, would mark both.
+func TestFileStorageResolvesOneRecommendationOfSeveralForAnEntity(t *testing.T) {
+	s := newTestStorage(t)
+
+	id := saveOne(t, s, model.AuditResult{
+		Timestamp: time.Date(2026, 9, 1, 10, 0, 0, 0, time.UTC),
+		Recommendations: []model.Recommendation{
+			{ID: "recall_below_threshold:PERSON", Kind: model.KindRecallGap, Entity: "PERSON"},
+			{ID: "precision_collapsed:PERSON", Kind: model.KindPrecisionCollapsed, Entity: "PERSON"},
+		},
+	})
+
+	if err := s.ResolveRecommendation(context.Background(), id, "recall_below_threshold:PERSON"); err != nil {
+		t.Fatalf("ResolveRecommendation: %v", err)
+	}
+
+	res, err := s.GetAuditResult(context.Background(), id)
+	if err != nil {
+		t.Fatalf("GetAuditResult: %v", err)
+	}
+	if !res.Recommendations[0].Resolved {
+		t.Error("expected the recall recommendation to be resolved")
+	}
+	if res.Recommendations[1].Resolved {
+		t.Error("resolving the recall recommendation must not resolve the precision warning")
+	}
+}
+
+// Audits written before recommendations had IDs are still addressable by
+// entity, which is all their stored recommendations carry.
+func TestFileStorageFallsBackToEntityForLegacyRecommendations(t *testing.T) {
+	s := newTestStorage(t)
+
+	id := saveOne(t, s, model.AuditResult{
+		Timestamp:       time.Date(2026, 9, 1, 10, 0, 0, 0, time.UTC),
+		Recommendations: []model.Recommendation{{Entity: "SSN", Description: "add a filter"}},
+	})
+
+	if err := s.DismissRecommendation(context.Background(), id, "SSN"); err != nil {
+		t.Fatalf("DismissRecommendation: %v", err)
+	}
+
+	res, err := s.GetAuditResult(context.Background(), id)
+	if err != nil {
+		t.Fatalf("GetAuditResult: %v", err)
+	}
+	if !res.Recommendations[0].Dismissed {
+		t.Error("expected an ID-less recommendation to still be addressable by entity")
+	}
+}

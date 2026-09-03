@@ -10,6 +10,7 @@ PhilterScope is a core part of our framework for implementing PII/PHI redaction 
 
 - **Automated Auditing**: Compare Philter's redaction results against golden datasets.
 - **Interactive UI**: Visualize redaction overlaps, false positives, and false negatives in a web-based dashboard.
+- **Policy Recommendations**: Turn a measured gap into a structured, advisory policy change that names the filter and states what it is expected to cost.
 - **AI Recommendations**: Get suggestions for optimizing Philter policies using local LLMs (via Ollama).
 - **History Tracking**: Maintain a history of audit runs locally or in MongoDB.
 - **Privacy Mode**: Obfuscate PII in the evaluation UI for secure auditing.
@@ -17,6 +18,7 @@ PhilterScope is a core part of our framework for implementing PII/PHI redaction 
 ## Documentation
 
 - [Running PhilterScope](running.md): Detailed explanation of commands and flags.
+- [Policy Recommendations](recommendations.md): What a recommendation contains and how to consume it.
 - [Environment Variables](environment-variables.md): Available environment variables for configuration.
 - [Development](development.md): Instructions for building and testing the project.
 

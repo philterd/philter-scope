@@ -9,6 +9,7 @@ PhilterScope is a core part of our framework for implementing PII/PHI redaction 
 ## Documentation
 
 - [Running PhilterScope](docs/running.md): Detailed explanation of commands and flags.
+- [Policy Recommendations](docs/docs/recommendations.md): What a recommendation contains and how to consume it.
 - [Environment Variables](docs/environment-variables.md): Available environment variables for configuration.
 - [Development](docs/development.md): Instructions for building and testing the project.
 
