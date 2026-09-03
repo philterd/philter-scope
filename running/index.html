@@ -1,0 +1,1391 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="User guide for PhilterScope.">
+      
+      
+        <meta name="author" content="philterd">
+      
+      
+        <link rel="canonical" href="https://philterd.github.io/philter-scope/running/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../recommendations/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Running PhilterScope - PhilterScope</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#running-philterscope" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PhilterScope" class="md-header__button md-logo" aria-label="PhilterScope" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PhilterScope
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Running PhilterScope
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/philterd/philter-scope" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PhilterScope" class="md-nav__button md-logo" aria-label="PhilterScope" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PhilterScope
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/philterd/philter-scope" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running PhilterScope
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running PhilterScope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#philterscope-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        philterscope-audit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="philterscope-audit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exit-codes-and-skipped-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit Codes and Skipped Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#philterscope-serve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        philterscope-serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health Endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readiness-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Readiness Endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metrics-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metrics Endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#history-and-audit-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        History and Audit Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-in-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running in Docker
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running in Docker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker Compose
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-data-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Data Formats
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Data Formats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#input-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#golden-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Golden Datasets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#matching-logic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matching Logic
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-understanding-the-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Understanding the Report
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Understanding the Report">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recall-and-precision-in-the-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recall and precision in the report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#confusion-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confusion Matrix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Confusion Matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-the-confusion-matrix-for-policy-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the Confusion Matrix for Policy Tuning
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recommendations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Policy Recommendations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../environment-variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#philterscope-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        philterscope-audit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="philterscope-audit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exit-codes-and-skipped-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit Codes and Skipped Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#philterscope-serve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        philterscope-serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health Endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readiness-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Readiness Endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metrics-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metrics Endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#history-and-audit-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        History and Audit Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-in-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running in Docker
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running in Docker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker Compose
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-data-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Data Formats
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Data Formats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#input-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#golden-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Golden Datasets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#matching-logic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matching Logic
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-understanding-the-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Understanding the Report
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Understanding the Report">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recall-and-precision-in-the-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recall and precision in the report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#confusion-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confusion Matrix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Confusion Matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-the-confusion-matrix-for-policy-tuning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the Confusion Matrix for Policy Tuning
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="running-philterscope">Running PhilterScope</h1>
+<p>PhilterScope is a standalone CLI tool for PII redaction auditing and policy optimization. This document explains the
+available commands and flags.</p>
+<p>Note that PhilterScope is intended to be run locally and not over a network. If running over a network, be sure to use SSL/TLS connection to MongoDB and to the PhilterScope UI.</p>
+<h2 id="1-installation">1. Installation</h2>
+<p>PhilterScope is written in Go. You can build the binary for your platform using the provided Makefile:</p>
+<pre><code class="language-bash">make build
+</code></pre>
+<p>This will create <code>philterscope-audit</code> and <code>philterscope-serve</code> binaries in the project root.</p>
+<hr />
+<h2 id="2-commands">2. Commands</h2>
+<p>PhilterScope provides two primary commands: <code>philterscope-audit</code> for performing audits and <code>philterscope-serve</code> for viewing results.</p>
+<h3 id="philterscope-audit"><code>philterscope-audit</code></h3>
+<p>The <code>philterscope-audit</code> command compares raw text files against a "golden dataset" to evaluate redaction quality.</p>
+<p><strong>Usage:</strong></p>
+<pre><code class="language-bash">PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-audit [flags]
+</code></pre>
+<p>Or without MongoDB:</p>
+<pre><code class="language-bash">./philterscope-audit [flags]
+</code></pre>
+<p><strong>Commonly Used Flags:</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Flag</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>--url</code></td>
+<td style="text-align: left;"><code>http://localhost:8080</code></td>
+<td style="text-align: left;">The Philter API URL to use for redacting the raw text files.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--token</code></td>
+<td style="text-align: left;">(none)</td>
+<td style="text-align: left;">The Philter API Token, if required by your Philter server.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--policy</code></td>
+<td style="text-align: left;"><code>default</code></td>
+<td style="text-align: left;">The name of the Philter policy to use for redaction.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--input</code></td>
+<td style="text-align: left;"><code>./raw</code></td>
+<td style="text-align: left;">The directory containing the raw text files or Philter <code>explain</code> JSON files.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--golden</code></td>
+<td style="text-align: left;"><code>golden.json</code></td>
+<td style="text-align: left;">The path to the golden dataset file or directory.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--output</code></td>
+<td style="text-align: left;"><code>.</code></td>
+<td style="text-align: left;">The directory where the <code>report.html</code> and <code>report.json</code> will be saved.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--threshold</code></td>
+<td style="text-align: left;"><code>0.5</code></td>
+<td style="text-align: left;">The default recall threshold for policy suggestions (0.0 to 1.0).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--thresholds</code></td>
+<td style="text-align: left;">(none)</td>
+<td style="text-align: left;">Per-entity recall thresholds (e.g., <code>NAME=0.9,SSN=1.0</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--precision-floor</code></td>
+<td style="text-align: left;"><code>0.25</code></td>
+<td style="text-align: left;">Precision below which an entity is flagged as likely misconfigured (0.0 to 1.0).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--group</code></td>
+<td style="text-align: left;"><code>default</code></td>
+<td style="text-align: left;">Assign a group name to the audit for history tracking.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--ai</code></td>
+<td style="text-align: left;"><code>false</code></td>
+<td style="text-align: left;">Enable AI-driven policy recommendations (requires Ollama).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--best-effort</code></td>
+<td style="text-align: left;"><code>false</code></td>
+<td style="text-align: left;">Score the files that can be scored instead of failing the run.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--version</code></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Print the version stamped in at build time and exit.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash">./philterscope-audit --input ./examples/raw --golden ./examples/golden --output ./examples/ --threshold 0.75 --ai
+</code></pre>
+<p>Thresholds can also be set individually for each entity type:</p>
+<pre><code class="language-bash">./philterscope-audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --thresholds &quot;NAME=0.9,SSN=1.0&quot;
+</code></pre>
+<h4 id="exit-codes-and-skipped-files">Exit Codes and Skipped Files</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Code</th>
+<th style="text-align: left;">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>0</code></td>
+<td style="text-align: left;">The audit ran and a report was written.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1</code></td>
+<td style="text-align: left;">The audit did not produce a usable result.</td>
+</tr>
+</tbody>
+</table>
+<p>An audit fails rather than reporting a score it cannot stand behind:</p>
+<ul>
+<li>If Philter cannot be reached, the run stops at the first file with one error, instead of warning once per file and then scoring nothing.</li>
+<li>If no input file could be scored, the run fails rather than writing a report whose precision and recall are zero because nothing was measured.</li>
+</ul>
+<p>A file that cannot be read or redacted, while other files can, is skipped and the run continues. Skipped files are counted in the summary line and recorded in the JSON report under <code>files_skipped</code> and <code>skipped</code>, each with the reason. A skipped file is not the same as a file that scored zero: it contributed nothing to the metrics.</p>
+<p><code>--best-effort</code> opts out of both failures, for callers that would rather have a partial score than an error. The report still records what was skipped.</p>
+<hr />
+<h3 id="philterscope-serve"><code>philterscope-serve</code></h3>
+<p>The <code>philterscope-serve</code> command launches the Evaluation UI, allowing you to view and interact with the results of a previous audit.</p>
+<p><strong>Usage:</strong></p>
+<pre><code class="language-bash">./philterscope-serve [flags]
+</code></pre>
+<p><strong>Flags:</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Flag</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>--report</code></td>
+<td style="text-align: left;"><code>report.json</code></td>
+<td style="text-align: left;">The JSON report file generated by the <code>audit</code> command.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--port</code></td>
+<td style="text-align: left;"><code>5000</code></td>
+<td style="text-align: left;">The port on which the UI will be served.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--privacy</code></td>
+<td style="text-align: left;"><code>false</code></td>
+<td style="text-align: left;">Enable privacy mode (obfuscates PII in UI).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--id</code></td>
+<td style="text-align: left;">(none)</td>
+<td style="text-align: left;">The ID of a specific audit result to view from history.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--version</code></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Print the version stamped in at build time and exit.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash">PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-serve --privacy
+</code></pre>
+<p>Or without MongoDB:</p>
+<pre><code class="language-bash">./philterscope-serve --report ./examples/report.json --port 5000 --privacy
+</code></pre>
+<p>With no arguments, <code>philterscope-serve</code> picks a source in this order:</p>
+<ol>
+<li>MongoDB, if <code>PHILTERSCOPE_MONGODB_CONNECTION_STRING</code> is set and reachable.</li>
+<li>The report named by <code>--report</code>, or a <code>report.json</code> in the current directory.</li>
+<li>The local <code>.philterscope</code> audit history.</li>
+</ol>
+<p>Serving a single report shows that one audit. The other two serve the full history, where you can browse past audits, add notes, and resolve or dismiss recommendations.</p>
+<h3 id="health-endpoint">Health Endpoint</h3>
+<p><code>philterscope-serve</code> exposes an unauthenticated health endpoint at <code>/api/health</code> for container runtimes, load balancers, and uptime checks. It is a liveness probe: it reports that the server is answering and does not check MongoDB.</p>
+<pre><code class="language-bash">curl http://localhost:5000/api/health
+</code></pre>
+<pre><code class="language-json">{&quot;status&quot;: &quot;UP&quot;, &quot;applicationVersion&quot;: &quot;1.2.3&quot;}
+</code></pre>
+<p>A healthy server returns <code>200</code> with <code>"status": "UP"</code>. The version comes from the <code>VERSION</code> set at build time (<code>make build VERSION=1.2.3</code>, or <code>docker build --build-arg VERSION=1.2.3</code>); builds made without it report <code>dev</code>.</p>
+<p>This is a liveness check. It reports that the server is answering and deliberately does not touch storage, so a database outage does not make a working server look dead to a container runtime that would restart it. Use the readiness endpoint for that.</p>
+<h3 id="readiness-endpoint">Readiness Endpoint</h3>
+<p><code>GET /api/readyz</code> reports whether the storage behind the server can be reached. It is unauthenticated.</p>
+<pre><code class="language-bash">curl http://localhost:5000/api/readyz
+</code></pre>
+<pre><code class="language-json">{&quot;status&quot;: &quot;READY&quot;, &quot;mode&quot;: &quot;mongodb&quot;}
+</code></pre>
+<p><code>mode</code> says which backend the server came up with: <code>mongodb</code>, <code>file</code> for the local <code>.philterscope</code> history, or <code>report</code> when serving a single report file, which has no backend and is always ready.</p>
+<p>When MongoDB is configured but cannot be reached, the endpoint returns <code>503</code> and says why:</p>
+<pre><code class="language-json">{&quot;status&quot;: &quot;NOT_READY&quot;, &quot;mode&quot;: &quot;mongodb&quot;, &quot;reason&quot;: &quot;failed to reach MongoDB: server selection error...&quot;}
+</code></pre>
+<p>Point a load balancer at <code>/api/readyz</code> so it stops sending requests that would fail, and a container runtime's liveness probe at <code>/api/health</code> so it only restarts a server that has actually stopped serving.</p>
+<h3 id="metrics-endpoint">Metrics Endpoint</h3>
+<p><code>GET /metrics</code> exposes Prometheus text format, unauthenticated:</p>
+<pre><code class="language-bash">curl http://localhost:5000/metrics
+</code></pre>
+<p>Alongside the standard Go runtime and process metrics:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Labels</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>philterscope_http_requests_total</code></td>
+<td style="text-align: left;">counter</td>
+<td style="text-align: left;"><code>route</code>, <code>method</code>, <code>code</code></td>
+<td style="text-align: left;">API requests served.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>philterscope_http_request_duration_seconds</code></td>
+<td style="text-align: left;">histogram</td>
+<td style="text-align: left;"><code>route</code>, <code>method</code></td>
+<td style="text-align: left;">API request duration.</td>
+</tr>
+</tbody>
+</table>
+<p><code>route</code> is the registered route, not the request path, so an audit ID in a query string never becomes a label value. A labelled series appears once the first matching request has been served. The health, readiness and metrics endpoints are not counted: probe and scrape traffic would otherwise swamp the request counts they report.</p>
+<hr />
+<h3 id="history-and-audit-management">History and Audit Management</h3>
+<p>PhilterScope maintains a history of your audit runs. When using <code>philterscope-serve</code>, you can browse previous audits and their results.</p>
+<ul>
+<li><strong>Local Storage</strong>: By default, audits are stored as one JSON file per audit in a <code>.philterscope</code> directory, created in the directory you run the command from. <code>philterscope-serve</code> reads that history, so audits are browsable without a database. It assumes a single user on one machine: nothing coordinates concurrent writers.</li>
+<li><strong>Shared Storage</strong>: Set <code>PHILTERSCOPE_MONGODB_CONNECTION_STRING</code> for a centralized audit repository across your team. It takes precedence over local storage.</li>
+<li><strong>Privacy Mode</strong>: When <code>--privacy</code> is enabled, all PII found in the audit results (both expected and actual) is replaced with a cryptographic hash in the UI.</li>
+</ul>
+<h3 id="running-in-docker">Running in Docker</h3>
+<p>The image carries both binaries. <code>philterscope-serve</code> is the default command, the working directory is <code>/data</code>, and the container runs as a non-root user. It is published on <a href="https://hub.docker.com/r/philterd/philter-scope">Docker Hub</a> for <code>linux/amd64</code> and <code>linux/arm64</code>:</p>
+<pre><code class="language-bash">docker pull philterd/philter-scope:latest
+</code></pre>
+<p><code>latest</code> tracks the most recent release. Pin a version for anything you deploy:</p>
+<pre><code class="language-bash">docker pull philterd/philter-scope:0.1.0
+</code></pre>
+<p>Serve a report:</p>
+<pre><code class="language-bash">docker run --rm -p 5000:5000 \
+  -v &quot;$PWD/examples/report.json:/data/report.json:ro&quot; \
+  philterd/philter-scope:latest
+</code></pre>
+<p>Setting <code>PHILTERSCOPE_MONGODB_CONNECTION_STRING</code> takes precedence over the report file.</p>
+<p>Run an audit by overriding the command. <code>--user</code> is needed for the non-root container to write the reports back to a bind-mounted directory:</p>
+<pre><code class="language-bash">docker run --rm --user &quot;$(id -u):$(id -g)&quot; \
+  -v &quot;$PWD/examples:/data&quot; \
+  philterd/philter-scope:latest \
+  philterscope-audit --golden /data/golden/ --input /data/raw/ --output /data/ --threshold 0.75
+</code></pre>
+<p>The running container reports its version at <code>/api/health</code> and from <code>philterscope-serve --version</code>. Building the image yourself is covered in the <a href="../development/">development guide</a>.</p>
+<h4 id="docker-compose">Docker Compose</h4>
+<p>The repository ships a <a href="https://github.com/philterd/philter-scope/blob/main/docker-compose.yaml"><code>docker-compose.yaml</code></a> that runs both steps in order. The audit runs once and writes its reports into <code>./data</code>, then the dashboard starts and serves them on port 5000:</p>
+<pre><code class="language-bash">curl -O https://raw.githubusercontent.com/philterd/philter-scope/main/docker-compose.yaml
+
+mkdir -p data/golden data/raw   # your golden dataset, and the text to score
+
+export PHILTER_URL=http://philter.internal:8080
+docker compose up
+</code></pre>
+<p>The file reads its settings from the environment or from a <code>.env</code> file next to it.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>PHILTER_URL</code></td>
+<td style="text-align: left;"><code>http://localhost:8080</code></td>
+<td style="text-align: left;">Philter API used to redact the raw text.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>PHILTER_TOKEN</code></td>
+<td style="text-align: left;">(none)</td>
+<td style="text-align: left;">Philter API token, if your Philter requires one.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>PHILTERSCOPE_VERSION</code></td>
+<td style="text-align: left;"><code>0.1.0</code></td>
+<td style="text-align: left;">Image tag to run.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>PHILTERSCOPE_THRESHOLD</code></td>
+<td style="text-align: left;"><code>0.75</code></td>
+<td style="text-align: left;">Recall threshold, applied to both the audit and the dashboard.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>PHILTERSCOPE_UID</code></td>
+<td style="text-align: left;"><code>1000</code></td>
+<td style="text-align: left;">Your <code>id -u</code>, so the audit can write into <code>./data</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>PHILTERSCOPE_GID</code></td>
+<td style="text-align: left;"><code>1000</code></td>
+<td style="text-align: left;">Your <code>id -g</code>.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-data-formats">3. Data Formats</h2>
+<p>PhilterScope is designed to be flexible with your data. It supports multiple formats for both input files and golden
+datasets.</p>
+<h3 id="input-files">Input Files</h3>
+<p>The input directory (<code>--input</code>) can contain:</p>
+<ol>
+<li><strong>Raw Text Files</strong>: Simple <code>.txt</code> files that will be sent to the Philter API for redaction.</li>
+<li><strong>Philter Explain JSON</strong>: If you have already redacted text using Philter's <code>explain</code> API, you can provide the JSON
+   response directly. This allows you to audit pre-redacted data without calling the Philter API again.</li>
+</ol>
+<h3 id="golden-datasets">Golden Datasets</h3>
+<p>The golden dataset (<code>--golden</code>) defines the expected redactions. PhilterScope looks for a match in several ways:</p>
+<ol>
+<li><strong>Tagged Text</strong>: Wrap PII in your raw text files with tags like <code>&lt;NAME&gt;John Doe&lt;/NAME&gt;</code>. PhilterScope can parse these
+   directly.</li>
+<li><strong>JSON Spans</strong>: A JSON file that defines the text and the character offsets for each PII entity. This is the
+   recommended format for large datasets.</li>
+</ol>
+<p>Example JSON Span format:</p>
+<pre><code class="language-json">{
+  &quot;text&quot;: &quot;My name is John Doe and I live at 123 Main St.&quot;,
+  &quot;labels&quot;: [
+    {
+      &quot;text&quot;: &quot;John Doe&quot;,
+      &quot;start&quot;: 11,
+      &quot;end&quot;: 19,
+      &quot;label&quot;: &quot;NAME&quot;
+    }
+  ]
+}
+</code></pre>
+<h3 id="matching-logic">Matching Logic</h3>
+<p>When you run <code>philterscope-audit</code>, PhilterScope searches for the golden data in this order:</p>
+<ol>
+<li>The path provided by the <code>--golden</code> flag (if it's a file).</li>
+<li>Matching filenames in the directory provided by <code>--golden</code> (if it's a directory).</li>
+<li><code>&lt;filename&gt;.golden</code> in the input directory.</li>
+<li>A <code>golden/</code> subdirectory within or next to your input directory.</li>
+<li>Inline tags within the input file itself.</li>
+</ol>
+<hr />
+<h2 id="4-understanding-the-report">4. Understanding the Report</h2>
+<p>After an audit completes, PhilterScope generates an HTML report and a JSON report containing overall metrics (precision, recall, F1-score), per-entity recall and precision, a confusion matrix, per-document results, and recommended policy changes.</p>
+<p>The recommendations are advisory. PhilterScope measures and explains; applying a change is your decision, and nothing here edits a policy for you. See <a href="../recommendations/">Policy Recommendations</a> for what a recommendation contains and how to consume it.</p>
+<h3 id="recall-and-precision-in-the-report">Recall and precision in the report</h3>
+<p>Recall is the target. It is the share of the labeled spans that Philter found, it is what <code>--threshold</code> is set against, and it is what a PASS or FAIL in the entity table reports.</p>
+<p>Precision, the share of detections that matched a labeled span, is reported next to it but is not scored against a target. It is there to bound the advice. Suggestions driven by recall alone all point the same way, since a policy that redacts everything scores perfect recall, so precision is what shows when a filter has gone further than intended. An entity whose precision falls below <code>--precision-floor</code> is marked CHECK in the entity table and raises a recommendation to look at the filter, because a filter matching several times more text than the gold standard labels is usually misconfigured. PhilterScope does not suggest redacting less in order to raise it.</p>
+<h3 id="confusion-matrix">Confusion Matrix</h3>
+<p>The confusion matrix shows how each expected entity type was classified by Philter. It is displayed immediately below the PII Detection Performance table in the report.</p>
+<p>Each row represents an <strong>expected</strong> entity type from the golden dataset, and each column represents what Philter <strong>detected</strong> it as. The cells contain the count of occurrences.</p>
+<p>There are two special labels in the matrix:</p>
+<ul>
+<li><strong>(missed)</strong> (column): The entity was present in the golden dataset but Philter did not detect it at all. These are false negatives.</li>
+<li><strong>(none)</strong> (row): Philter detected an entity that was not present in the golden dataset. These are false positives (spurious detections).</li>
+</ul>
+<p>Cells are color-coded:</p>
+<ul>
+<li><strong>Green</strong>: Correct classifications (expected and detected types match).</li>
+<li><strong>Orange</strong>: Misclassifications (Philter detected the entity but assigned the wrong type, e.g., a NAME detected as an ADDRESS).</li>
+<li><strong>Red</strong>: Missed entities or spurious detections.</li>
+</ul>
+<h4 id="using-the-confusion-matrix-for-policy-tuning">Using the Confusion Matrix for Policy Tuning</h4>
+<p>The confusion matrix helps identify specific weaknesses in your Philter policy:</p>
+<ul>
+<li><strong>High counts in the (missed) column</strong> for a given entity type indicate that Philter is failing to detect that type. Consider adjusting the policy to add or tune the relevant filter.</li>
+<li><strong>Off-diagonal orange cells</strong> reveal type confusion. For example, if LOCATION entities are frequently detected as ADDRESS, the policy may need more specific patterns to distinguish the two.</li>
+<li><strong>High counts in the (none) row</strong> indicate false positives. Philter is flagging text that is not PII, which may require tightening filter rules or adjusting confidence thresholds.</li>
+</ul>
+<p>The confusion matrix data is also included in the JSON report under the <code>confusion_matrix</code> field for programmatic analysis.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 Philterd, LLC
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
