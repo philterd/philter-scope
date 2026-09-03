@@ -315,7 +315,7 @@ Precision, the share of detections that matched a labeled span, is reported next
 
 ### Confusion Matrix
 
-The confusion matrix shows how each expected entity type was classified by Philter. It is displayed immediately below the PII Recall Performance table in the report.
+The confusion matrix shows how each expected entity type was classified by Philter. It is displayed immediately below the PII Detection Performance table in the report.
 
 Each row represents an **expected** entity type from the golden dataset, and each column represents what Philter **detected** it as. The cells contain the count of occurrences.
 
