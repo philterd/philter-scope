@@ -151,7 +151,13 @@ func (s *MongoDBStorage) DeleteAuditResult(ctx context.Context, id string) error
 	return nil
 }
 
-func (s *MongoDBStorage) ResolveRecommendation(ctx context.Context, auditID string, entity string) error {
+// setRecommendation sets one field on the recommendation matching ref, which is
+// a recommendation ID. One entity can carry more than one recommendation, so
+// the positional update has to key on the ID to reach the right element.
+//
+// Audits stored before recommendations carried an ID have none to match, so an
+// update that matches nothing is retried against the entity.
+func (s *MongoDBStorage) setRecommendation(ctx context.Context, auditID string, ref string, field string) error {
 	coll := s.client.Database(s.database).Collection(s.collection)
 
 	objID, err := bson.ObjectIDFromHex(auditID)
@@ -159,50 +165,35 @@ func (s *MongoDBStorage) ResolveRecommendation(ctx context.Context, auditID stri
 		return fmt.Errorf("invalid audit ID: %w", err)
 	}
 
-	// Update the recommendation in the array that matches the entity
-	filter := bson.D{
-		{Key: "_id", Value: objID},
-		{Key: "recommendations.entity", Value: entity},
-	}
 	update := bson.D{
 		{Key: "$set", Value: bson.D{
-			{Key: "recommendations.$.resolved", Value: true},
+			{Key: "recommendations.$." + field, Value: true},
 		}},
 	}
 
-	_, err = coll.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return fmt.Errorf("failed to resolve recommendation: %w", err)
+	for _, key := range []string{"recommendations.id", "recommendations.entity"} {
+		filter := bson.D{
+			{Key: "_id", Value: objID},
+			{Key: key, Value: ref},
+		}
+		res, err := coll.UpdateOne(ctx, filter, update)
+		if err != nil {
+			return fmt.Errorf("failed to update recommendation: %w", err)
+		}
+		if res.MatchedCount > 0 {
+			return nil
+		}
 	}
 
 	return nil
 }
 
-func (s *MongoDBStorage) DismissRecommendation(ctx context.Context, auditID string, entity string) error {
-	coll := s.client.Database(s.database).Collection(s.collection)
+func (s *MongoDBStorage) ResolveRecommendation(ctx context.Context, auditID string, ref string) error {
+	return s.setRecommendation(ctx, auditID, ref, "resolved")
+}
 
-	objID, err := bson.ObjectIDFromHex(auditID)
-	if err != nil {
-		return fmt.Errorf("invalid audit ID: %w", err)
-	}
-
-	// Update the recommendation in the array that matches the entity
-	filter := bson.D{
-		{Key: "_id", Value: objID},
-		{Key: "recommendations.entity", Value: entity},
-	}
-	update := bson.D{
-		{Key: "$set", Value: bson.D{
-			{Key: "recommendations.$.dismissed", Value: true},
-		}},
-	}
-
-	_, err = coll.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return fmt.Errorf("failed to dismiss recommendation: %w", err)
-	}
-
-	return nil
+func (s *MongoDBStorage) DismissRecommendation(ctx context.Context, auditID string, ref string) error {
+	return s.setRecommendation(ctx, auditID, ref, "dismissed")
 }
 
 func (s *MongoDBStorage) SaveAuditNotes(ctx context.Context, id string, notes string) error {

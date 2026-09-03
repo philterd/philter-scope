@@ -49,6 +49,7 @@ Or without MongoDB:
 | `--output`     | `.`                     | The directory where the `report.html` and `report.json` will be saved.       |
 | `--threshold`  | `0.5`                   | The default recall threshold for policy suggestions (0.0 to 1.0).            |
 | `--thresholds` | (none)                  | Per-entity recall thresholds (e.g., `NAME=0.9,SSN=1.0`).                     |
+| `--precision-floor` | `0.25`             | Precision below which an entity is flagged as likely misconfigured (0.0 to 1.0). |
 | `--group`      | `default`               | Assign a group name to the audit for history tracking.                       |
 | `--ai`         | `false`                 | Enable AI-driven policy recommendations (requires Ollama).                   |
 | `--best-effort`| `false`                 | Score the files that can be scored instead of failing the run.               |
@@ -302,7 +303,15 @@ When you run `philterscope-audit`, PhilterScope searches for the golden data in 
 
 ## 4. Understanding the Report
 
-After an audit completes, PhilterScope generates an HTML report and a JSON report containing overall metrics (precision, recall, F1-score), per-entity recall, a confusion matrix, per-document results, and recommended policy changes.
+After an audit completes, PhilterScope generates an HTML report and a JSON report containing overall metrics (precision, recall, F1-score), per-entity recall and precision, a confusion matrix, per-document results, and recommended policy changes.
+
+The recommendations are advisory. PhilterScope measures and explains; applying a change is your decision, and nothing here edits a policy for you. See [Policy Recommendations](recommendations.md) for what a recommendation contains and how to consume it.
+
+### Recall and precision in the report
+
+Recall is the target. It is the share of the labeled spans that Philter found, it is what `--threshold` is set against, and it is what a PASS or FAIL in the entity table reports.
+
+Precision, the share of detections that matched a labeled span, is reported next to it but is not scored against a target. It is there to bound the advice. Suggestions driven by recall alone all point the same way, since a policy that redacts everything scores perfect recall, so precision is what shows when a filter has gone further than intended. An entity whose precision falls below `--precision-floor` is marked CHECK in the entity table and raises a recommendation to look at the filter, because a filter matching several times more text than the gold standard labels is usually misconfigured. PhilterScope does not suggest redacting less in order to raise it.
 
 ### Confusion Matrix
 

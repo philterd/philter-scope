@@ -35,17 +35,18 @@ import (
 )
 
 var (
-	philterURL    string
-	philterToken  string
-	philterPolicy string
-	inputDir      string
-	goldenFile    string
-	outputDir     string
-	threshold     float64
-	thresholds    string
-	groupName     string
-	enableAI      bool
-	bestEffort    bool
+	philterURL     string
+	philterToken   string
+	philterPolicy  string
+	inputDir       string
+	goldenFile     string
+	outputDir      string
+	threshold      float64
+	thresholds     string
+	precisionFloor float64
+	groupName      string
+	enableAI       bool
+	bestEffort     bool
 )
 
 func main() {
@@ -64,6 +65,7 @@ func main() {
 	rootCmd.Flags().StringVar(&outputDir, "output", ".", "Directory to export reports")
 	rootCmd.Flags().Float64Var(&threshold, "threshold", 0.5, "Recall threshold for suggestions (0.0 to 1.0)")
 	rootCmd.Flags().StringVar(&thresholds, "thresholds", "", "Per-entity recall thresholds (e.g., NAME=0.9,SSN=1.0)")
+	rootCmd.Flags().Float64Var(&precisionFloor, "precision-floor", suggest.DefaultPrecisionFloor, "Precision below which an entity is flagged as likely misconfigured (0.0 to 1.0)")
 	rootCmd.Flags().StringVar(&groupName, "group", "default", "Assign a group name to the audit")
 	rootCmd.Flags().BoolVar(&enableAI, "ai", false, "Enable AI-driven policy recommendations")
 	rootCmd.Flags().BoolVar(&bestEffort, "best-effort", false, "Score the files that can be scored instead of failing the run")
@@ -240,6 +242,7 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	auditResult.Skipped = skipped
 	auditResult.Timestamp = time.Now()
 	auditResult.Threshold = threshold
+	auditResult.PrecisionFloor = precisionFloor
 	auditResult.EntityThresholds = entityThresholdMap
 	auditResult.GroupName = groupName
 
@@ -250,7 +253,7 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	suggester := suggest.NewBasicSuggester(threshold, entityThresholdMap)
+	suggester := suggest.NewBasicSuggesterWithFloor(threshold, entityThresholdMap, precisionFloor)
 	auditResult.Recommendations = suggester.Suggest(auditResult)
 
 	if enableAI {

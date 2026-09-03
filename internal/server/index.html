@@ -90,8 +90,8 @@
         <div id="entityRecallSection" class="mb-10 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                    <h2 class="text-lg font-semibold">PII Recall Performance for Audit</h2>
-                    <span class="text-xs text-gray-400 uppercase font-bold">Metrics per Entity Type</span>
+                    <h2 class="text-lg font-semibold">PII Detection Performance for Audit</h2>
+                    <span class="text-xs text-gray-400 uppercase font-bold">Recall is the target, precision bounds it</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -99,6 +99,7 @@
                             <tr class="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
                                 <th class="px-6 py-3">Entity Type</th>
                                 <th class="px-6 py-3">Recall</th>
+                                <th class="px-6 py-3" title="Share of detections that matched a labeled span. Reported to show over-redaction, not scored against a target.">Precision</th>
                                 <th class="px-6 py-3">Threshold</th>
                                 <th class="px-6 py-3">Status</th>
                             </tr>
@@ -201,7 +202,7 @@
                         </div>
                     </div>
                     <div class="p-6 space-y-4" id="recommendationsList">
-                        <p class="text-sm text-gray-500 italic">No recommendations at this time. Philter is performing above threshold.</p>
+                        <p class="text-sm text-gray-500 italic">No recommendations at this time. Every entity is at or above its recall threshold and none looks misconfigured.</p>
                     </div>
                 </div>
             </div>
@@ -480,6 +481,81 @@
             }
         }
 
+        // A recommendation is addressed by its ID. Reports written before
+        // recommendations had IDs carry only an entity, which the server still
+        // accepts, so fall back to it rather than sending nothing.
+        function recRef(rec) {
+            return rec.id ? rec.id : rec.entity;
+        }
+
+        // The kind badge separates a change to make from a warning to look into.
+        function kindBadge(rec) {
+            if (rec.kind === 'recall_below_threshold') {
+                return '<span class="bg-indigo-100 text-indigo-700 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded" title="Recall for this entity is below its threshold">Recall</span>';
+            }
+            if (rec.kind === 'precision_collapsed') {
+                return '<span class="bg-amber-100 text-amber-800 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded" title="This filter matches far more than the gold standard labels. Usually a misconfiguration.">Precision</span>';
+            }
+            return '';
+        }
+
+        function pct(v) {
+            return (v * 100).toFixed(1) + '%';
+        }
+
+        // tradeLine shows what a suggestion costs, not just what it gains.
+        //
+        // A projection computed from the audit's own detections and one that
+        // cannot be computed at all must not look alike, so they get different
+        // labels and different colours. Widening a filter admits spans this
+        // audit never saw, so its effect is genuinely unknown and is labeled
+        // that way rather than being left blank.
+        function tradeLine(rec) {
+            const proj = rec.projection;
+            const hasRecall = typeof rec.current_recall === 'number';
+            const hasPrecision = typeof rec.current_precision === 'number';
+            if (!proj && !hasRecall && !hasPrecision) return '';
+
+            const current = [];
+            if (hasRecall) current.push(`Recall ${pct(rec.current_recall)}`);
+            if (hasPrecision) current.push(`Precision ${pct(rec.current_precision)}`);
+
+            if (proj && proj.predicted) {
+                const after = [];
+                if (typeof proj.recall === 'number') after.push(`Recall ${pct(proj.recall)}`);
+                if (typeof proj.precision === 'number') after.push(`Precision ${pct(proj.precision)}`);
+                return `
+                    <div class="mb-2 p-2 rounded bg-white border border-emerald-200">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded">Projected</span>
+                            <span class="text-[10px] text-gray-500">computed from this audit</span>
+                        </div>
+                        <p class="text-[11px] text-gray-700">${current.join(' &middot; ')} &rarr; ${after.join(' &middot; ')}</p>
+                        ${proj.note ? `<p class="text-[10px] text-gray-500 mt-1">${proj.note}</p>` : ''}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="mb-2 p-2 rounded bg-white border border-gray-200">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="bg-gray-100 text-gray-600 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded">Not measured</span>
+                        <span class="text-[10px] text-gray-500">effect needs a re-run</span>
+                    </div>
+                    ${current.length ? `<p class="text-[11px] text-gray-700">Today: ${current.join(' &middot; ')}</p>` : ''}
+                    ${proj && proj.note ? `<p class="text-[10px] text-gray-500 mt-1">${proj.note}</p>` : ''}
+                </div>
+            `;
+        }
+
+        // The precision floor the audit ran with. Reports written before the
+        // floor existed carry none, so fall back to the built-in default.
+        function precisionFloor(data) {
+            return (data && typeof data.precision_floor === 'number' && data.precision_floor > 0)
+                ? data.precision_floor
+                : 0.25;
+        }
+
         function renderAudit() {
             // Summary
             document.getElementById('reportTimestamp').innerText = `Generated on ${new Date(reportData.timestamp).toLocaleString()}`;
@@ -527,22 +603,28 @@
             const entityList = document.getElementById('entityRecallList');
             const hasMetrics = reportData.entity_metrics && Object.keys(reportData.entity_metrics).length > 0;
             const hasEntityThresholds = reportData.entity_thresholds && Object.keys(reportData.entity_thresholds).length > 0;
+            const hasEntityStats = reportData.entity_stats && Object.keys(reportData.entity_stats).length > 0;
 
-            if (hasMetrics || hasEntityThresholds) {
+            if (hasMetrics || hasEntityThresholds || hasEntityStats) {
                 entitySection.classList.remove('hidden');
                 entityList.innerHTML = '';
                 
-                // Get all entities from both metrics and thresholds
+                // Get all entities from metrics, thresholds, and per-entity stats.
+                // An entity that only produced false positives has no recall and
+                // appears in the stats alone, and it is exactly the case worth seeing.
+                const stats = reportData.entity_stats || {};
                 const metricEntities = reportData.entity_metrics ? Object.keys(reportData.entity_metrics) : [];
                 const thresholdEntities = reportData.entity_thresholds ? Object.keys(reportData.entity_thresholds) : [];
-                const allEntities = [...new Set([...metricEntities, ...thresholdEntities])].sort();
-                
+                const statEntities = Object.keys(stats);
+                const allEntities = [...new Set([...metricEntities, ...thresholdEntities, ...statEntities])].sort();
+
                 allEntities.forEach(entity => {
                     const hasInstance = reportData.entity_metrics && entity in reportData.entity_metrics;
                     const recall = hasInstance ? reportData.entity_metrics[entity] : 0;
                     const threshold = (reportData.entity_thresholds && reportData.entity_thresholds[entity]) 
                                       ? reportData.entity_thresholds[entity] 
                                       : reportData.threshold || 0;
+                    const stat = stats[entity];
                     
                     let statusClass, statusText, recallDisplay;
                     
@@ -563,12 +645,30 @@
                             </div>
                         `;
                     }
+
+                    // Precision is reported, not scored. It gets no bar and no
+                    // pass/fail, and turns amber only where the filter looks
+                    // misconfigured, so the table cannot be read as two targets.
+                    const detections = stat ? (stat.true_positives + stat.false_positives) : 0;
+                    let precisionDisplay;
+                    if (!stat || detections === 0) {
+                        precisionDisplay = `<span class="text-gray-400 italic text-xs">No detections</span>`;
+                    } else {
+                        const collapsed = stat.precision < precisionFloor(reportData);
+                        precisionDisplay = `
+                            <span class="${collapsed ? 'text-amber-700 font-bold' : 'text-gray-600'}" title="${stat.true_positives} of ${detections} detections matched a labeled span">
+                                ${(stat.precision * 100).toFixed(1)}%
+                            </span>
+                            ${collapsed ? '<span class="ml-2 text-[10px] uppercase font-bold tracking-widest text-amber-700 bg-amber-50 px-2 py-1 rounded" title="Far more detections than labeled spans. Usually a misconfigured filter.">CHECK</span>' : ''}
+                        `;
+                    }
                     
                     const tr = document.createElement('tr');
                     tr.className = 'text-sm hover:bg-gray-50 transition-colors';
                     tr.innerHTML = `
                         <td class="px-6 py-4 font-medium text-gray-900">${entity}</td>
                         <td class="px-6 py-4">${recallDisplay}</td>
+                        <td class="px-6 py-4">${precisionDisplay}</td>
                         <td class="px-6 py-4 text-gray-500 font-medium">${(threshold * 100).toFixed(0)}%</td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 rounded text-[10px] font-bold tracking-widest ${statusClass}">${statusText}</span>
@@ -683,16 +783,18 @@
 
                 pageRecs.forEach(rec => {
                     const div = document.createElement('div');
-                    div.className = `p-3 border rounded-lg relative group ${rec.resolved ? 'bg-gray-50 border-gray-200 opacity-75' : rec.dismissed ? 'bg-red-50 border-red-100 opacity-75' : 'bg-indigo-50 border-indigo-100'}`;
+                    const isWarning = rec.kind === 'precision_collapsed';
+                    const liveClass = isWarning ? 'bg-amber-50 border-amber-200' : 'bg-indigo-50 border-indigo-100';
+                    div.className = `p-3 border rounded-lg relative group ${rec.resolved ? 'bg-gray-50 border-gray-200 opacity-75' : rec.dismissed ? 'bg-red-50 border-red-100 opacity-75' : liveClass}`;
                     
                     let actionButtons = '';
                     if (!rec.resolved && !rec.dismissed) {
                         actionButtons = `
                             <div class="flex items-center gap-2">
-                                <button onclick="resolveRecommendation('${rec.entity}')" class="text-gray-400 hover:text-green-600 transition-colors opacity-0 group-hover:opacity-100" title="Mark as Resolved">
+                                <button onclick="resolveRecommendation('${encodeURIComponent(recRef(rec))}')" class="text-gray-400 hover:text-green-600 transition-colors opacity-0 group-hover:opacity-100" title="Mark as Resolved">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                 </button>
-                                <button onclick="dismissRecommendation('${rec.entity}')" class="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100" title="Dismiss Recommendation">
+                                <button onclick="dismissRecommendation('${encodeURIComponent(recRef(rec))}', '${encodeURIComponent(rec.entity)}')" class="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100" title="Dismiss Recommendation">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                 </button>
                             </div>
@@ -715,14 +817,19 @@
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
                                 <span class="${rec.resolved ? 'bg-gray-400' : rec.dismissed ? 'bg-red-400' : 'bg-indigo-600'} text-white text-[10px] uppercase font-bold px-1.5 py-0.5 rounded">${rec.entity}</span>
-                                <span class="text-xs font-semibold ${rec.resolved ? 'text-gray-500' : rec.dismissed ? 'text-red-700' : 'text-indigo-900'}">${rec.resolved ? 'Resolved' : rec.dismissed ? 'Dismissed' : 'Action Required'}</span>
+                                <span class="text-xs font-semibold ${rec.resolved ? 'text-gray-500' : rec.dismissed ? 'text-red-700' : isWarning ? 'text-amber-900' : 'text-indigo-900'}">${rec.resolved ? 'Resolved' : rec.dismissed ? 'Dismissed' : isWarning ? 'Check Configuration' : 'Action Required'}</span>
+                                ${kindBadge(rec)}
                                 ${rec.is_ai ? '<span class="bg-purple-600 text-white text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ml-1" title="AI Generated Recommendation">AI</span>' : ''}
                             </div>
                             ${actionButtons}
                         </div>
-                        <p class="text-xs ${rec.resolved ? 'text-gray-500' : rec.dismissed ? 'text-red-800' : 'text-indigo-800'} mb-2">${rec.description}</p>
-                        <p class="text-[10px] font-bold ${rec.resolved ? 'text-gray-400' : rec.dismissed ? 'text-red-400' : 'text-indigo-500'} uppercase mb-1">Suggested Change:</p>
-                        <pre class="text-[10px] ${rec.resolved ? 'bg-gray-100 border-gray-200 text-gray-500' : rec.dismissed ? 'bg-white border-red-100 text-red-400' : 'bg-white border-indigo-100'} border p-2 rounded overflow-x-auto">${rec.snippet}</pre>
+                        <p class="text-xs ${rec.resolved ? 'text-gray-500' : rec.dismissed ? 'text-red-800' : isWarning ? 'text-amber-900' : 'text-indigo-800'} mb-2">${rec.description}</p>
+                        ${rec.action ? `<p class="text-[11px] ${rec.resolved ? 'text-gray-500' : rec.dismissed ? 'text-red-800' : isWarning ? 'text-amber-900' : 'text-indigo-900'} font-medium mb-2">${rec.action}</p>` : ''}
+                        ${tradeLine(rec)}
+                        ${rec.snippet ? `
+                            <p class="text-[10px] font-bold ${rec.resolved ? 'text-gray-400' : rec.dismissed ? 'text-red-400' : isWarning ? 'text-amber-600' : 'text-indigo-500'} uppercase mb-1">Suggested Change:</p>
+                            <pre class="text-[10px] ${rec.resolved ? 'bg-gray-100 border-gray-200 text-gray-500' : rec.dismissed ? 'bg-white border-red-100 text-red-400' : isWarning ? 'bg-white border-amber-200' : 'bg-white border-indigo-100'} border p-2 rounded overflow-x-auto">${rec.snippet}</pre>
+                        ` : ''}
                     `;
                     recList.appendChild(div);
                 });
@@ -730,7 +837,7 @@
                 document.getElementById('prevRecPage').classList.add('hidden');
                 document.getElementById('nextRecPage').classList.add('hidden');
                 document.getElementById('recPageIndicator').classList.add('hidden');
-                recList.innerHTML = '<p class="text-sm text-gray-500 italic">No recommendations at this time. Philter is performing above threshold.</p>';
+                recList.innerHTML = '<p class="text-sm text-gray-500 italic">No recommendations at this time. Every entity is at or above its recall threshold and none looks misconfigured.</p>';
             }
 
             // File List
@@ -971,13 +1078,16 @@
         }
 
 
-        async function resolveRecommendation(entity) {
+        // ref is a recommendation ID, URL-encoded by the caller. One entity can
+        // carry several recommendations, so matching local state on the entity
+        // would flip the wrong card.
+        async function resolveRecommendation(ref) {
             const selector = document.getElementById('auditSelector');
             const id = (reportData && reportData.id) || (selector && selector.value);
-            if (!id || !entity) return;
+            if (!id || !ref) return;
 
             try {
-                const response = await fetch(`/api/audit/recommendation/resolve?id=${id}&entity=${encodeURIComponent(entity)}`, {
+                const response = await fetch(`/api/audit/recommendation/resolve?id=${id}&rec=${ref}`, {
                     method: 'POST'
                 });
 
@@ -987,12 +1097,10 @@
                 }
 
                 // Update local data and re-render
-                if (reportData && reportData.recommendations) {
-                    const rec = reportData.recommendations.find(r => r.entity === entity);
-                    if (rec) {
-                        rec.resolved = true;
-                        renderAudit();
-                    }
+                const rec = findRecommendation(ref);
+                if (rec) {
+                    rec.resolved = true;
+                    renderAudit();
                 }
             } catch (err) {
                 console.error(err);
@@ -1000,15 +1108,28 @@
             }
         }
 
-        async function dismissRecommendation(entity) {
+        // findRecommendation resolves the ref the card was rendered with back to
+        // its recommendation, by ID first and by entity only for older reports
+        // that have no IDs.
+        function findRecommendation(ref) {
+            if (!reportData || !reportData.recommendations) return null;
+            const decoded = decodeURIComponent(ref);
+            return reportData.recommendations.find(r => r.id === decoded)
+                || reportData.recommendations.find(r => !r.id && r.entity === decoded)
+                || null;
+        }
+
+        // ref is a recommendation ID and entity is only there to name the thing
+        // being dismissed in the prompt. Both arrive URL-encoded.
+        async function dismissRecommendation(ref, entity) {
             const selector = document.getElementById('auditSelector');
             const id = (reportData && reportData.id) || (selector && selector.value);
-            if (!id || !entity) return;
+            if (!id || !ref) return;
 
-            if (!confirm(`Are you sure you want to dismiss the recommendation for ${entity}?`)) return;
+            if (!confirm(`Are you sure you want to dismiss the recommendation for ${decodeURIComponent(entity || ref)}?`)) return;
 
             try {
-                const response = await fetch(`/api/audit/recommendation/dismiss?id=${id}&entity=${encodeURIComponent(entity)}`, {
+                const response = await fetch(`/api/audit/recommendation/dismiss?id=${id}&rec=${ref}`, {
                     method: 'POST'
                 });
 
@@ -1018,12 +1139,10 @@
                 }
 
                 // Update local data and re-render
-                if (reportData && reportData.recommendations) {
-                    const rec = reportData.recommendations.find(r => r.entity === entity);
-                    if (rec) {
-                        rec.dismissed = true;
-                        renderAudit();
-                    }
+                const rec = findRecommendation(ref);
+                if (rec) {
+                    rec.dismissed = true;
+                    renderAudit();
                 }
             } catch (err) {
                 console.error(err);

@@ -13,5 +13,6 @@ theme:
 nav:
   - Home: index.md
   - Running PhilterScope: running.md
+  - Policy Recommendations: recommendations.md
   - Environment Variables: environment-variables.md
   - Development: development.md

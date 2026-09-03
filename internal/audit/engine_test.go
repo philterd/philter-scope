@@ -118,3 +118,75 @@ func TestCalculateEntityMetrics(t *testing.T) {
 		t.Errorf("Expected Recall for PHONE 0.5, got %f", metrics["PHONE"])
 	}
 }
+
+func TestCalculateEntityStats(t *testing.T) {
+	results := []model.Result{
+		{
+			Overlaps: []model.Overlap{
+				// PHONE: one found, one missed, one spurious.
+				{Type: model.OverlapExact, Golden: model.Span{Label: "PHONE", Text: "123"}, Actual: model.Span{Label: "PHONE", Text: "123"}},
+				{Type: model.OverlapNone, Golden: model.Span{Label: "PHONE", Text: "456"}},
+				{Type: model.OverlapNone, Actual: model.Span{Label: "PHONE", Text: "789", CharacterStart: 10, CharacterEnd: 13}},
+			},
+		},
+	}
+
+	stats := CalculateEntityStats(results)
+
+	phone := stats["PHONE"]
+	if phone.TruePositives != 1 || phone.FalseNegatives != 1 || phone.FalsePositives != 1 {
+		t.Fatalf("expected 1/1/1 for PHONE, got tp=%d fn=%d fp=%d",
+			phone.TruePositives, phone.FalseNegatives, phone.FalsePositives)
+	}
+	if phone.Recall != 0.5 {
+		t.Errorf("expected PHONE recall 0.5, got %f", phone.Recall)
+	}
+	if phone.Precision != 0.5 {
+		t.Errorf("expected PHONE precision 0.5, got %f", phone.Precision)
+	}
+}
+
+// An entity Philter detected but the gold standard never labels has a precision
+// and no recall. It used to vanish from the report entirely, which is how an
+// over-matching filter stayed invisible.
+func TestCalculateEntityStats_FalsePositivesOnly(t *testing.T) {
+	results := []model.Result{
+		{
+			Overlaps: []model.Overlap{
+				{Type: model.OverlapNone, Actual: model.Span{Label: "URL", Text: "a", CharacterStart: 0, CharacterEnd: 1}},
+				{Type: model.OverlapNone, Actual: model.Span{Label: "URL", Text: "b", CharacterStart: 2, CharacterEnd: 3}},
+			},
+		},
+	}
+
+	stats := CalculateEntityStats(results)
+	url, ok := stats["URL"]
+	if !ok {
+		t.Fatal("expected URL to appear in the stats on false positives alone")
+	}
+	if url.FalsePositives != 2 || url.Precision != 0 {
+		t.Errorf("expected 2 false positives and zero precision, got fp=%d precision=%f",
+			url.FalsePositives, url.Precision)
+	}
+
+	// It has no recall to report, so it stays out of the recall map.
+	if _, present := CalculateEntityMetrics(results)["URL"]; present {
+		t.Error("an entity with no golden spans has no recall and should not appear in entity_metrics")
+	}
+}
+
+// A span carrying only a filter type is labeled the same way everywhere, so the
+// stats and the confusion matrix agree on what an entity is called.
+func TestCalculateEntityStats_FallsBackToFilterType(t *testing.T) {
+	results := []model.Result{
+		{
+			Overlaps: []model.Overlap{
+				{Type: model.OverlapExact, Golden: model.Span{FilterType: "SSN", Text: "1"}, Actual: model.Span{FilterType: "SSN", Text: "1"}},
+			},
+		},
+	}
+
+	if stats := CalculateEntityStats(results); stats["SSN"].TruePositives != 1 {
+		t.Errorf("expected the filter type to be used as the label, got %+v", stats)
+	}
+}

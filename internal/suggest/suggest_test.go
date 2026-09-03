@@ -119,15 +119,17 @@ func TestBasicSuggester_Suggest_EntityThreshold(t *testing.T) {
 	}
 }
 
-func TestGenerateSnippet(t *testing.T) {
-	snippet := generateSnippet("CREDIT_CARD")
+// The snippet is now a Philter policy fragment keyed by the policy's own
+// identifier name, rather than the "filters" array the earlier version emitted,
+// which did not match any schema Philter accepts.
+func TestEnableSnippet(t *testing.T) {
+	snippet := enableSnippet("creditCard")
 	expected := `{
-  "filters": [
-    {
-      "filterType": "CREDIT_CARD",
-      "strategy": "REDACT"
+  "identifiers": {
+    "creditCard": {
+      "enabled": true
     }
-  ]
+  }
 }`
 	if snippet != expected {
 		t.Errorf("Expected snippet:\n%s\nGot:\n%s", expected, snippet)

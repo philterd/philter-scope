@@ -271,28 +271,45 @@ func (s *FileStorage) DeleteAuditResult(ctx context.Context, id string) error {
 	return nil
 }
 
-// setRecommendation applies fn to the recommendation matching entity.
-func (s *FileStorage) setRecommendation(id string, entity string, fn func(*model.Recommendation)) error {
+// setRecommendation applies fn to the recommendation matching ref, which is a
+// recommendation ID. One entity can now carry more than one recommendation, so
+// matching on the entity would mark the wrong one.
+//
+// Audits written before recommendations carried an ID have none to match, so a
+// ref that finds nothing is retried against the entity. That is the old
+// behavior, ambiguity included, and it only applies to those older audits.
+func (s *FileStorage) setRecommendation(id string, ref string, fn func(*model.Recommendation)) error {
 	res, err := s.read(id)
 	if err != nil {
 		return err
 	}
+
+	matched := false
 	for i := range res.Recommendations {
-		if res.Recommendations[i].Entity == entity {
+		if res.Recommendations[i].ID == ref {
 			fn(&res.Recommendations[i])
+			matched = true
 		}
 	}
+	if !matched {
+		for i := range res.Recommendations {
+			if res.Recommendations[i].Entity == ref {
+				fn(&res.Recommendations[i])
+			}
+		}
+	}
+
 	return s.write(id, res)
 }
 
 // ResolveRecommendation marks a recommendation as resolved.
-func (s *FileStorage) ResolveRecommendation(ctx context.Context, auditID string, entity string) error {
-	return s.setRecommendation(auditID, entity, func(r *model.Recommendation) { r.Resolved = true })
+func (s *FileStorage) ResolveRecommendation(ctx context.Context, auditID string, ref string) error {
+	return s.setRecommendation(auditID, ref, func(r *model.Recommendation) { r.Resolved = true })
 }
 
 // DismissRecommendation marks a recommendation as dismissed.
-func (s *FileStorage) DismissRecommendation(ctx context.Context, auditID string, entity string) error {
-	return s.setRecommendation(auditID, entity, func(r *model.Recommendation) { r.Dismissed = true })
+func (s *FileStorage) DismissRecommendation(ctx context.Context, auditID string, ref string) error {
+	return s.setRecommendation(auditID, ref, func(r *model.Recommendation) { r.Dismissed = true })
 }
 
 // SaveAuditNotes stores user-provided notes against an audit.
