@@ -111,6 +111,10 @@ It reports the released version:
 
 To build the image yourself instead of pulling it, see the [development guide](docs/docs/development.md).
 
+## Community
+
+Users and developers are welcome to join the [Philterd Slack workspace](https://philterd.ai/slack/) to ask questions, share feedback, and discuss PhilterScope and the rest of the Philterd toolkit.
+
 ## License
 
 Copyright 2026 Philterd, LLC. "Philter" is a registered trademark of Philterd, LLC. All rights reserved.
