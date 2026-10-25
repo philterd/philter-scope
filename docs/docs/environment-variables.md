@@ -22,8 +22,8 @@ export PHILTERSCOPE_OLLAMA_MODEL="gemma4"
 ./philterscope-audit --ai
 ```
 
-If these environment variables are not set and you use the `--ai` flag, PhilterScope will attempt to use the default
-Ollama URL and model.
+If `PHILTERSCOPE_OLLAMA_URL` is not set, `--ai` prints a warning and the audit runs without AI recommendations. If
+`PHILTERSCOPE_OLLAMA_MODEL` is not set, `gemma4` is used.
 
 ## 2. Shared History Storage (MongoDB)
 
@@ -46,4 +46,4 @@ If no environment variables are set, PhilterScope uses the following defaults:
 
 - **Audit History**: Stored in a `.philterscope` directory in the current working directory, one JSON file per audit.
 - **Philter API**: Defaults to `https://localhost:8080`.
-- **Ollama API**: Defaults to `http://localhost:11434`.
+- **Ollama API**: None. AI recommendations run only when `PHILTERSCOPE_OLLAMA_URL` is set.

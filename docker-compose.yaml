@@ -21,7 +21,7 @@
 services:
 
   audit:
-    image: philterd/philter-scope:${PHILTERSCOPE_VERSION:-0.1.0}
+    image: philterd/philter-scope:${PHILTERSCOPE_VERSION:-0.2.0}
     # The container runs as a non-root user, so the audit needs your own uid and
     # gid to write the report back to the bind-mounted directory.
     user: "${PHILTERSCOPE_UID:-1000}:${PHILTERSCOPE_GID:-1000}"
@@ -31,7 +31,7 @@ services:
       - philterscope-audit
       # Philter serves HTTPS with a self-signed certificate by default. Save it
       # into ./data and set PHILTER_CA_CERT to trust it. Input files that are
-      # already Philter explain JSON are scored without calling Philter at all.
+      # already Philter explain JSON are scored without being redacted again.
       - --url=${PHILTER_URL:-https://localhost:8080}
       - --token=${PHILTER_TOKEN:-}
       - --ca-cert=${PHILTER_CA_CERT:-}
@@ -41,7 +41,7 @@ services:
       - --threshold=${PHILTERSCOPE_THRESHOLD:-0.75}
 
   dashboard:
-    image: philterd/philter-scope:${PHILTERSCOPE_VERSION:-0.1.0}
+    image: philterd/philter-scope:${PHILTERSCOPE_VERSION:-0.2.0}
     ports:
       - "5000:5000"
     volumes:

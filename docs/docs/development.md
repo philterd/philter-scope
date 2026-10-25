@@ -10,7 +10,7 @@ To build the PhilterScope binaries, run:
 make build
 ```
 
-The compiled binaries `philterscope-audit` and `philterscope-serve` will be placed in the root of the project. Refer to the `Makefile` for building for other paltforms.
+The compiled binaries `philterscope-audit` and `philterscope-serve` will be placed in the root of the project. Refer to the `Makefile` for building for other platforms.
 
 The version is baked into both binaries at build time. It defaults to `git describe`; override it with:
 

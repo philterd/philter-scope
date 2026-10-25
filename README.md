@@ -8,10 +8,10 @@ PhilterScope is a core part of our framework for implementing PII/PHI redaction 
 
 ## Documentation
 
-- [Running PhilterScope](docs/running.md): Detailed explanation of commands and flags.
+- [Running PhilterScope](docs/docs/running.md): Detailed explanation of commands and flags.
 - [Policy Recommendations](docs/docs/recommendations.md): What a recommendation contains and how to consume it.
-- [Environment Variables](docs/environment-variables.md): Available environment variables for configuration.
-- [Development](docs/development.md): Instructions for building and testing the project.
+- [Environment Variables](docs/docs/environment-variables.md): Available environment variables for configuration.
+- [Development](docs/docs/development.md): Instructions for building and testing the project.
 
 ## Quick Start
 
@@ -39,7 +39,7 @@ Likewise with audits, to view audit results stored in MongoDB database, provide 
 PHILTERSCOPE_MONGODB_CONNECTION_STRING=mongodb://localhost:27017/philterscope ./philterscope-serve --report ./examples/report.json --port 5000
 ```
 
-See the [documentation](docs/running.md) for more details and options.
+See the [documentation](docs/docs/running.md) for more details and options.
 
 ## Docker
 
@@ -54,7 +54,7 @@ docker pull philterd/philter-scope:latest
 `latest` tracks the most recent release. Pin a version for anything you deploy, so an upgrade is a change you make rather than one you receive:
 
 ```
-docker pull philterd/philter-scope:0.1.0
+docker pull philterd/philter-scope:0.2.0
 ```
 
 Images are published for `linux/amd64` and `linux/arm64`.
@@ -107,7 +107,7 @@ curl http://localhost:5000/api/health
 It reports the released version:
 
 ```json
-{"status": "UP", "applicationVersion": "0.1.0"}
+{"status": "UP", "applicationVersion": "0.2.0"}
 ```
 
 To build the image yourself instead of pulling it, see the [development guide](docs/docs/development.md).
