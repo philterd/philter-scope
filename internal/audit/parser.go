@@ -132,8 +132,8 @@ func ParseJSONSpans(data []byte) (string, []model.Span, error) {
 func ParsePhilterExplain(data []byte) (string, []model.Span, error) {
 	// Re-define internal structures to match Philter's API without importing internal/philter
 	type explanation struct {
-		AppliedSpans []model.Span `json:"appliedSpans"`
-		IgnoredSpans []model.Span `json:"ignoredSpans"`
+		AppliedSpans    []model.Span `json:"appliedSpans"`
+		IdentifiedSpans []model.Span `json:"identifiedSpans"`
 	}
 	type explainResponse struct {
 		FilteredText string      `json:"filteredText"`

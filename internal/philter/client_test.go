@@ -16,9 +16,14 @@ package philter
 
 import (
 	"encoding/json"
+	"encoding/pem"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -141,12 +146,20 @@ func TestExplain(t *testing.T) {
 	}
 }
 
+// Philter 4 lists policies a page at a time, as objects, with the total.
 func TestGetPolicyNames(t *testing.T) {
+	const total = policiesPageSize + 5
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" || r.URL.Path != "/api/policies" {
 			t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
 		}
-		json.NewEncoder(w).Encode([]string{"policy1", "policy2"})
+		offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+		var policies []map[string]any
+		for i := offset; i < total && i < offset+limit; i++ {
+			policies = append(policies, map[string]any{"name": fmt.Sprintf("policy%d", i), "revision": 0})
+		}
+		json.NewEncoder(w).Encode(map[string]any{"policies": policies, "total": total})
 	}))
 	defer ts.Close()
 
@@ -155,7 +168,7 @@ func TestGetPolicyNames(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	if len(names) != 2 || names[0] != "policy1" {
+	if len(names) != total || names[0] != "policy0" || names[total-1] != fmt.Sprintf("policy%d", total-1) {
 		t.Errorf("Unexpected names: %v", names)
 	}
 }
@@ -165,7 +178,10 @@ func TestUploadPolicy(t *testing.T) {
 		if r.Method != "POST" || r.URL.Path != "/api/policies" {
 			t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
 		}
-		w.WriteHeader(http.StatusOK)
+		if r.URL.Query().Get("name") != "new-policy" {
+			t.Errorf("Expected name=new-policy, got %q", r.URL.RawQuery)
+		}
+		w.WriteHeader(http.StatusCreated)
 	}))
 	defer ts.Close()
 
@@ -215,5 +231,102 @@ func TestNoConnectionErrorWhenPhilterAnswersWithAnError(t *testing.T) {
 	var connErr *ConnectionError
 	if errors.As(err, &connErr) {
 		t.Error("a 500 response is Philter answering, not a connection failure")
+	}
+}
+
+func TestUploadPolicy_Exists(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(`{"message":"A policy with this name already exists.","reason":"policy_exists"}`))
+	}))
+	defer ts.Close()
+
+	client := &PhilterClient{BaseURL: ts.URL}
+	err := client.UploadPolicy("new-policy", `{}`)
+	if err == nil || !strings.Contains(err.Error(), "409") {
+		t.Fatalf("Expected a 409 error, got %v", err)
+	}
+}
+
+// Philter's Docker image serves HTTPS with a self-signed certificate, which the
+// default client rejects.
+func TestNewHTTPClient_TLS(t *testing.T) {
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(ExplainResponse{FilteredText: "redacted"})
+	}))
+	defer ts.Close()
+
+	explain := func(httpClient *http.Client) error {
+		client := &PhilterClient{BaseURL: ts.URL, HTTPClient: httpClient}
+		_, err := client.Explain("test")
+		return err
+	}
+
+	defaultClient, err := NewHTTPClient("", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := explain(defaultClient); err == nil {
+		t.Error("Expected the default client to reject an untrusted certificate")
+	}
+
+	caFile := filepath.Join(t.TempDir(), "philter.pem")
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: ts.Certificate().Raw})
+	if err := os.WriteFile(caFile, certPEM, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	trusting, err := NewHTTPClient(caFile, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := explain(trusting); err != nil {
+		t.Errorf("Expected the certificate in --ca-cert to be trusted, got %v", err)
+	}
+
+	insecure, err := NewHTTPClient("", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := explain(insecure); err != nil {
+		t.Errorf("Expected --insecure to skip verification, got %v", err)
+	}
+}
+
+func TestNewHTTPClient_BadCACert(t *testing.T) {
+	caFile := filepath.Join(t.TempDir(), "not-a-cert.pem")
+	if err := os.WriteFile(caFile, []byte("not a certificate"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := NewHTTPClient(caFile, false); err == nil {
+		t.Error("Expected an error for a file with no certificates")
+	}
+	if _, err := NewHTTPClient(filepath.Join(t.TempDir(), "missing.pem"), false); err == nil {
+		t.Error("Expected an error for a missing file")
+	}
+}
+
+// A refused API key fails every document, so it is reported as an AuthError
+// rather than an ordinary API error.
+func TestAuthErrorForRefusedKey(t *testing.T) {
+	for _, status := range []int{http.StatusUnauthorized, http.StatusForbidden} {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(status)
+			w.Write([]byte(`{"message":"refused","reason":"test_reason"}`))
+		}))
+
+		client := &PhilterClient{BaseURL: ts.URL}
+		_, _, err := client.Redact("some text")
+		ts.Close()
+
+		var authErr *AuthError
+		if !errors.As(err, &authErr) {
+			t.Fatalf("%d: expected an *AuthError, got %T: %v", status, err, err)
+		}
+		if authErr.StatusCode != status {
+			t.Errorf("expected status %d, got %d", status, authErr.StatusCode)
+		}
+		if !strings.Contains(err.Error(), "test_reason") {
+			t.Errorf("%d: expected Philter's reason in the message, got %q", status, err.Error())
+		}
 	}
 }

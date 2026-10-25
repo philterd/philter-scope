@@ -91,11 +91,12 @@ docker run --rm --user "$(id -u):$(id -g)" \
 ```
 mkdir -p data/golden data/raw
 
-export PHILTER_URL=http://philter.internal:8080
+export PHILTER_URL=https://philter.internal:8080
+export PHILTER_TOKEN=sk_...
 docker compose up
 ```
 
-`PHILTER_TOKEN`, the image tag, the recall threshold, and the uid and gid the audit writes as are all environment variables the file reads, documented at the top of it and in the [running guide](https://philterd.github.io/philter-scope/running/).
+PhilterScope works with Philter 4, which requires an API key (`PHILTER_TOKEN`) and serves HTTPS with a self-signed certificate by default. The [running guide](https://philterd.github.io/philter-scope/running/#connecting-to-philter) covers trusting that certificate. `PHILTER_TOKEN`, `PHILTER_CA_CERT`, the image tag, the recall threshold, and the uid and gid the audit writes as are all environment variables the file reads, documented at the top of it and in the [running guide](https://philterd.github.io/philter-scope/running/).
 
 The server answers health checks at `/api/health`:
 

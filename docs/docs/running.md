@@ -41,8 +41,10 @@ Or without MongoDB:
 
 | Flag           | Default                 | Description                                                                  |
 |:---------------|:------------------------|:-----------------------------------------------------------------------------|
-| `--url`        | `http://localhost:8080` | The Philter API URL to use for redacting the raw text files.                 |
-| `--token`      | (none)                  | The Philter API Token, if required by your Philter server.                   |
+| `--url`        | `https://localhost:8080` | The Philter API URL to use for redacting the raw text files.                |
+| `--token`      | (none)                  | The Philter API key. Philter 4 requires one with the `redact` scope.         |
+| `--ca-cert`    | (none)                  | A PEM file of certificates to trust for Philter's HTTPS, in addition to the system roots. |
+| `--insecure`   | `false`                 | Do not verify Philter's HTTPS certificate. For local testing only.           |
 | `--policy`     | `default`               | The name of the Philter policy to use for redaction.                         |
 | `--input`      | `./raw`                 | The directory containing the raw text files or Philter `explain` JSON files. |
 | `--golden`     | `golden.json`           | The path to the golden dataset file or directory.                            |
@@ -67,6 +69,22 @@ Thresholds can also be set individually for each entity type:
 ./philterscope-audit --golden ./examples/golden/ --input ./examples/raw/ --output ./examples/ --threshold 0.75 --thresholds "NAME=0.9,SSN=1.0"
 ```
 
+#### Connecting to Philter
+
+PhilterScope works with Philter 4. Raw text files are sent to Philter's `POST /api/explain`; input files that are already Philter explain JSON are scored without calling Philter.
+
+- **API key.** Every Philter 4 request needs an API key, passed with `--token`. The key needs the `redact` scope. The first key is the one Philter was started with in `PHILTER_BOOTSTRAP_API_KEY`; create a narrower one with `POST /api/api-keys`.
+- **HTTPS.** Philter's Docker image serves HTTPS on port 8080 with a self-signed certificate, which PhilterScope does not trust by default. Either pass that certificate with `--ca-cert`, use a certificate your system already trusts, or run Philter with `SSL_ENABLED=false` behind a TLS-terminating proxy and point `--url` at the proxy. `--insecure` skips verification entirely and is suitable only for a Philter on your own machine.
+
+To trust a self-signed certificate, save it and pass it with `--ca-cert`:
+
+```bash
+openssl s_client -connect localhost:8080 </dev/null 2>/dev/null | openssl x509 > philter.pem
+./philterscope-audit --url https://localhost:8080 --token "$PHILTER_API_KEY" --ca-cert philter.pem
+```
+
+The hostname in `--url` has to match the certificate. Philter generates its certificate for `localhost` unless it is started with `SSL_CERTIFICATE_HOSTNAME` set to the name you connect with.
+
 #### Exit Codes and Skipped Files
 
 | Code | Meaning |
@@ -76,7 +94,7 @@ Thresholds can also be set individually for each entity type:
 
 An audit fails rather than reporting a score it cannot stand behind:
 
-- If Philter cannot be reached, the run stops at the first file with one error, instead of warning once per file and then scoring nothing.
+- If Philter cannot be reached, or refuses the API key with `401` or `403` (a key without the `redact` scope), the run stops at the first file with one error, instead of warning once per file and then scoring nothing.
 - If no input file could be scored, the run fails rather than writing a report whose precision and recall are zero because nothing was measured.
 
 A file that cannot be read or redacted, while other files can, is skipped and the run continues. Skipped files are counted in the summary line and recorded in the JSON report under `files_skipped` and `skipped`, each with the reason. A skipped file is not the same as a file that scored zero: it contributed nothing to the metrics.
@@ -234,16 +252,20 @@ curl -O https://raw.githubusercontent.com/philterd/philter-scope/main/docker-com
 
 mkdir -p data/golden data/raw   # your golden dataset, and the text to score
 
-export PHILTER_URL=http://philter.internal:8080
+export PHILTER_URL=https://philter.internal:8080
+export PHILTER_TOKEN=sk_...     # a Philter API key with the redact scope
 docker compose up
 ```
+
+To trust Philter's self-signed certificate, save it as `data/philter.pem` (see [Connecting to Philter](#connecting-to-philter)) and set `PHILTER_CA_CERT=/data/philter.pem`.
 
 The file reads its settings from the environment or from a `.env` file next to it.
 
 | Variable                 | Default                 | Description                                                   |
 |:-------------------------|:------------------------|:--------------------------------------------------------------|
-| `PHILTER_URL`            | `http://localhost:8080` | Philter API used to redact the raw text.                      |
-| `PHILTER_TOKEN`          | (none)                  | Philter API token, if your Philter requires one.              |
+| `PHILTER_URL`            | `https://localhost:8080` | Philter API used to redact the raw text.                     |
+| `PHILTER_TOKEN`          | (none)                  | Philter API key with the `redact` scope.                      |
+| `PHILTER_CA_CERT`        | (none)                  | Path inside the container to a PEM certificate to trust for Philter's HTTPS, such as `/data/philter.pem`. |
 | `PHILTERSCOPE_VERSION`   | `0.1.0`                 | Image tag to run.                                             |
 | `PHILTERSCOPE_THRESHOLD` | `0.75`                  | Recall threshold, applied to both the audit and the dashboard. |
 | `PHILTERSCOPE_UID`       | `1000`                  | Your `id -u`, so the audit can write into `./data`.           |

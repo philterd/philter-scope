@@ -38,6 +38,8 @@ var (
 	philterURL     string
 	philterToken   string
 	philterPolicy  string
+	caCert         string
+	insecure       bool
 	inputDir       string
 	goldenFile     string
 	outputDir      string
@@ -57,8 +59,10 @@ func main() {
 		RunE:    runAudit,
 	}
 
-	rootCmd.Flags().StringVar(&philterURL, "url", "http://localhost:8080", "Philter API URL")
-	rootCmd.Flags().StringVar(&philterToken, "token", "", "Philter API Token")
+	rootCmd.Flags().StringVar(&philterURL, "url", "https://localhost:8080", "Philter API URL")
+	rootCmd.Flags().StringVar(&philterToken, "token", "", "Philter API key")
+	rootCmd.Flags().StringVar(&caCert, "ca-cert", "", "PEM file of certificates to trust for Philter's HTTPS, such as its self-signed certificate")
+	rootCmd.Flags().BoolVar(&insecure, "insecure", false, "Do not verify Philter's HTTPS certificate")
 	rootCmd.Flags().StringVar(&philterPolicy, "policy", "default", "Philter policy name")
 	rootCmd.Flags().StringVar(&inputDir, "input", "./raw", "Directory of raw text files")
 	rootCmd.Flags().StringVar(&goldenFile, "golden", "golden.json", "Golden dataset JSON file")
@@ -99,10 +103,19 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	httpClient, err := philter.NewHTTPClient(caCert, insecure)
+	if err != nil {
+		return err
+	}
+	if insecure {
+		fmt.Fprintln(os.Stderr, "Warning: --insecure is set, so Philter's certificate is not verified")
+	}
+
 	client := &philter.PhilterClient{
-		BaseURL: philterURL,
-		Token:   philterToken,
-		Policy:  philterPolicy,
+		BaseURL:    philterURL,
+		Token:      philterToken,
+		Policy:     philterPolicy,
+		HTTPClient: httpClient,
 	}
 
 	files, err := os.ReadDir(inputDir)
@@ -211,6 +224,10 @@ func runAudit(cmd *cobra.Command, args []string) error {
 				var connErr *philter.ConnectionError
 				if errors.As(err, &connErr) && !bestEffort {
 					return fmt.Errorf("%w (use --best-effort to score the files that can be redacted)", connErr)
+				}
+				var authErr *philter.AuthError
+				if errors.As(err, &authErr) && !bestEffort {
+					return fmt.Errorf("%w (check --token and that the key has the redact scope)", authErr)
 				}
 				skip(f.Name(), "failed to redact: %v", err)
 				continue

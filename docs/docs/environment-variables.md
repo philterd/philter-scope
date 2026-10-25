@@ -45,5 +45,5 @@ The history feature will also prioritize results from MongoDB.
 If no environment variables are set, PhilterScope uses the following defaults:
 
 - **Audit History**: Stored in a `.philterscope` directory in the current working directory, one JSON file per audit.
-- **Philter API**: Defaults to `http://localhost:8080`.
+- **Philter API**: Defaults to `https://localhost:8080`.
 - **Ollama API**: Defaults to `http://localhost:11434`.

@@ -1,7 +1,8 @@
 # Scores a redaction policy and then serves the report in a browser.
 #
 #   mkdir -p data/golden data/raw     # your gold standard, and the text to score
-#   export PHILTER_URL=http://philter.internal:8080
+#   export PHILTER_URL=https://philter.internal:8080
+#   export PHILTER_TOKEN=sk_...       # a Philter API key with the redact scope
 #   docker compose up
 #
 # The audit runs once and writes report.json and report.html into ./data. The
@@ -10,7 +11,9 @@
 # Override any of these in the environment or in a .env file next to this file:
 #
 #   PHILTER_URL              Philter API to redact the raw text with
-#   PHILTER_TOKEN            Philter API token, if your Philter requires one
+#   PHILTER_TOKEN            Philter API key; Philter 4 requires one
+#   PHILTER_CA_CERT          PEM certificate to trust for Philter's HTTPS, as a
+#                            path inside the container, e.g. /data/philter.pem
 #   PHILTERSCOPE_VERSION     image tag to run
 #   PHILTERSCOPE_THRESHOLD   recall threshold an entity type has to clear
 #   PHILTERSCOPE_UID/_GID    your own id -u and id -g, if they are not 1000
@@ -26,12 +29,12 @@ services:
       - ./data:/data
     command:
       - philterscope-audit
-      # Philter serves HTTPS with a self-signed certificate by default, so point
-      # this at a Philter whose certificate you trust or one started with
-      # SSL_ENABLED=false. Input files that are already Philter explain JSON are
-      # scored without calling Philter at all.
-      - --url=${PHILTER_URL:-http://localhost:8080}
+      # Philter serves HTTPS with a self-signed certificate by default. Save it
+      # into ./data and set PHILTER_CA_CERT to trust it. Input files that are
+      # already Philter explain JSON are scored without calling Philter at all.
+      - --url=${PHILTER_URL:-https://localhost:8080}
       - --token=${PHILTER_TOKEN:-}
+      - --ca-cert=${PHILTER_CA_CERT:-}
       - --golden=/data/golden/
       - --input=/data/raw/
       - --output=/data/
