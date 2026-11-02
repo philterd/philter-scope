@@ -105,4 +105,4 @@ make test
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](../../CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+We welcome contributions! Please see the [Philterd contributing guide](https://github.com/philterd/.github/blob/main/CONTRIBUTING.md) for how to submit a pull request and sign off your commits.
