@@ -85,6 +85,30 @@ func TestSuggest_RecallGap_FilterAbsent(t *testing.T) {
 	}
 }
 
+// A gold EIN label gets a fragment for the ein filter, not "unknown filter".
+func TestSuggest_RecallGap_EIN(t *testing.T) {
+	s := NewBasicSuggester(0.75, nil)
+
+	result := model.AuditResult{
+		EntityMetrics: map[string]float64{"EIN": 0.5},
+		EntityStats: map[string]model.EntityStat{
+			"EIN": {TruePositives: 1, FalseNegatives: 1, Recall: 0.5, Precision: 1},
+		},
+		Policy: policyWith(t, `{"identifiers": {"ssn": {"enabled": true}}}`),
+	}
+
+	rec := findByKind(s.Suggest(result), model.KindRecallGap, "EIN")
+	if rec == nil {
+		t.Fatal("expected a recall recommendation for EIN")
+	}
+	if rec.Change == nil || rec.Change.Type != model.ChangeEnableFilter || rec.Change.Filter != "ein" {
+		t.Fatalf("expected an enable_filter change for ein, got %+v", rec.Change)
+	}
+	if !strings.Contains(rec.Snippet, `"ein"`) {
+		t.Errorf("expected the snippet keyed by ein, got:\n%s", rec.Snippet)
+	}
+}
+
 // An entity whose filter is already enabled is not told to enable it again.
 func TestSuggest_RecallGap_FilterAlreadyEnabled(t *testing.T) {
 	s := NewBasicSuggester(0.75, nil)

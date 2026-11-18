@@ -16,6 +16,9 @@ package suggest
 
 import (
 	"encoding/json"
+	"os"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/philterd/philterscope/pkg/model"
@@ -39,6 +42,16 @@ func TestFilterKey(t *testing.T) {
 		{"NAME", "person", true},
 		{"ADDRESS", "streetAddress", true},
 		{"EMAIL", "emailAddress", true},
+		// Filters the schema gained after the list was written.
+		{"EIN", "ein", true},
+		{"ITIN", "itin", true},
+		{"CANADA_SIN", "canadaSin", true},
+		{"NPI", "npi", true},
+		{"DEA_NUMBER", "deaNumber", true},
+		{"dea-number", "deaNumber", true},
+		{"MBI", "mbi", true},
+		// Schema 1.3.0 has no physicianName filter.
+		{"PHYSICIAN_NAME", "physicianName", false},
 		// A label naming no Philter filter must say so rather than invent one.
 		{"PATIENT_NICKNAME", "patientNickname", false},
 		{"LOCATION", "location", false},
@@ -49,6 +62,49 @@ func TestFilterKey(t *testing.T) {
 		if key != c.key || known != c.known {
 			t.Errorf("filterKey(%q) = (%q, %v), want (%q, %v)", c.entity, key, known, c.key, c.known)
 		}
+	}
+}
+
+// TestKnownIdentifiersMatchSchema keeps knownIdentifiers in step with the
+// identifier keys of the policy schema Philter Scope targets. The schema in
+// testdata is a copy of schema/1.3.0/schema.json from philterd/phisql.
+func TestKnownIdentifiersMatchSchema(t *testing.T) {
+	raw, err := os.ReadFile("testdata/phisql-schema-1.3.0.json")
+	if err != nil {
+		t.Fatalf("read schema: %v", err)
+	}
+	var schema struct {
+		Defs struct {
+			Identifiers struct {
+				Properties map[string]json.RawMessage `json:"properties"`
+			} `json:"identifiers"`
+		} `json:"$defs"`
+	}
+	if err := json.Unmarshal(raw, &schema); err != nil {
+		t.Fatalf("parse schema: %v", err)
+	}
+	if len(schema.Defs.Identifiers.Properties) == 0 {
+		t.Fatal("found no identifier keys in the schema")
+	}
+
+	var missing, extra []string
+	for key := range schema.Defs.Identifiers.Properties {
+		if _, ok := knownIdentifiers[key]; !ok {
+			missing = append(missing, key)
+		}
+	}
+	for key := range knownIdentifiers {
+		if _, ok := schema.Defs.Identifiers.Properties[key]; !ok {
+			extra = append(extra, key)
+		}
+	}
+	sort.Strings(missing)
+	sort.Strings(extra)
+	if len(missing) > 0 {
+		t.Errorf("schema identifiers missing from knownIdentifiers: %s", strings.Join(missing, ", "))
+	}
+	if len(extra) > 0 {
+		t.Errorf("knownIdentifiers not in the schema: %s", strings.Join(extra, ", "))
 	}
 }
 

@@ -39,13 +39,19 @@ type policyView struct {
 // "I cannot tell you which filter this is" rather than a policy fragment keyed
 // by something Philter would reject. A policy naming a filter this list has not
 // caught up with is still matched, since lookup searches the policy itself.
+//
+// The keys are those of "identifiers" in the redaction policy schema 1.3.0
+// (philterd/phisql). TestKnownIdentifiersMatchSchema compares the two, so a
+// filter added to the schema, or taken out of it, fails the test here until
+// this list follows.
 var knownIdentifiers = map[string]struct{}{
 	"pheyes": {}, "person": {}, "dictionaries": {}, "age": {}, "bankRoutingNumber": {},
-	"bitcoinAddress": {}, "creditCard": {}, "currency": {}, "date": {}, "driversLicense": {},
-	"emailAddress": {}, "ibanCode": {}, "identifiers": {}, "ipAddress": {}, "macAddress": {},
-	"passportNumber": {}, "phoneNumber": {}, "phoneNumberExtension": {}, "physicianName": {},
-	"sections": {}, "ssn": {}, "stateAbbreviation": {}, "streetAddress": {}, "trackingNumber": {},
-	"url": {}, "vin": {}, "zipCode": {}, "medicalCondition": {}, "city": {}, "county": {},
+	"bitcoinAddress": {}, "canadaSin": {}, "creditCard": {}, "currency": {}, "date": {},
+	"deaNumber": {}, "driversLicense": {}, "ein": {}, "emailAddress": {}, "ibanCode": {},
+	"identifiers": {}, "ipAddress": {}, "itin": {}, "macAddress": {}, "mbi": {}, "npi": {},
+	"passportNumber": {}, "phoneNumber": {}, "phoneNumberExtension": {}, "sections": {},
+	"ssn": {}, "stateAbbreviation": {}, "streetAddress": {}, "trackingNumber": {}, "url": {},
+	"vin": {}, "zipCode": {}, "medicalCondition": {}, "city": {}, "county": {},
 	"firstName": {}, "hospital": {}, "state": {}, "surname": {},
 }
 

@@ -1,0 +1,2193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.philterd.ai/schemas/redaction-policy/1.3.0/schema.json",
+  "version": "1.3.0",
+  "title": "Phileas Redaction Policy",
+  "description": "Schema for a Phileas redaction policy JSON file. A policy defines which types of sensitive information to detect and how to redact or transform each type.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "metadata": {
+      "description": "Optional descriptive information about the policy. Ignored during redaction.",
+      "$ref": "#/$defs/metadata"
+    },
+    "config": {
+      "description": "Global configuration settings for the policy.",
+      "$ref": "#/$defs/config"
+    },
+    "crypto": {
+      "description": "AES encryption settings used by the CRYPTO_REPLACE strategy.",
+      "$ref": "#/$defs/crypto"
+    },
+    "fpe": {
+      "description": "Format-preserving encryption settings used by the FPE_ENCRYPT_REPLACE strategy.",
+      "$ref": "#/$defs/fpe"
+    },
+    "identifiers": {
+      "description": "Defines which types of sensitive information to detect and how to handle each type.",
+      "$ref": "#/$defs/identifiers"
+    },
+    "ignored": {
+      "description": "Lists of terms to ignore globally during filtering.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ignored"
+      }
+    },
+    "ignoredPatterns": {
+      "description": "Regex patterns to ignore globally during filtering.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ignoredPattern"
+      }
+    },
+    "graphical": {
+      "description": "Graphical redaction settings for image and PDF redaction.",
+      "$ref": "#/$defs/graphical"
+    },
+    "generators": {
+      "description": "Named, reusable replacement generators referenced by the MAP_REPLACE strategy's generator property.",
+      "$ref": "#/$defs/generators"
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "description": "Descriptive information about the policy, carried with the policy itself so it survives export, import, and sharing. Nothing here affects detection or redaction; an engine reads and writes it unchanged. Additional properties are allowed so the object can grow (author, timestamps, labels) without a breaking schema change.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "description": {
+          "description": "Human-readable description of what the policy does.",
+          "type": "string"
+        }
+      }
+    },
+    "validatorName": {
+      "description": "Name of a built-in checksum or structural validator the identifier filter may apply to its matches. The set is the source-of-truth catalog spec/v1.0/catalog/validators.yaml; this enum is kept in sync with it. Most national and financial identifiers reduce to the shared algorithms (luhn, mod11, mod97, mod23-letter); the remainder are specific named validators.",
+      "type": "string",
+      "enum": [
+        "luhn",
+        "mod11",
+        "mod97",
+        "mod23-letter",
+        "aba",
+        "verhoeff",
+        "damm",
+        "es-cif",
+        "de-steuerid",
+        "de-personalausweis",
+        "bic-structural"
+      ]
+    },
+    "config": {
+      "description": "Global configuration settings for the policy.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "splitting": {
+          "description": "Controls whether and how input text is split into smaller chunks before filtering.",
+          "$ref": "#/$defs/splitting"
+        },
+        "pdf": {
+          "description": "Settings for PDF redaction rendering.",
+          "$ref": "#/$defs/pdf"
+        },
+        "postFilters": {
+          "description": "Post-processing filters applied after redaction.",
+          "$ref": "#/$defs/postFilters"
+        },
+        "analysis": {
+          "description": "Settings for analysis features.",
+          "$ref": "#/$defs/analysis"
+        }
+      }
+    },
+    "splitting": {
+      "description": "Controls whether and how input text is split into smaller chunks before filtering.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "Enable text splitting.",
+          "type": "boolean",
+          "default": false
+        },
+        "threshold": {
+          "description": "Character count threshold above which text is split.",
+          "type": "integer",
+          "default": 10000
+        },
+        "method": {
+          "description": "Method used to split text.",
+          "type": "string",
+          "default": "newline"
+        },
+        "overlap": {
+          "description": "Number of characters each chunk shares with the end of the previous chunk when text is split. An entity that straddles a chunk boundary is still seen whole within the overlap window; spans detected in the overlap are de-duplicated and mapped back to their absolute document offsets. Default 0 (no overlap; chunks are contiguous).",
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
+      }
+    },
+    "pdf": {
+      "description": "Settings for PDF redaction rendering.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "redactionColor": {
+          "description": "Policy-wide color of the redaction box drawn over redacted text in PDFs, used for any span whose strategy does not set its own color. Accepts a named color (black, white, red, orange, yellow, green, blue, gray) or a 6-digit hex string matching ^#[0-9A-Fa-f]{6}$; an unrecognized or malformed value renders as black.",
+          "type": "string",
+          "default": "black"
+        },
+        "showReplacement": {
+          "description": "Whether to render replacement text inside the redaction box.",
+          "type": "boolean",
+          "default": false
+        },
+        "replacementFont": {
+          "description": "Font used for replacement text in PDFs.",
+          "type": "string",
+          "default": "helvetica"
+        },
+        "replacementMaxFontSize": {
+          "description": "Maximum font size for replacement text in PDFs.",
+          "type": "number",
+          "default": 12
+        },
+        "replacementFontColor": {
+          "description": "Color of the replacement text in PDFs.",
+          "type": "string"
+        },
+        "scale": {
+          "description": "Scale factor for PDF rendering.",
+          "type": "number",
+          "default": 0.25
+        },
+        "dpi": {
+          "description": "DPI for PDF rendering.",
+          "type": "integer",
+          "default": 150
+        },
+        "compressionQuality": {
+          "description": "JPEG compression quality for PDF output (0.0 to 1.0).",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 1.0
+        },
+        "preserveUnredactedPages": {
+          "description": "Whether to preserve pages that contain no redactions in their original form.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "postFilters": {
+      "description": "Post-processing filters applied after redaction.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removeTrailingPeriods": {
+          "description": "Remove trailing periods from redacted output.",
+          "type": "boolean",
+          "default": true
+        },
+        "removeTrailingSpaces": {
+          "description": "Remove trailing spaces from redacted output.",
+          "type": "boolean",
+          "default": true
+        },
+        "removeTrailingNewLines": {
+          "description": "Remove trailing newlines from redacted output.",
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "analysis": {
+      "description": "Settings for analysis features.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "identification": {
+          "description": "Enable identification analysis.",
+          "type": "boolean",
+          "default": true
+        },
+        "spanDisambiguation": {
+          "description": "Enable span disambiguation: the context-vector step that resolves which type an ambiguously-typed span is (for example SSN vs. phone number). Default true (current behavior). When false, this policy skips the disambiguation step. Subject to the global feature also being enabled: a policy can turn disambiguation off but not force it on when it is disabled globally.",
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "crypto": {
+      "description": "AES-GCM encryption settings used by the CRYPTO_REPLACE strategy. A fresh random nonce is generated per value, so no initialization vector is configured. Values may be prefixed with 'env:' to read from environment variables.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "description": "AES encryption key. Prefix with 'env:' to read from an environment variable (e.g. 'env:CRYPTO_KEY').",
+          "type": "string"
+        }
+      },
+      "required": ["key"]
+    },
+    "fpe": {
+      "description": "Format-preserving encryption settings used by the FPE_ENCRYPT_REPLACE strategy. Values may be prefixed with 'env:' to read from environment variables.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "description": "FPE encryption key. Prefix with 'env:' to read from an environment variable.",
+          "type": "string"
+        },
+        "tweak": {
+          "description": "FPE tweak value. Prefix with 'env:' to read from an environment variable.",
+          "type": "string"
+        }
+      },
+      "required": ["key", "tweak"]
+    },
+    "ignored": {
+      "description": "A named list of terms to ignore during filtering.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "Name of this ignore list.",
+          "type": "string"
+        },
+        "terms": {
+          "description": "Terms to ignore.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files": {
+          "description": "Paths to files containing terms to ignore (one term per line).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "caseSensitive": {
+          "description": "Whether term matching is case-sensitive.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "ignoredPattern": {
+      "description": "A named regex pattern whose matches are ignored during filtering.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "Name of this ignored pattern.",
+          "type": "string"
+        },
+        "pattern": {
+          "description": "Java-compatible regular expression. Matches are excluded from filtering.",
+          "type": "string"
+        }
+      }
+    },
+    "graphical": {
+      "description": "Graphical redaction settings for image and PDF redaction.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "boundingBoxes": {
+          "description": "Fixed bounding boxes to redact in images or PDFs.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/boundingBox"
+          }
+        }
+      }
+    },
+    "boundingBox": {
+      "description": "A rectangular region to redact in an image or PDF page.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "description": "Fill color for the redaction box. Accepts a named color (black, white, red, orange, yellow, green, blue, gray) or a 6-digit hex string matching ^#[0-9A-Fa-f]{6}$; an unrecognized or malformed value renders as black.",
+          "type": "string"
+        },
+        "x": {
+          "description": "X coordinate of the top-left corner.",
+          "type": "number"
+        },
+        "y": {
+          "description": "Y coordinate of the top-left corner.",
+          "type": "number"
+        },
+        "w": {
+          "description": "Width of the bounding box.",
+          "type": "number"
+        },
+        "h": {
+          "description": "Height of the bounding box.",
+          "type": "number"
+        },
+        "page": {
+          "description": "Page number (1-based) for PDF redaction.",
+          "type": "integer",
+          "default": 1,
+          "minimum": 1
+        },
+        "enabled": {
+          "description": "Whether this bounding box is active.",
+          "type": "boolean",
+          "default": true
+        },
+        "ignored": {
+          "description": "Specific values to ignore.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "ignoredFiles": {
+          "description": "Paths to files containing values to ignore.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "ignoredPatterns": {
+          "description": "Regex patterns whose matches are ignored.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ignoredPattern"
+          }
+        },
+        "windowSize": {
+          "description": "Context window size (number of surrounding tokens to consider).",
+          "type": "integer"
+        },
+        "priority": {
+          "description": "Priority of this filter relative to others. Higher values take precedence.",
+          "type": "integer"
+        }
+      }
+    },
+    "identifiers": {
+      "description": "Defines which types of sensitive information to detect and how to handle each type.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "age": {
+          "description": "Detects age values (e.g. '35 years old', 'age 42').",
+          "$ref": "#/$defs/filterAge"
+        },
+        "bankRoutingNumber": {
+          "description": "Detects bank routing numbers.",
+          "$ref": "#/$defs/filterBankRoutingNumber"
+        },
+        "bitcoinAddress": {
+          "description": "Detects Bitcoin wallet addresses.",
+          "$ref": "#/$defs/filterBitcoinAddress"
+        },
+        "canadaSin": {
+          "description": "Detects Canadian Social Insurance Numbers (nine digits, Luhn-validated, format NNN-NNN-NNN).",
+          "$ref": "#/$defs/filterCanadaSin"
+        },
+        "city": {
+          "description": "Detects city names using dictionary matching.",
+          "$ref": "#/$defs/filterCity"
+        },
+        "county": {
+          "description": "Detects county names using dictionary matching.",
+          "$ref": "#/$defs/filterCounty"
+        },
+        "creditCard": {
+          "description": "Detects credit card numbers.",
+          "$ref": "#/$defs/filterCreditCard"
+        },
+        "currency": {
+          "description": "Detects currency values (e.g. '$100.00', '50 EUR').",
+          "$ref": "#/$defs/filterCurrency"
+        },
+        "date": {
+          "description": "Detects date values in various formats.",
+          "$ref": "#/$defs/filterDate"
+        },
+        "deaNumber": {
+          "description": "Detects DEA registration numbers (two letters, or a letter and 9, followed by seven digits, validated by the check digit, format AB1234563).",
+          "$ref": "#/$defs/filterDeaNumber"
+        },
+        "dictionaries": {
+          "description": "Custom dictionary filters. Each entry defines a set of terms to detect.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/filterCustomDictionary"
+          }
+        },
+        "driversLicense": {
+          "description": "Detects driver's license numbers.",
+          "$ref": "#/$defs/filterDriversLicense"
+        },
+        "ein": {
+          "description": "Detects U.S. Employer Identification Numbers (federal tax ID, format NN-NNNNNNN).",
+          "$ref": "#/$defs/filterEin"
+        },
+        "emailAddress": {
+          "description": "Detects email addresses.",
+          "$ref": "#/$defs/filterEmailAddress"
+        },
+        "firstName": {
+          "description": "Detects first names using dictionary matching.",
+          "$ref": "#/$defs/filterFirstName"
+        },
+        "hospital": {
+          "description": "Detects hospital names using dictionary matching.",
+          "$ref": "#/$defs/filterHospital"
+        },
+        "ibanCode": {
+          "description": "Detects International Bank Account Numbers (IBAN).",
+          "$ref": "#/$defs/filterIbanCode"
+        },
+        "identifiers": {
+          "description": "Custom regex-based identifier filters. Each entry defines a pattern to detect.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/filterIdentifier"
+          }
+        },
+        "ipAddress": {
+          "description": "Detects IPv4 and IPv6 addresses.",
+          "$ref": "#/$defs/filterIpAddress"
+        },
+        "itin": {
+          "description": "Detects U.S. Individual Taxpayer Identification Numbers (SSN-shaped, beginning with 9, format 9XX-XX-XXXX).",
+          "$ref": "#/$defs/filterItin"
+        },
+        "macAddress": {
+          "description": "Detects MAC addresses.",
+          "$ref": "#/$defs/filterMacAddress"
+        },
+        "mbi": {
+          "description": "Detects Medicare Beneficiary Identifiers (eleven characters in the format CMS publishes, such as 1EG4-TE5-MK73).",
+          "$ref": "#/$defs/filterMbi"
+        },
+        "medicalCondition": {
+          "description": "Detects medical conditions using PhEye AI-based detection.",
+          "$ref": "#/$defs/filterMedicalCondition"
+        },
+        "npi": {
+          "description": "Detects National Provider Identifiers (ten digits beginning with 1 or 2, validated by the NPI check digit, format 1234567893).",
+          "$ref": "#/$defs/filterNpi"
+        },
+        "passportNumber": {
+          "description": "Detects passport numbers.",
+          "$ref": "#/$defs/filterPassportNumber"
+        },
+        "person": {
+          "description": "Deprecated. Use 'pheyes' instead.",
+          "deprecated": true,
+          "$ref": "#/$defs/filterPhEye"
+        },
+        "pheyes": {
+          "description": "PhEye AI-based entity detection filters.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/filterPhEye"
+          }
+        },
+        "phoneNumber": {
+          "description": "Detects phone numbers.",
+          "$ref": "#/$defs/filterPhoneNumber"
+        },
+        "phoneNumberExtension": {
+          "description": "Detects phone number extensions (e.g. 'ext. 1234').",
+          "$ref": "#/$defs/filterPhoneNumberExtension"
+        },
+        "sections": {
+          "description": "Section-based filters. Each entry defines a start/end pattern pair to redact.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/filterSection"
+          }
+        },
+        "ssn": {
+          "description": "Detects U.S. Social Security Numbers.",
+          "$ref": "#/$defs/filterSsn"
+        },
+        "state": {
+          "description": "Detects U.S. state names using dictionary matching.",
+          "$ref": "#/$defs/filterState"
+        },
+        "stateAbbreviation": {
+          "description": "Detects U.S. state abbreviations (e.g. 'CA', 'NY').",
+          "$ref": "#/$defs/filterStateAbbreviation"
+        },
+        "streetAddress": {
+          "description": "Detects street addresses.",
+          "$ref": "#/$defs/filterStreetAddress"
+        },
+        "surname": {
+          "description": "Detects surnames/last names using dictionary matching.",
+          "$ref": "#/$defs/filterSurname"
+        },
+        "trackingNumber": {
+          "description": "Detects shipping tracking numbers (UPS, FedEx, USPS).",
+          "$ref": "#/$defs/filterTrackingNumber"
+        },
+        "url": {
+          "description": "Detects URLs.",
+          "$ref": "#/$defs/filterUrl"
+        },
+        "vin": {
+          "description": "Detects Vehicle Identification Numbers (VINs).",
+          "$ref": "#/$defs/filterVin"
+        },
+        "zipCode": {
+          "description": "Detects U.S. ZIP codes (5-digit and ZIP+4 formats).",
+          "$ref": "#/$defs/filterZipCode"
+        }
+      }
+    },
+    "abstractFilterProperties": {
+      "description": "Common properties inherited by all filters.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Whether this filter is active.",
+          "type": "boolean",
+          "default": true
+        },
+        "ignored": {
+          "description": "Specific values to ignore for this filter.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "ignoredFiles": {
+          "description": "Paths to files containing values to ignore for this filter.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "ignoredPatterns": {
+          "description": "Regex patterns whose matches are ignored by this filter.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ignoredPattern"
+          }
+        },
+        "windowSize": {
+          "description": "Context window size (number of surrounding tokens to consider).",
+          "type": "integer"
+        },
+        "priority": {
+          "description": "Priority of this filter relative to others. Higher values take precedence.",
+          "type": "integer"
+        },
+        "id": {
+          "description": "Optional identifier for this filter, assigned by the policy author or generated, so the filter can be referenced in logs and diagnostics without printing content that may be PII. Opaque to redaction behavior: it never changes how a document is filtered. Must not itself contain PII.",
+          "type": "string"
+        }
+      }
+    },
+    "baseFilterStrategy": {
+      "description": "Common properties for all filter strategies.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Optional identifier for this strategy instance, assigned by the policy author or generated, so the strategy and its condition can be referenced in logs and diagnostics without printing content that may be PII. Opaque to redaction behavior: it never changes how a document is filtered. Must not itself contain PII.",
+          "type": "string"
+        },
+        "strategy": {
+          "description": "The redaction/replacement strategy to apply.",
+          "type": "string",
+          "enum": [
+            "REDACT",
+            "RANDOM_REPLACE",
+            "STATIC_REPLACE",
+            "CRYPTO_REPLACE",
+            "FPE_ENCRYPT_REPLACE",
+            "HASH_SHA256_REPLACE",
+            "LAST_4",
+            "MASK",
+            "TRUNCATE",
+            "ABBREVIATE",
+            "MAP_REPLACE"
+          ],
+          "default": "REDACT"
+        },
+        "redactionFormat": {
+          "description": "Format string for REDACT strategy. Supports placeholders: %t (filter type), %v (original value), %l (label).",
+          "type": "string",
+          "default": "{{{REDACTED-%t}}}"
+        },
+        "replacementScope": {
+          "description": "Scope for consistent replacements. DOCUMENT: same token always gets same replacement within a document. CONTEXT: same token gets same replacement within a context.",
+          "type": "string",
+          "enum": ["DOCUMENT", "CONTEXT"],
+          "default": "DOCUMENT"
+        },
+        "staticReplacement": {
+          "description": "Replacement text for STATIC_REPLACE strategy.",
+          "type": "string"
+        },
+        "maskCharacter": {
+          "description": "Character used for MASK strategy.",
+          "type": "string",
+          "default": "*",
+          "maxLength": 1
+        },
+        "maskLength": {
+          "description": "Length of the mask. SAME preserves the original length. Can also be a number for fixed-length masking.",
+          "type": ["string", "integer"],
+          "default": "SAME"
+        },
+        "truncateLeaveCharacters": {
+          "description": "Number of characters to leave visible when using TRUNCATE strategy.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "truncateCharacter": {
+          "description": "Character used to replace truncated portions.",
+          "type": "string",
+          "default": "*",
+          "maxLength": 1
+        },
+        "truncateDirection": {
+          "description": "Which end of the value to truncate.",
+          "type": "string",
+          "enum": ["LEADING", "TRAILING"],
+          "default": "LEADING"
+        },
+        "condition": {
+          "description": "Conditional expression that must be satisfied for this strategy to apply. If every strategy on a filter has a condition and none is satisfied, the value is left unchanged. Supports fields: token, context, confidence, population. Operators: startswith, ==, !=, >, <, >=, <=, is, is not. Multiple conditions joined with and. Example: 'confidence > 0.9', 'confidence > 0.5 and confidence < 0.9', 'token startswith \"5\"', 'population < 4500', 'token is birthdate'.",
+          "type": "string"
+        },
+        "salt": {
+          "description": "Whether to add a random salt to hashed values (HASH_SHA256_REPLACE).",
+          "type": "boolean",
+          "default": false
+        },
+        "anonymizationMethod": {
+          "description": "Method used for RANDOM_REPLACE anonymization.",
+          "type": "string",
+          "enum": ["REALISTIC", "FROM_LIST", "UUID"],
+          "default": "REALISTIC"
+        },
+        "anonymizationCandidates": {
+          "description": "Custom candidate values for FROM_LIST anonymization method.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mappings": {
+          "description": "MAP_REPLACE lookup table mapping a detected value to its replacement. Inline entries take precedence over any loaded from mappingFiles.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "mappingFiles": {
+          "description": "MAP_REPLACE: local file paths (TSV, one tab-delimited key/value pair per row) merged into the lookup table at policy-load time. Inline mappings override entries loaded from files.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "caseSensitive": {
+          "description": "MAP_REPLACE: whether lookup-table keys are matched case-sensitively.",
+          "type": "boolean",
+          "default": false
+        },
+        "generator": {
+          "description": "MAP_REPLACE: name of a generator declared in the top-level generators block, invoked to produce a replacement for a detected value absent from the lookup table.",
+          "type": "string"
+        },
+        "fallbackStrategy": {
+          "description": "MAP_REPLACE: terminal strategy applied when a detected value is absent from the lookup table and no generator is set, or when the generator fails, times out, or returns invalid output. A detected value is never left in the clear.",
+          "type": "string",
+          "enum": [
+            "REDACT",
+            "RANDOM_REPLACE",
+            "STATIC_REPLACE",
+            "CRYPTO_REPLACE",
+            "FPE_ENCRYPT_REPLACE",
+            "HASH_SHA256_REPLACE",
+            "LAST_4",
+            "MASK",
+            "TRUNCATE",
+            "ABBREVIATE"
+          ],
+          "default": "REDACT"
+        },
+        "color": {
+          "description": "Optional color of the bar drawn over a span redacted by this strategy when rendering a PDF or image. Overrides the policy-wide config.pdf.redactionColor for spans this strategy redacts; when unset, the policy-wide color (default black) applies. Accepts a named color (black, white, red, orange, yellow, green, blue, gray) or a 6-digit hex string matching ^#[0-9A-Fa-f]{6}$ (e.g. '#ff8800'); an unrecognized or malformed value renders as black. Has no effect on text redaction.",
+          "type": "string"
+        }
+      }
+    },
+    "dateFilterStrategy": {
+      "description": "A filter strategy for date values. Supports all base strategies plus date-specific strategies: TRUNCATE_TO_YEAR, SHIFT, and RELATIVE.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Optional identifier for this strategy instance, assigned by the policy author or generated, so the strategy and its condition can be referenced in logs and diagnostics without printing content that may be PII. Opaque to redaction behavior: it never changes how a document is filtered. Must not itself contain PII.",
+          "type": "string"
+        },
+        "strategy": {
+          "description": "The redaction/replacement strategy to apply. Date filters support additional strategies: TRUNCATE_TO_YEAR, SHIFT, and RELATIVE.",
+          "type": "string",
+          "enum": [
+            "REDACT",
+            "RANDOM_REPLACE",
+            "STATIC_REPLACE",
+            "CRYPTO_REPLACE",
+            "FPE_ENCRYPT_REPLACE",
+            "HASH_SHA256_REPLACE",
+            "LAST_4",
+            "MASK",
+            "TRUNCATE",
+            "TRUNCATE_TO_YEAR",
+            "SHIFT",
+            "RELATIVE"
+          ],
+          "default": "REDACT"
+        },
+        "redactionFormat": {
+          "description": "Format string for REDACT strategy. Supports placeholders: %t (filter type), %v (original value), %l (label).",
+          "type": "string",
+          "default": "{{{REDACTED-%t}}}"
+        },
+        "replacementScope": {
+          "description": "Scope for consistent replacements.",
+          "type": "string",
+          "enum": ["DOCUMENT", "CONTEXT"],
+          "default": "DOCUMENT"
+        },
+        "staticReplacement": {
+          "description": "Replacement text for STATIC_REPLACE strategy.",
+          "type": "string"
+        },
+        "maskCharacter": {
+          "description": "Character used for MASK strategy.",
+          "type": "string",
+          "default": "*",
+          "maxLength": 1
+        },
+        "maskLength": {
+          "description": "Length of the mask. SAME preserves the original length.",
+          "type": ["string", "integer"],
+          "default": "SAME"
+        },
+        "truncateLeaveCharacters": {
+          "description": "Number of characters to leave visible when using TRUNCATE strategy.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "truncateCharacter": {
+          "description": "Character used to replace truncated portions.",
+          "type": "string",
+          "default": "*",
+          "maxLength": 1
+        },
+        "truncateDirection": {
+          "description": "Which end of the value to truncate.",
+          "type": "string",
+          "enum": ["LEADING", "TRAILING"],
+          "default": "LEADING"
+        },
+        "condition": {
+          "description": "Conditional expression that must be satisfied for this strategy to apply. If every strategy on a filter has a condition and none is satisfied, the value is left unchanged. Date filters support: 'token is birthdate', 'token is deathdate', 'token is birthdate or deathdate'.",
+          "type": "string"
+        },
+        "salt": {
+          "description": "Whether to add a random salt to hashed values.",
+          "type": "boolean",
+          "default": false
+        },
+        "anonymizationMethod": {
+          "description": "Method used for RANDOM_REPLACE anonymization.",
+          "type": "string",
+          "enum": ["REALISTIC", "FROM_LIST", "UUID"],
+          "default": "REALISTIC"
+        },
+        "anonymizationCandidates": {
+          "description": "Custom candidate values for FROM_LIST anonymization method.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "shiftRandom": {
+          "description": "Whether to shift dates by a random amount (SHIFT strategy).",
+          "type": "boolean",
+          "default": false
+        },
+        "shiftDays": {
+          "description": "Number of days to shift dates (SHIFT strategy).",
+          "type": "integer",
+          "default": 0
+        },
+        "shiftMonths": {
+          "description": "Number of months to shift dates (SHIFT strategy).",
+          "type": "integer",
+          "default": 0
+        },
+        "shiftYears": {
+          "description": "Number of years to shift dates (SHIFT strategy).",
+          "type": "integer",
+          "default": 0
+        },
+        "futureDates": {
+          "description": "Whether shifted dates may land in the future (SHIFT strategy).",
+          "type": "boolean",
+          "default": false
+        },
+        "color": {
+          "description": "Optional color of the bar drawn over a span redacted by this strategy when rendering a PDF or image. Overrides the policy-wide config.pdf.redactionColor for spans this strategy redacts; when unset, the policy-wide color (default black) applies. Accepts a named color (black, white, red, orange, yellow, green, blue, gray) or a 6-digit hex string matching ^#[0-9A-Fa-f]{6}$ (e.g. '#ff8800'); an unrecognized or malformed value renders as black. Has no effect on text redaction.",
+          "type": "string"
+        }
+      }
+    },
+    "generators": {
+      "description": "Map of generator name to its definition. A MAP_REPLACE strategy references a generator by name to produce a replacement for a detected value absent from its lookup table.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/generator"
+      }
+    },
+    "generator": {
+      "description": "A named replacement generator. Targets a local model endpoint inside the deployment boundary so detected values are not sent to a third party.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "description": "Generator backend. 'ollama' calls a local Ollama-compatible generate endpoint.",
+          "type": "string",
+          "enum": ["ollama"]
+        },
+        "endpoint": {
+          "description": "Base URL of the local generator endpoint (e.g. 'http://localhost:11434'). Must resolve inside the deployment boundary.",
+          "type": "string"
+        },
+        "model": {
+          "description": "Model name the endpoint should use (e.g. 'llama3.1').",
+          "type": "string"
+        },
+        "prompt": {
+          "description": "Prompt template. The placeholder {{token}} is replaced with the detected value and {{label}} with its entity label. The model must return only the replacement value.",
+          "type": "string"
+        },
+        "timeoutMs": {
+          "description": "Maximum time in milliseconds to wait for the generator before falling back to the strategy's fallbackStrategy. Required so a generator can never block the pipeline indefinitely.",
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": ["type", "timeoutMs"],
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "ollama" } },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["endpoint", "model", "prompt"]
+          }
+        }
+      ]
+    },
+    "filterAge": {
+      "description": "Detects age values (e.g. '35 years old', 'age 42').",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "ageFilterStrategies": {
+          "description": "Strategies for handling detected age values. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterBankRoutingNumber": {
+      "description": "Detects bank routing numbers.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "bankRoutingNumberFilterStrategies": {
+          "description": "Strategies for handling detected bank routing numbers. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterBitcoinAddress": {
+      "description": "Detects Bitcoin wallet addresses.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "bitcoinFilterStrategies": {
+          "description": "Strategies for handling detected Bitcoin addresses. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterCanadaSin": {
+      "description": "Detects Canadian Social Insurance Numbers (nine digits, Luhn-validated, format NNN-NNN-NNN).",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "canadaSinFilterStrategies": {
+          "description": "Strategies for handling detected SINs. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "onlyValidPrefixes": {
+          "description": "Do not detect SINs beginning with 0 or 8, which are not issued to individuals (8 is used for business numbers, which also pass the Luhn check). Default false (match any Luhn-valid nine-digit value).",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterCity": {
+      "description": "Detects city names using dictionary matching.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "cityFilterStrategies": {
+          "description": "Strategies for handling detected city names. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "fuzzy": {
+          "description": "Enable fuzzy matching for approximate matches.",
+          "type": "boolean",
+          "default": false
+        },
+        "sensitivity": {
+          "description": "Sensitivity level controlling match strictness when fuzzy matching is enabled.",
+          "$ref": "#/$defs/sensitivityLevel",
+          "default": "medium"
+        },
+        "capitalized": {
+          "description": "Only match capitalized variants of city names.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterCounty": {
+      "description": "Detects county names using dictionary matching.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "countyFilterStrategies": {
+          "description": "Strategies for handling detected county names. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "fuzzy": {
+          "description": "Enable fuzzy matching for approximate matches.",
+          "type": "boolean",
+          "default": false
+        },
+        "sensitivity": {
+          "description": "Sensitivity level controlling match strictness when fuzzy matching is enabled.",
+          "$ref": "#/$defs/sensitivityLevel",
+          "default": "medium"
+        },
+        "capitalized": {
+          "description": "Only match capitalized variants of county names.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterCreditCard": {
+      "description": "Detects credit card numbers.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "creditCardFilterStrategies": {
+          "description": "Strategies for handling detected credit card numbers. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "onlyValidCreditCardNumbers": {
+          "description": "Only detect numbers that pass Luhn checksum validation.",
+          "type": "boolean",
+          "default": true
+        },
+        "ignoreWhenInUnixTimestamp": {
+          "description": "Ignore sequences that appear to be Unix timestamps.",
+          "type": "boolean",
+          "default": false
+        },
+        "onlyWordBoundaries": {
+          "description": "Only detect numbers at word boundaries.",
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterCurrency": {
+      "description": "Detects currency values (e.g. '$100.00', '50 EUR').",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "currencyFilterStrategies": {
+          "description": "Strategies for handling detected currency values. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterCustomDictionary": {
+      "description": "Detects terms from a user-defined dictionary.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "customFilterStrategies": {
+          "description": "Strategies for handling detected custom dictionary terms. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "classification": {
+          "description": "Classification label assigned to matches from this dictionary.",
+          "type": "string"
+        },
+        "terms": {
+          "description": "Terms to detect.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files": {
+          "description": "Paths to files containing terms to detect (one term per line).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fuzzy": {
+          "description": "Enable fuzzy matching for approximate matches.",
+          "type": "boolean",
+          "default": false
+        },
+        "sensitivity": {
+          "description": "Sensitivity level controlling match strictness when fuzzy matching is enabled.",
+          "$ref": "#/$defs/sensitivityLevel",
+          "default": "off"
+        },
+        "capitalized": {
+          "description": "Only match capitalized variants of terms.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterDate": {
+      "description": "Detects date values in various formats.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "dateFilterStrategies": {
+          "description": "Strategies for handling detected dates. Supports date-specific strategies: TRUNCATE_TO_YEAR, SHIFT, RELATIVE. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dateFilterStrategy"
+          }
+        },
+        "onlyValidDates": {
+          "description": "Only detect strings that parse as valid calendar dates.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterDeaNumber": {
+      "description": "Detects DEA registration numbers (two letters, or a letter and 9, followed by seven digits, validated by the check digit, format AB1234563).",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "deaNumberFilterStrategies": {
+          "description": "Strategies for handling detected DEA numbers. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterDriversLicense": {
+      "description": "Detects driver's license numbers.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "driversLicenseFilterStrategies": {
+          "description": "Strategies for handling detected driver's license numbers. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterEin": {
+      "description": "Detects U.S. Employer Identification Numbers (federal tax ID, format NN-NNNNNNN).",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "einFilterStrategies": {
+          "description": "Strategies for handling detected EINs. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "onlyValidPrefixes": {
+          "description": "Only detect EINs whose two-digit prefix is one the IRS currently issues. Reduces false positives on format-valid but non-issued numbers; a prefix added after this build is recognized only once the engine's prefix list is updated. Default false (match any EIN-formatted value).",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterEmailAddress": {
+      "description": "Detects email addresses.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "emailAddressFilterStrategies": {
+          "description": "Strategies for handling detected email addresses. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "onlyStrictMatches": {
+          "description": "Use strict email validation rules.",
+          "type": "boolean",
+          "default": true
+        },
+        "onlyValidTLDs": {
+          "description": "Only detect emails with recognized top-level domains.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterFirstName": {
+      "description": "Detects first names using dictionary matching.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "firstNameFilterStrategies": {
+          "description": "Strategies for handling detected first names. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "fuzzy": {
+          "description": "Enable fuzzy matching for approximate matches.",
+          "type": "boolean",
+          "default": false
+        },
+        "sensitivity": {
+          "description": "Sensitivity level controlling match strictness when fuzzy matching is enabled.",
+          "$ref": "#/$defs/sensitivityLevel",
+          "default": "medium"
+        },
+        "capitalized": {
+          "description": "Only match capitalized variants of first names.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterHospital": {
+      "description": "Detects hospital names using dictionary matching.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "hospitalFilterStrategies": {
+          "description": "Strategies for handling detected hospital names. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "fuzzy": {
+          "description": "Enable fuzzy matching for approximate matches.",
+          "type": "boolean",
+          "default": false
+        },
+        "sensitivity": {
+          "description": "Sensitivity level controlling match strictness when fuzzy matching is enabled.",
+          "$ref": "#/$defs/sensitivityLevel",
+          "default": "medium"
+        },
+        "capitalized": {
+          "description": "Only match capitalized variants of hospital names.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterIbanCode": {
+      "description": "Detects International Bank Account Numbers (IBAN).",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "ibanCodeFilterStrategies": {
+          "description": "Strategies for handling detected IBAN codes. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "onlyValidIBANCodes": {
+          "description": "Only detect codes that pass IBAN checksum validation.",
+          "type": "boolean",
+          "default": true
+        },
+        "allowSpaces": {
+          "description": "Allow spaces within IBAN codes.",
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterIdentifier": {
+      "description": "Detects custom identifiers using a user-defined regex pattern.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "identifierFilterStrategies": {
+          "description": "Strategies for handling detected custom identifiers. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "pattern": {
+          "description": "Java-compatible regular expression to match identifiers.",
+          "type": "string",
+          "default": "\\b[A-Z0-9_-]{6,}\\b"
+        },
+        "groupNumber": {
+          "description": "Regex capture group number to extract as the identifier (0 = entire match).",
+          "type": "integer",
+          "default": 0,
+          "minimum": 0
+        },
+        "caseSensitive": {
+          "description": "Whether regex matching is case-sensitive.",
+          "type": "boolean",
+          "default": true
+        },
+        "classification": {
+          "description": "Classification label assigned to matches from this identifier.",
+          "type": "string",
+          "default": "custom-identifier"
+        },
+        "validator": {
+          "description": "Optional post-match validation. A regex match is kept only if the named built-in validator passes, so a generic identifier can reject format-valid but checksum-invalid values (for example a SIN that fails the Luhn check). Names a validator from the catalog (spec/v1.0/catalog/validators.yaml); no executable code is carried in the policy. An unknown name is a policy error, never silently ignored.",
+          "oneOf": [
+            { "$ref": "#/$defs/validatorName" },
+            {
+              "type": "object",
+              "properties": {
+                "name": { "$ref": "#/$defs/validatorName" },
+                "params": {
+                  "description": "Validator-specific parameters, for example mod11 weights and variant, mod23-letter prefix substitutions, or mod97 letter substitutions. The accepted keys per validator are documented in the catalog.",
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": ["name"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterIpAddress": {
+      "description": "Detects IPv4 and IPv6 addresses.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "ipAddressFilterStrategies": {
+          "description": "Strategies for handling detected IP addresses. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterItin": {
+      "description": "Detects U.S. Individual Taxpayer Identification Numbers (SSN-shaped, beginning with 9, format 9XX-XX-XXXX).",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "itinFilterStrategies": {
+          "description": "Strategies for handling detected ITINs. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "onlyValidRanges": {
+          "description": "Only detect ITINs whose fourth and fifth digits fall in the ranges the IRS issues (50-65, 70-88, 90-92, 94-99). Excludes ATINs (fourth and fifth digits 93), which are otherwise detected as ITINs. Default false (match any 9XX-XX-XXXX value).",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterMacAddress": {
+      "description": "Detects MAC addresses.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "macAddressFilterStrategies": {
+          "description": "Strategies for handling detected MAC addresses. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterMbi": {
+      "description": "Detects Medicare Beneficiary Identifiers (eleven characters in the format CMS publishes, such as 1EG4-TE5-MK73).",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "mbiFilterStrategies": {
+          "description": "Strategies for handling detected MBIs. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterMedicalCondition": {
+      "description": "Detects medical conditions using PhEye AI-based detection.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "medicalConditionFilterStrategies": {
+          "description": "Strategies for handling detected medical conditions. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "phEyeConfiguration": {
+          "description": "Configuration for a PhEye filter (remote service or local GLiNER model).",
+          "$ref": "#/$defs/phEyeConfiguration"
+        },
+        "removePunctuation": {
+          "description": "Remove punctuation from text before sending to the AI model.",
+          "type": "boolean",
+          "default": false
+        },
+        "thresholds": {
+          "description": "Confidence thresholds per label. Detections below the threshold are discarded.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterNpi": {
+      "description": "Detects National Provider Identifiers (ten digits beginning with 1 or 2, validated by the NPI check digit, format 1234567893).",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "npiFilterStrategies": {
+          "description": "Strategies for handling detected NPIs. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterPassportNumber": {
+      "description": "Detects passport numbers.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "passportNumberFilterStrategies": {
+          "description": "Strategies for handling detected passport numbers. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterPhEye": {
+      "description": "PhEye AI-based entity detection filter. Uses a remote AI model to detect entities.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "phEyeFilterStrategies": {
+          "description": "Strategies for handling entities detected by PhEye. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "phEyeConfiguration": {
+          "description": "Configuration for connecting to a PhEye AI service.",
+          "$ref": "#/$defs/phEyeConfiguration"
+        },
+        "removePunctuation": {
+          "description": "Remove punctuation from text before sending to the AI model.",
+          "type": "boolean",
+          "default": false
+        },
+        "thresholds": {
+          "description": "Confidence thresholds per label. Detections below the threshold are discarded.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "phEyeConfiguration": {
+      "description": "Configuration for connecting to a PhEye AI service.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "endpoint": {
+          "description": "URL of the PhEye service endpoint.",
+          "type": "string",
+          "format": "uri"
+        },
+        "bearerToken": {
+          "description": "Bearer token for authenticating with the PhEye service.",
+          "type": "string"
+        },
+        "timeout": {
+          "description": "Request timeout in seconds.",
+          "type": "integer",
+          "default": 600
+        },
+        "maxIdleConnections": {
+          "description": "Maximum number of idle HTTP connections to maintain.",
+          "type": "integer",
+          "default": 30
+        },
+        "labels": {
+          "description": "Entity labels to detect (e.g. 'PER', 'LOC', 'ORG'). For a local GLiNER model these are the detection prompt.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modelPath": {
+          "description": "Filesystem path to a local GLiNER model directory (the ONNX model, the SentencePiece tokenizer, and the GLiNER config). When set, entities are detected with on-device inference instead of via the endpoint.",
+          "type": "string"
+        },
+        "threshold": {
+          "description": "Minimum span confidence for the local model to return a detection. Defaults to 0.5.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5
+        }
+      }
+    },
+    "filterPhoneNumber": {
+      "description": "Detects phone numbers.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "phoneNumberFilterStrategies": {
+          "description": "Strategies for handling detected phone numbers. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "region": {
+          "description": "Default region(s), ISO 3166-1 alpha-2 (for example \"US\", \"GB\", \"FR\"), used to interpret phone numbers written without an international \"+\" country code. A string sets a single region; an array enables detection for each listed region (each is scanned and the results are merged). Numbers with a \"+\" prefix are detected regardless of this value. Default \"US\".",
+          "type": ["string", "array"],
+          "items": {
+            "type": "string"
+          },
+          "default": "US"
+        },
+        "leniency": {
+          "description": "How strictly a candidate must match to be detected, using libphonenumber's leniency levels. \"POSSIBLE\" accepts numbers whose length is possible for the region. \"VALID\" also requires the number to be valid under the region's numbering plan, which drops candidates such as short numeric identifiers or years. \"STRICT_GROUPING\" also requires the digits to be grouped as in one of the number's formats, and \"EXACT_GROUPING\" requires them to be grouped exactly as in one of those formats. Validity follows numbering-plan rules only; it does not establish that a number is assigned or in service. Values are case-sensitive. Default \"POSSIBLE\".",
+          "type": "string",
+          "enum": ["POSSIBLE", "VALID", "STRICT_GROUPING", "EXACT_GROUPING"],
+          "default": "POSSIBLE"
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterPhoneNumberExtension": {
+      "description": "Detects phone number extensions (e.g. 'ext. 1234').",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "phoneNumberExtensionFilterStrategies": {
+          "description": "Strategies for handling detected phone number extensions. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterSection": {
+      "description": "Detects and redacts sections of text bounded by start and end regex patterns.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "sectionFilterStrategies": {
+          "description": "Strategies for handling detected sections. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "startPattern": {
+          "description": "Java-compatible regex that marks the beginning of a section to redact.",
+          "type": "string"
+        },
+        "endPattern": {
+          "description": "Java-compatible regex that marks the end of a section to redact.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterSsn": {
+      "description": "Detects U.S. Social Security Numbers.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "ssnFilterStrategies": {
+          "description": "Strategies for handling detected SSNs. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterState": {
+      "description": "Detects U.S. state names using dictionary matching.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "stateFilterStrategies": {
+          "description": "Strategies for handling detected state names. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "fuzzy": {
+          "description": "Enable fuzzy matching for approximate matches.",
+          "type": "boolean",
+          "default": false
+        },
+        "sensitivity": {
+          "description": "Sensitivity level controlling match strictness when fuzzy matching is enabled.",
+          "$ref": "#/$defs/sensitivityLevel",
+          "default": "medium"
+        },
+        "capitalized": {
+          "description": "Only match capitalized variants of state names.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterStateAbbreviation": {
+      "description": "Detects U.S. state abbreviations (e.g. 'CA', 'NY').",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "stateAbbreviationFilterStrategies": {
+          "description": "Strategies for handling detected state abbreviations. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterStreetAddress": {
+      "description": "Detects street addresses.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "streetAddressFilterStrategies": {
+          "description": "Strategies for handling detected street addresses. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterSurname": {
+      "description": "Detects surnames/last names using dictionary matching.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "surnameFilterStrategies": {
+          "description": "Strategies for handling detected surnames. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "fuzzy": {
+          "description": "Enable fuzzy matching for approximate matches.",
+          "type": "boolean",
+          "default": false
+        },
+        "sensitivity": {
+          "description": "Sensitivity level controlling match strictness when fuzzy matching is enabled.",
+          "$ref": "#/$defs/sensitivityLevel",
+          "default": "medium"
+        },
+        "capitalized": {
+          "description": "Only match capitalized variants of surnames.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterTrackingNumber": {
+      "description": "Detects shipping tracking numbers (UPS, FedEx, USPS).",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "trackingNumberFilterStrategies": {
+          "description": "Strategies for handling detected tracking numbers. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "ups": {
+          "description": "Detect UPS tracking numbers.",
+          "type": "boolean",
+          "default": true
+        },
+        "fedex": {
+          "description": "Detect FedEx tracking numbers.",
+          "type": "boolean",
+          "default": true
+        },
+        "usps": {
+          "description": "Detect USPS tracking numbers.",
+          "type": "boolean",
+          "default": true
+        },
+        "allowSpaces": {
+          "description": "Allow spaces within tracking numbers.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterUrl": {
+      "description": "Detects URLs.",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "urlFilterStrategies": {
+          "description": "Strategies for handling detected URLs. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "requireHttpWwwPrefix": {
+          "description": "Only detect URLs that start with http://, https://, or www.",
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterVin": {
+      "description": "Detects Vehicle Identification Numbers (VINs).",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "vinFilterStrategies": {
+          "description": "Strategies for handling detected VINs. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "filterZipCode": {
+      "description": "Detects U.S. ZIP codes (5-digit and ZIP+4 formats).",
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/abstractFilterProperties" }
+      ],
+      "properties": {
+        "enabled": true,
+        "ignored": true,
+        "ignoredFiles": true,
+        "ignoredPatterns": true,
+        "windowSize": true,
+        "priority": true,
+        "id": true,
+        "zipCodeFilterStrategies": {
+          "description": "Strategies for handling detected ZIP codes. Strategies are evaluated in order, and the first one with no condition or a satisfied condition is applied. If every strategy has a condition and none is satisfied, the value is left unchanged. If no strategies are given, the value is redacted with the default format. To transform every detected value, end with a strategy that has no condition.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "zipCodeFilterStrategy": {
+          "description": "Deprecated. Use 'zipCodeFilterStrategies' instead.",
+          "deprecated": true,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/baseFilterStrategy"
+          }
+        },
+        "requireDelimiter": {
+          "description": "Require a delimiter (hyphen) between the 5-digit and 4-digit parts of ZIP+4 codes.",
+          "type": "boolean",
+          "default": false
+        },
+        "validate": {
+          "description": "Validate that detected ZIP codes are real U.S. ZIP codes.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "sensitivityLevel": {
+      "description": "Controls how strictly fuzzy matching is applied. Higher sensitivity means more matches.",
+      "type": "string",
+      "enum": ["auto", "off", "low", "medium", "high"]
+    }
+  }
+}
