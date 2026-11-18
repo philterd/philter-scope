@@ -14,7 +14,7 @@ COPY . .
 
 # Reported by the server's health endpoint; pass --build-arg VERSION=1.2.3.
 ARG VERSION=dev
-ENV LDFLAGS="-s -w -X github.com/philterd/philterscope/internal/server.Version=$VERSION"
+ENV LDFLAGS="-s -w -X github.com/philterd/philterscope/internal/report.Version=$VERSION"
 
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="$LDFLAGS" \
         -o /out/philterscope-serve ./cmd/philterscope-serve \

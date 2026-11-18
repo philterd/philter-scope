@@ -20,13 +20,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/philterd/philterscope/internal/report"
 	"github.com/philterd/philterscope/pkg/model"
 )
 
 func TestHealth(t *testing.T) {
-	original := Version
-	Version = "1.2.3"
-	defer func() { Version = original }()
+	original := report.Version
+	report.Version = "1.2.3"
+	defer func() { report.Version = original }()
 
 	standaloneMux, err := NewStandaloneServerMux(model.AuditResult{F1Score: 0.85}, false)
 	if err != nil {

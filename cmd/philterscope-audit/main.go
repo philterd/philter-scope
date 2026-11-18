@@ -27,7 +27,7 @@ import (
 	"github.com/philterd/philterscope/internal/audit"
 	"github.com/philterd/philterscope/internal/ollama"
 	"github.com/philterd/philterscope/internal/philter"
-	"github.com/philterd/philterscope/internal/server"
+	"github.com/philterd/philterscope/internal/report"
 	"github.com/philterd/philterscope/internal/storage"
 	"github.com/philterd/philterscope/internal/suggest"
 	"github.com/philterd/philterscope/pkg/model"
@@ -55,7 +55,7 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use:     "philterscope-audit",
 		Short:   "Audit redaction quality",
-		Version: server.Version,
+		Version: report.Version,
 		RunE:    runAudit,
 	}
 
@@ -288,7 +288,7 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	htmlReport, err := server.GenerateStandaloneReport(auditResult, false)
+	htmlReport, err := report.GenerateStandaloneReport(auditResult, false)
 	if err != nil {
 		return fmt.Errorf("failed to generate HTML report: %w", err)
 	}
