@@ -20,6 +20,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/philterd/philterscope/internal/report"
 	"github.com/philterd/philterscope/internal/server"
 	"github.com/philterd/philterscope/internal/storage"
 	"github.com/philterd/philterscope/pkg/model"
@@ -38,7 +39,7 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use:     "philterscope-serve",
 		Short:   "Launch Evaluation UI",
-		Version: server.Version,
+		Version: report.Version,
 		RunE:    runServe,
 	}
 

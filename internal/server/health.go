@@ -18,15 +18,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/philterd/philterscope/internal/report"
 )
 
 // HealthPath is the path of the health endpoint.
 const HealthPath = "/api/health"
-
-// Version is the application version, set at build time with
-// -ldflags "-X github.com/philterd/philterscope/internal/server.Version=...".
-// Builds made outside the Makefile (go build, go test, an IDE) report "dev".
-var Version = "dev"
 
 // HealthResponse is the body of the health endpoint, matching the contract
 // shared across Philterd products.
@@ -46,7 +43,7 @@ func registerHealth(mux *http.ServeMux) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		response := HealthResponse{Status: "UP", ApplicationVersion: Version}
+		response := HealthResponse{Status: "UP", ApplicationVersion: report.Version}
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			fmt.Printf("Error encoding health response: %v\n", err)
 		}

@@ -8,7 +8,7 @@ HTML_FILES=$(shell find . -name '*.html')
 # Reported by the server's health endpoint. Derived from the current git
 # tag/commit; override with `make build VERSION=1.2.3`.
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-LDFLAGS=-X github.com/philterd/philterscope/internal/server.Version=$(VERSION)
+LDFLAGS=-X github.com/philterd/philterscope/internal/report.Version=$(VERSION)
 
 all: build
 
