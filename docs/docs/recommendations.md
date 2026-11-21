@@ -134,11 +134,13 @@ A filter matching far past its labels, where a cutoff exists that costs no recal
 
 ## Per-entity statistics
 
-Recommendations are derived from `entity_stats`, which the report carries for every entity either the gold standard labels or Philter detected:
+Recommendations are derived from `entity_stats`, which the report carries for every entity either the gold standard labels or Philter detected.
+
+An entity is named by the identifier key its filter has in a policy, because a gold standard and Philter often spell one filter differently. A span labeled `NAME` and one Philter reports as `PERSON` are both counted under `person`, and `PHONE`, `PHONE_NUMBER` and `phone-number` under `phoneNumber`. A label that names no Philter filter, such as `LOCATION`, keeps its own spelling. The same names are used in `entity_metrics` and `confusion_matrix`.
 
 ```json
 "entity_stats": {
-  "PHONE_NUMBER": {
+  "phoneNumber": {
     "true_positives": 2,
     "false_positives": 1,
     "false_negatives": 3,

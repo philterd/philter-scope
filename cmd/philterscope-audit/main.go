@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/philterd/philterscope/internal/audit"
+	"github.com/philterd/philterscope/internal/entities"
 	"github.com/philterd/philterscope/internal/ollama"
 	"github.com/philterd/philterscope/internal/philter"
 	"github.com/philterd/philterscope/internal/server"
@@ -97,7 +98,9 @@ func runAudit(cmd *cobra.Command, args []string) error {
 			if len(kv) == 2 {
 				var val float64
 				if _, err := fmt.Sscanf(kv[1], "%f", &val); err == nil {
-					entityThresholdMap[kv[0]] = val
+					// Keyed by the name the report gives the entity, so NAME=0.9
+					// applies to the person row.
+					entityThresholdMap[entities.Name(kv[0])] = val
 				}
 			}
 		}

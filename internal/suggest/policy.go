@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/philterd/philterscope/internal/entities"
 )
 
 // policyView is a read-only view over the Philter policy an audit ran against.
@@ -31,55 +33,6 @@ import (
 // suggestion some precision but never invents a wrong one.
 type policyView struct {
 	identifiers map[string]any
-}
-
-// knownIdentifiers is the set of filter keys a Philter policy can contain.
-//
-// It exists so a gold standard label that maps to no Philter filter produces
-// "I cannot tell you which filter this is" rather than a policy fragment keyed
-// by something Philter would reject. A policy naming a filter this list has not
-// caught up with is still matched, since lookup searches the policy itself.
-//
-// The keys are those of "identifiers" in the redaction policy schema 1.3.0
-// (philterd/phisql). TestKnownIdentifiersMatchSchema compares the two, so a
-// filter added to the schema, or taken out of it, fails the test here until
-// this list follows.
-var knownIdentifiers = map[string]struct{}{
-	"pheyes": {}, "person": {}, "dictionaries": {}, "age": {}, "bankRoutingNumber": {},
-	"bitcoinAddress": {}, "canadaSin": {}, "creditCard": {}, "currency": {}, "date": {},
-	"deaNumber": {}, "driversLicense": {}, "ein": {}, "emailAddress": {}, "ibanCode": {},
-	"identifiers": {}, "ipAddress": {}, "itin": {}, "macAddress": {}, "mbi": {}, "npi": {},
-	"passportNumber": {}, "phoneNumber": {}, "phoneNumberExtension": {}, "sections": {},
-	"ssn": {}, "stateAbbreviation": {}, "streetAddress": {}, "trackingNumber": {}, "url": {},
-	"vin": {}, "zipCode": {}, "medicalCondition": {}, "city": {}, "county": {},
-	"firstName": {}, "hospital": {}, "state": {}, "surname": {},
-}
-
-// entityAliases maps entity labels whose camelCase form is not the policy's
-// identifier key. Two kinds of entry live here: Philter filter types that are
-// spelled differently in a policy, and the short labels gold standards commonly
-// use for them. The mapping is a convenience, and an unmapped label falls
-// through to "unknown filter" rather than to a guess.
-var entityAliases = map[string]string{
-	// Philter filter types whose policy key differs from the type name.
-	"locationcity":         "city",
-	"locationstate":        "state",
-	"locationcounty":       "county",
-	"driverslicensenumber": "driversLicense",
-	"pheye":                "pheyes",
-	"customdictionary":     "dictionaries",
-	"identifier":           "identifiers",
-	"section":              "sections",
-	"hospitalabbreviation": "hospital",
-
-	// Labels a gold standard commonly uses for those filters.
-	"name":     "person",
-	"fullname": "person",
-	"address":  "streetAddress",
-	"email":    "emailAddress",
-	"phone":    "phoneNumber",
-	"zip":      "zipCode",
-	"zipcode":  "zipCode",
 }
 
 // parsePolicy reads the identifiers out of an audit's policy. A nil or
@@ -102,84 +55,19 @@ func (p *policyView) known() bool {
 	return p.identifiers != nil
 }
 
-// normalizeEntity reduces a label to letters and digits in lower case, so the
-// several spellings of one filter compare equal.
-func normalizeEntity(entity string) string {
-	var b strings.Builder
-	for _, r := range strings.ToLower(entity) {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
-			b.WriteRune(r)
-		}
-	}
-	return b.String()
-}
-
-// camelize turns an entity label into the lowerCamelCase spelling a Philter
-// policy uses for its identifier keys, so PHONE_NUMBER, phone-number, and
-// phoneNumber all render as phoneNumber. A label that is already one word
-// comes back lowercased, which is how the single-word keys are spelled.
-func camelize(entity string) string {
-	words := strings.FieldsFunc(entity, func(r rune) bool {
-		return !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9'))
-	})
-
-	var b strings.Builder
-	for i, w := range words {
-		lower := strings.ToLower(w)
-		if i == 0 {
-			b.WriteString(lower)
-			continue
-		}
-		b.WriteString(strings.ToUpper(lower[:1]))
-		b.WriteString(lower[1:])
-	}
-	return b.String()
-}
-
-// filterKey returns the identifier key a policy would use for an entity, and
-// whether that key names a filter Philter actually has. A key produced here can
-// be written into a snippet, so it has to be spelled the way a policy spells it
-// rather than merely normalized for comparison.
-//
-// Gold standard labels are free text. One that names no Philter filter reports
-// known as false, and the caller then says so instead of proposing a change
-// against a filter that does not exist.
-func filterKey(entity string) (string, bool) {
-	norm := normalizeEntity(entity)
-	if alias, ok := entityAliases[norm]; ok {
-		return alias, true
-	}
-	// Matching on the normalized form catches every spelling of a known filter,
-	// so PHONE_NUMBER, phone-number, and phoneNumber all land on phoneNumber
-	// without camelize having to reconstruct the word boundaries.
-	if canonical, ok := knownByNormalized[norm]; ok {
-		return canonical, true
-	}
-	return camelize(entity), false
-}
-
-// knownByNormalized indexes the known filter keys by their normalized form.
-var knownByNormalized = func() map[string]string {
-	index := make(map[string]string, len(knownIdentifiers))
-	for key := range knownIdentifiers {
-		index[normalizeEntity(key)] = key
-	}
-	return index
-}()
-
 // lookup finds the filter for an entity. It returns the identifier key as the
 // policy spells it, the filter body, and whether the policy contains it. A
 // filter defined as a list, as "pheyes" is, yields its first element, which is
 // enough to read "enabled" and "thresholds" from.
 func (p *policyView) lookup(entity string) (string, map[string]any, bool) {
-	key, _ := filterKey(entity)
+	key, _ := entities.Key(entity)
 	if p.identifiers == nil {
 		return key, nil, false
 	}
 
-	norm := normalizeEntity(key)
+	norm := entities.Normalize(key)
 	for name, body := range p.identifiers {
-		if normalizeEntity(name) != norm {
+		if entities.Normalize(name) != norm {
 			continue
 		}
 		switch f := body.(type) {
@@ -223,9 +111,9 @@ func confidenceThreshold(filter map[string]any, entity string) (float64, bool) {
 		return 0, false
 	}
 
-	norm := normalizeEntity(entity)
+	norm := entities.Normalize(entity)
 	for label, value := range raw {
-		if normalizeEntity(label) != norm {
+		if entities.Normalize(label) != norm {
 			continue
 		}
 		if f, ok := toFloat(value); ok {

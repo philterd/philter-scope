@@ -65,8 +65,8 @@ func TestGenerateAuditResult(t *testing.T) {
 	if res.Recall != 0.8 {
 		t.Errorf("Expected Recall 0.8, got %f", res.Recall)
 	}
-	if res.EntityMetrics["NAME"] != 1.0 {
-		t.Errorf("Expected Recall for NAME 1.0, got %f", res.EntityMetrics["NAME"])
+	if res.EntityMetrics["person"] != 1.0 {
+		t.Errorf("Expected Recall for person 1.0, got %f", res.EntityMetrics["person"])
 	}
 }
 
@@ -88,17 +88,17 @@ func TestCalculateConfusionMatrix(t *testing.T) {
 
 	cm := CalculateConfusionMatrix(results)
 
-	if cm["NAME"]["NAME"] != 1 {
-		t.Errorf("Expected NAME->NAME=1, got %d", cm["NAME"]["NAME"])
+	if cm["person"]["person"] != 1 {
+		t.Errorf("Expected person->person=1, got %d", cm["person"]["person"])
 	}
-	if cm["NAME"]["ADDRESS"] != 1 {
-		t.Errorf("Expected NAME->ADDRESS=1, got %d", cm["NAME"]["ADDRESS"])
+	if cm["person"]["streetAddress"] != 1 {
+		t.Errorf("Expected person->streetAddress=1, got %d", cm["person"]["streetAddress"])
 	}
-	if cm["SSN"]["(missed)"] != 1 {
-		t.Errorf("Expected SSN->(missed)=1, got %d", cm["SSN"]["(missed)"])
+	if cm["ssn"]["(missed)"] != 1 {
+		t.Errorf("Expected ssn->(missed)=1, got %d", cm["ssn"]["(missed)"])
 	}
-	if cm["(none)"]["PHONE"] != 1 {
-		t.Errorf("Expected (none)->PHONE=1, got %d", cm["(none)"]["PHONE"])
+	if cm["(none)"]["phoneNumber"] != 1 {
+		t.Errorf("Expected (none)->phoneNumber=1, got %d", cm["(none)"]["phoneNumber"])
 	}
 }
 
@@ -114,8 +114,8 @@ func TestCalculateEntityMetrics(t *testing.T) {
 
 	metrics := CalculateEntityMetrics(results)
 
-	if metrics["PHONE"] != 0.5 {
-		t.Errorf("Expected Recall for PHONE 0.5, got %f", metrics["PHONE"])
+	if metrics["phoneNumber"] != 0.5 {
+		t.Errorf("Expected Recall for phoneNumber 0.5, got %f", metrics["phoneNumber"])
 	}
 }
 
@@ -133,7 +133,7 @@ func TestCalculateEntityStats(t *testing.T) {
 
 	stats := CalculateEntityStats(results)
 
-	phone := stats["PHONE"]
+	phone := stats["phoneNumber"]
 	if phone.TruePositives != 1 || phone.FalseNegatives != 1 || phone.FalsePositives != 1 {
 		t.Fatalf("expected 1/1/1 for PHONE, got tp=%d fn=%d fp=%d",
 			phone.TruePositives, phone.FalseNegatives, phone.FalsePositives)
@@ -160,9 +160,9 @@ func TestCalculateEntityStats_FalsePositivesOnly(t *testing.T) {
 	}
 
 	stats := CalculateEntityStats(results)
-	url, ok := stats["URL"]
+	url, ok := stats["url"]
 	if !ok {
-		t.Fatal("expected URL to appear in the stats on false positives alone")
+		t.Fatal("expected url to appear in the stats on false positives alone")
 	}
 	if url.FalsePositives != 2 || url.Precision != 0 {
 		t.Errorf("expected 2 false positives and zero precision, got fp=%d precision=%f",
@@ -170,7 +170,7 @@ func TestCalculateEntityStats_FalsePositivesOnly(t *testing.T) {
 	}
 
 	// It has no recall to report, so it stays out of the recall map.
-	if _, present := CalculateEntityMetrics(results)["URL"]; present {
+	if _, present := CalculateEntityMetrics(results)["url"]; present {
 		t.Error("an entity with no golden spans has no recall and should not appear in entity_metrics")
 	}
 }
@@ -186,7 +186,53 @@ func TestCalculateEntityStats_FallsBackToFilterType(t *testing.T) {
 		},
 	}
 
-	if stats := CalculateEntityStats(results); stats["SSN"].TruePositives != 1 {
+	if stats := CalculateEntityStats(results); stats["ssn"].TruePositives != 1 {
 		t.Errorf("expected the filter type to be used as the label, got %+v", stats)
+	}
+}
+
+// A gold standard and Philter spelling one filter differently are scored as
+// one entity, under the policy key. Nine names labeled NAME and found as
+// PERSON, plus one stray PERSON, are a person filter with precision 9 of 10,
+// not a NAME row at 1.0 and a PERSON row at 0.0 (#18).
+func TestEntitiesSpelledDifferentlyAreScoredTogether(t *testing.T) {
+	var overlaps []model.Overlap
+	for i := 0; i < 9; i++ {
+		overlaps = append(overlaps, model.Overlap{
+			Type:   model.OverlapExact,
+			Golden: model.Span{Label: "NAME", Text: "n", CharacterStart: i * 10, CharacterEnd: i*10 + 1},
+			Actual: model.Span{FilterType: "PERSON", Text: "n", CharacterStart: i * 10, CharacterEnd: i*10 + 1},
+		})
+	}
+	overlaps = append(overlaps,
+		model.Overlap{Type: model.OverlapNone, Actual: model.Span{FilterType: "PERSON", Text: "x", CharacterStart: 100, CharacterEnd: 101}},
+		// A label that names no Philter filter keeps its spelling.
+		model.Overlap{Type: model.OverlapNone, Golden: model.Span{Label: "LOCATION", Text: "y", CharacterStart: 110, CharacterEnd: 111}},
+	)
+	results := []model.Result{{Overlaps: overlaps}}
+
+	stats := CalculateEntityStats(results)
+	person := stats["person"]
+	if person.TruePositives != 9 || person.FalsePositives != 1 || person.FalseNegatives != 0 {
+		t.Fatalf("expected person tp=9 fp=1 fn=0, got %+v", person)
+	}
+	if person.Precision != 0.9 || person.Recall != 1.0 {
+		t.Errorf("expected person precision 0.9 and recall 1.0, got %+v", person)
+	}
+	for _, label := range []string{"NAME", "PERSON"} {
+		if _, ok := stats[label]; ok {
+			t.Errorf("expected no separate %s row, got %+v", label, stats)
+		}
+	}
+	if stats["LOCATION"].FalseNegatives != 1 {
+		t.Errorf("expected LOCATION to keep its name, got %+v", stats)
+	}
+
+	cm := CalculateConfusionMatrix(results)
+	if cm["person"]["person"] != 9 || cm["(none)"]["person"] != 1 || cm["LOCATION"]["(missed)"] != 1 {
+		t.Errorf("unexpected confusion matrix %+v", cm)
+	}
+	if len(cm["person"]) != 1 {
+		t.Errorf("expected every person hit on the diagonal, got %+v", cm["person"])
 	}
 }

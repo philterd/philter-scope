@@ -50,7 +50,7 @@ Or without MongoDB:
 | `--golden`     | `golden.json`           | The path to the golden dataset file or directory.                            |
 | `--output`     | `.`                     | The directory where the `report.html` and `report.json` will be saved.       |
 | `--threshold`  | `0.5`                   | The default recall threshold for policy suggestions (0.0 to 1.0).            |
-| `--thresholds` | (none)                  | Per-entity recall thresholds (e.g., `NAME=0.9,SSN=1.0`).                     |
+| `--thresholds` | (none)                  | Per-entity recall thresholds (e.g., `NAME=0.9,SSN=1.0`). A label and its filter's key, such as `NAME` and `person`, name the same entity. |
 | `--precision-floor` | `0.25`             | Precision below which an entity is flagged as likely misconfigured (0.0 to 1.0). |
 | `--group`      | `default`               | Assign a group name to the audit for history tracking.                       |
 | `--ai`         | `false`                 | Enable AI-driven policy recommendations (requires Ollama).                   |
@@ -354,7 +354,9 @@ There are two special labels in the matrix:
 Cells are color-coded:
 
 - **Green**: Correct classifications (expected and detected types match).
-- **Orange**: Misclassifications (Philter detected the entity but assigned the wrong type, e.g., a NAME detected as an ADDRESS).
+- **Orange**: Misclassifications (Philter detected the entity but assigned the wrong type, e.g., a `person` detected as a `streetAddress`).
+
+Entity types are named by their filter's identifier key in a policy, so a gold standard label and the type Philter reports for the same filter, such as `NAME` and `PERSON`, share a row and a column (`person`).
 - **Red**: Missed entities or spurious detections.
 
 #### Using the Confusion Matrix for Policy Tuning

@@ -15,6 +15,7 @@
 package audit
 
 import (
+	"github.com/philterd/philterscope/internal/entities"
 	"github.com/philterd/philterscope/pkg/model"
 )
 
@@ -96,8 +97,8 @@ func CalculateConfusionMatrix(results []model.Result) map[string]map[string]int 
 		for _, o := range res.Overlaps {
 			switch o.Type {
 			case model.OverlapExact, model.OverlapPartial:
-				expected := entityLabel(o.Golden)
-				actual := entityLabel(o.Actual)
+				expected := entities.Of(o.Golden)
+				actual := entities.Of(o.Actual)
 				if expected == "" {
 					continue
 				}
@@ -108,14 +109,14 @@ func CalculateConfusionMatrix(results []model.Result) map[string]map[string]int 
 				matrix[expected][actual]++
 			case model.OverlapNone:
 				if o.Golden.Text != "" {
-					expected := entityLabel(o.Golden)
+					expected := entities.Of(o.Golden)
 					if expected == "" {
 						continue
 					}
 					ensure(expected)
 					matrix[expected]["(missed)"]++
 				} else if o.Actual.Text != "" && o.Actual.CharacterStart != o.Actual.CharacterEnd {
-					actual := entityLabel(o.Actual)
+					actual := entities.Of(o.Actual)
 					if actual == "" {
 						continue
 					}
@@ -127,13 +128,6 @@ func CalculateConfusionMatrix(results []model.Result) map[string]map[string]int 
 	}
 
 	return matrix
-}
-
-func entityLabel(s model.Span) string {
-	if s.Label != "" {
-		return s.Label
-	}
-	return s.FilterType
 }
 
 // CalculateEntityStats counts true positives, false positives, and false
@@ -163,12 +157,12 @@ func CalculateEntityStats(results []model.Result) map[string]model.EntityStat {
 				// A partial counts as found, matching CalculateMetricsByOverlap,
 				// and is credited to the golden label even where Philter gave
 				// the span a different one.
-				note(tpCount, entityLabel(o.Golden))
+				note(tpCount, entities.Of(o.Golden))
 			case model.OverlapNone:
 				if o.Golden.Text != "" {
-					note(fnCount, entityLabel(o.Golden))
+					note(fnCount, entities.Of(o.Golden))
 				} else if o.Actual.Text != "" && o.Actual.CharacterStart != o.Actual.CharacterEnd {
-					note(fpCount, entityLabel(o.Actual))
+					note(fpCount, entities.Of(o.Actual))
 				}
 			}
 		}
