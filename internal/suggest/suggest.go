@@ -32,6 +32,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/philterd/philterscope/internal/entities"
 	"github.com/philterd/philterscope/internal/ollama"
 	"github.com/philterd/philterscope/pkg/model"
 )
@@ -69,9 +70,19 @@ func NewBasicSuggesterWithFloor(threshold float64, entityThresholds map[string]f
 }
 
 // thresholdFor returns the recall threshold an entity is measured against.
+//
+// Thresholds may be keyed by a label (NAME) or by the name a report gives the
+// entity (person), and a report saved before entities were named by policy key
+// still uses labels, so both are compared under the same mapping.
 func (s *BasicSuggester) thresholdFor(entity string) float64 {
 	if t, ok := s.EntityThresholds[entity]; ok {
 		return t
+	}
+	name := entities.Name(entity)
+	for key, t := range s.EntityThresholds {
+		if entities.Name(key) == name {
+			return t
+		}
 	}
 	return s.Threshold
 }
@@ -143,7 +154,7 @@ func (s *BasicSuggester) recallGap(result model.AuditResult, policy *policyView,
 		rec.Snippet = enableSnippet(key)
 
 	case !present:
-		if _, known := filterKey(entity); !known {
+		if _, known := entities.Key(entity); !known {
 			// The gold standard labels this entity with a name that matches no
 			// Philter filter. Naming a filter here would invent one, so the
 			// recommendation asks for the mapping instead of proposing an edit.
@@ -271,7 +282,7 @@ func (s *BasicSuggester) precisionCollapse(result model.AuditResult, policy *pol
 	// gold standard labels with its own name has no filter to point at, and
 	// inventing one would send the reader looking for something absent.
 	named := key
-	if _, known := filterKey(entity); !present && !known {
+	if _, known := entities.Key(entity); !present && !known {
 		named = ""
 	}
 	if named == "" {

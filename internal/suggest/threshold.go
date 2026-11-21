@@ -17,6 +17,7 @@ package suggest
 import (
 	"sort"
 
+	"github.com/philterd/philterscope/internal/entities"
 	"github.com/philterd/philterscope/pkg/model"
 )
 
@@ -55,17 +56,21 @@ func SweepConfidence(result model.AuditResult, entity string, recallFloor float6
 		return nil
 	}
 
+	// Reports name entities by their policy key, and older ones by the label
+	// itself, so both sides go through the same mapping before they are compared.
+	target := entities.Name(entity)
+
 	var hitConfidences, missConfidences []float64
 	for _, res := range result.Details {
 		for _, o := range res.Overlaps {
 			// A threshold only moves detections the entity's own filter
 			// emitted, so the actual span's label decides what is in scope.
-			if spanLabel(o.Actual) != entity {
+			if entities.Of(o.Actual) != target {
 				continue
 			}
 			switch o.Type {
 			case model.OverlapExact, model.OverlapPartial:
-				if spanLabel(o.Golden) == entity {
+				if entities.Of(o.Golden) == target {
 					hitConfidences = append(hitConfidences, o.Actual.Confidence)
 				}
 			case model.OverlapNone:
@@ -119,15 +124,6 @@ func SweepConfidence(result model.AuditResult, entity string, recallFloor float6
 	}
 
 	return nil
-}
-
-// spanLabel prefers the golden label and falls back to the filter type, so a
-// span labeled either way resolves to the same entity.
-func spanLabel(s model.Span) string {
-	if s.Label != "" {
-		return s.Label
-	}
-	return s.FilterType
 }
 
 func countAtLeast(values []float64, cutoff float64) int {
