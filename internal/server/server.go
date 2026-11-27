@@ -25,7 +25,6 @@ import (
 	"html/template"
 	"net/http"
 	"slices"
-	"sort"
 
 	"github.com/philterd/philterscope/pkg/model"
 )
@@ -318,159 +317,188 @@ func hashText(text string) string {
 	return hex.EncodeToString(hash[:])[:5]
 }
 
+// obfuscateResult replaces the text of every labeled and detected span with
+// its tag. Span offsets index the original text, not Philter's output, where
+// each replacement shifts the text after it. So the Philter output is rebuilt
+// from the original text and the detected spans' replacements, rather than
+// tagged at offsets that do not point into it.
 func obfuscateResult(r model.Result) model.Result {
-	// Collect all spans that might contain PII and need redaction in text
-	type redaction struct {
-		start, end  int
-		replacement string
-	}
-	var redactions []redaction
-
-	collectRedactions := func(spans []model.Span) {
-		for _, s := range spans {
-			if s.CharacterStart < s.CharacterEnd {
-				redactions = append(redactions, redaction{
-					start:       s.CharacterStart,
-					end:         s.CharacterEnd,
-					replacement: hashText(s.Text),
-				})
-			}
+	// The ranges of the original text to hide, sorted and merged.
+	var hidden []textRange
+	hide := func(s model.Span) {
+		if s.CharacterStart < s.CharacterEnd {
+			hidden = append(hidden, textRange{start: s.CharacterStart, end: s.CharacterEnd})
 		}
 	}
-
-	collectRedactions(r.Spans)
+	for _, s := range r.Spans {
+		hide(s)
+	}
 	for _, o := range r.Overlaps {
-		if o.Golden.Text != "" {
-			collectRedactions([]model.Span{o.Golden})
-		}
-		if o.Actual.Text != "" {
-			collectRedactions([]model.Span{o.Actual})
+		hide(o.Golden)
+		hide(o.Actual)
+	}
+	hidden = mergeRanges(clampRanges(hidden, len(r.Expected)))
+
+	// Where Philter replaced text, by the spans it applied.
+	var replaced []textRange
+	for _, s := range r.Spans {
+		if s.CharacterStart < s.CharacterEnd {
+			replaced = append(replaced, textRange{start: s.CharacterStart, end: s.CharacterEnd, replacement: s.Replacement})
 		}
 	}
+	replaced = clampRanges(replaced, len(r.Expected))
+	slices.SortFunc(replaced, func(a, b textRange) int { return a.start - b.start })
 
-	// Sort and merge overlapping redactions
-	slices.SortFunc(redactions, func(a, b redaction) int {
+	expected, inExpected := obfuscateText(r.Expected, nil, hidden)
+	actual, inActual := obfuscateText(r.Expected, replaced, hidden)
+
+	r.Expected = expected
+	r.Actual = actual
+
+	for i := range r.Spans {
+		r.Spans[i] = moveSpan(r.Spans[i], inActual)
+	}
+	for i := range r.Overlaps {
+		r.Overlaps[i].Golden = moveSpan(r.Overlaps[i].Golden, inExpected)
+		r.Overlaps[i].Actual = moveSpan(r.Overlaps[i].Actual, inActual)
+	}
+
+	return r
+}
+
+// textRange is a range of the original text. A replaced range also carries
+// Philter's replacement for it.
+type textRange struct {
+	start, end  int
+	replacement string
+}
+
+// clampRanges drops the ranges that start past the end of the text and cuts
+// the rest at its end.
+func clampRanges(ranges []textRange, length int) []textRange {
+	var clamped []textRange
+	for _, t := range ranges {
+		t.start = max(t.start, 0)
+		t.end = min(t.end, length)
+		if t.start < t.end {
+			clamped = append(clamped, t)
+		}
+	}
+	return clamped
+}
+
+// mergeRanges sorts ranges and merges the ones that overlap.
+func mergeRanges(ranges []textRange) []textRange {
+	slices.SortFunc(ranges, func(a, b textRange) int {
 		if a.start != b.start {
 			return a.start - b.start
 		}
 		return a.end - b.end
 	})
-
-	var merged []redaction
-	if len(redactions) > 0 {
-		curr := redactions[0]
-		for i := 1; i < len(redactions); i++ {
-			if redactions[i].start < curr.end {
-				// Overlap
-				if redactions[i].end > curr.end {
-					curr.end = redactions[i].end
-					// We need a replacement for the merged span.
-					// Using hash of the original merged text would be best but we don't have it easily here.
-					// Let's just keep the first replacement or re-calculate if we had the text.
-				}
-			} else {
-				merged = append(merged, curr)
-				curr = redactions[i]
-			}
+	var merged []textRange
+	for _, t := range ranges {
+		if n := len(merged); n > 0 && t.start < merged[n-1].end {
+			merged[n-1].end = max(merged[n-1].end, t.end)
+			continue
 		}
-		merged = append(merged, curr)
+		merged = append(merged, t)
+	}
+	return merged
+}
+
+// piece is a range of the original text and what it became in the output.
+type piece struct {
+	start, end       int
+	outStart, outEnd int
+	kept             bool // copied as it is, so offsets inside it move by a constant
+}
+
+// obfuscateText writes text with each replaced range swapped for its
+// replacement and every other hidden character swapped for the tag of the run
+// it is in. A replaced range without a replacement, as in a report written
+// before Philter returned them, gets the tag of its text. It returns the output
+// and a function that moves an offset in text to the output: a start offset
+// inside a replaced or tagged run moves to the run's start, and an end offset
+// to its end.
+func obfuscateText(text string, replaced, hidden []textRange) (string, func(offset int, isEnd bool) int) {
+	var buf bytes.Buffer
+	var pieces []piece
+	write := func(start, end int, out string, kept bool) {
+		outStart := buf.Len()
+		buf.WriteString(out)
+		pieces = append(pieces, piece{start: start, end: end, outStart: outStart, outEnd: buf.Len(), kept: kept})
 	}
 
-	// Function to apply redactions and update spans
-	apply := func(text string) (string, func(int) int) {
-		var buf bytes.Buffer
-		lastIdx := 0
-
-		type shift struct {
-			origIdx int
-			newIdx  int
-		}
-		shifts := []shift{{0, 0}}
-
-		for _, red := range merged {
-			if red.start < lastIdx {
+	// keep writes text[from:to], tagging the parts of it that are hidden.
+	keep := func(from, to int) {
+		for _, h := range hidden {
+			if h.end <= from {
 				continue
-			} // Should not happen with merged
-			if red.start >= len(text) {
+			}
+			if h.start >= to {
 				break
 			}
-
-			buf.WriteString(text[lastIdx:red.start])
-
-			// If we didn't have the text for the merged span before, we can get it now to hash it properly
-			actualReplacement := red.replacement
-			if red.end > len(text) {
-				red.end = len(text)
+			if h.start > from {
+				write(from, h.start, text[from:h.start], true)
+				from = h.start
 			}
-			actualReplacement = hashText(text[red.start:red.end])
-
-			newStart := buf.Len()
-			buf.WriteString(actualReplacement)
-			lastIdx = red.end
-
-			shifts = append(shifts, shift{red.start, newStart})
-			shifts = append(shifts, shift{red.end, buf.Len()})
+			end := min(h.end, to)
+			write(from, end, hashText(text[from:end]), false)
+			from = end
 		}
-		buf.WriteString(text[lastIdx:])
-
-		transform := func(orig int) int {
-			// Find the last shift that is <= orig
-			idx := sort.Search(len(shifts), func(i int) bool {
-				return shifts[i].origIdx > orig
-			})
-			if idx == 0 {
-				return orig
-			}
-			s := shifts[idx-1]
-
-			// If orig was inside a redacted span, it should probably move to the start or end of the replacement
-			// But for our purposes, linear interpolation or just using the shift at the start is enough if we only care about span boundaries.
-
-			// Check if orig is exactly one of our tracked points
-			if s.origIdx == orig {
-				return s.newIdx
-			}
-
-			// If it's between points, it's either in a kept segment or a redacted segment.
-			// If idx < len(shifts) and s.origIdx was a start and shifts[idx].origIdx was an end:
-			// Then orig is inside a redacted span.
-			if idx < len(shifts) && (idx-1)%2 == 1 {
-				// It's inside a redacted span. map to start of replacement.
-				return s.newIdx
-			}
-
-			return s.newIdx + (orig - s.origIdx)
-		}
-
-		return buf.String(), transform
-	}
-
-	expected, transExp := apply(r.Expected)
-	actual, transAct := apply(r.Actual)
-
-	r.Expected = expected
-	r.Actual = actual
-
-	// Update spans in r.Spans
-	for i := range r.Spans {
-		r.Spans[i].CharacterStart = transAct(r.Spans[i].CharacterStart)
-		r.Spans[i].CharacterEnd = transAct(r.Spans[i].CharacterEnd)
-		r.Spans[i].Text = hashText(r.Spans[i].Text)
-	}
-
-	// Update spans in Overlaps
-	for i := range r.Overlaps {
-		if r.Overlaps[i].Golden.Text != "" {
-			r.Overlaps[i].Golden.CharacterStart = transExp(r.Overlaps[i].Golden.CharacterStart)
-			r.Overlaps[i].Golden.CharacterEnd = transExp(r.Overlaps[i].Golden.CharacterEnd)
-			r.Overlaps[i].Golden.Text = hashText(r.Overlaps[i].Golden.Text)
-		}
-		if r.Overlaps[i].Actual.Text != "" {
-			r.Overlaps[i].Actual.CharacterStart = transAct(r.Overlaps[i].Actual.CharacterStart)
-			r.Overlaps[i].Actual.CharacterEnd = transAct(r.Overlaps[i].Actual.CharacterEnd)
-			r.Overlaps[i].Actual.Text = hashText(r.Overlaps[i].Actual.Text)
+		if from < to {
+			write(from, to, text[from:to], true)
 		}
 	}
 
-	return r
+	pos := 0
+	for _, rep := range replaced {
+		if rep.start < pos {
+			// Overlaps a range already replaced. Philter does not apply
+			// overlapping spans, so tag the rest rather than guess.
+			if rep.end > pos {
+				write(pos, rep.end, hashText(text[pos:rep.end]), false)
+				pos = rep.end
+			}
+			continue
+		}
+		keep(pos, rep.start)
+		out := rep.replacement
+		if out == "" {
+			out = hashText(text[rep.start:rep.end])
+		}
+		write(rep.start, rep.end, out, false)
+		pos = rep.end
+	}
+	keep(pos, len(text))
+
+	length := buf.Len()
+	move := func(offset int, isEnd bool) int {
+		for _, p := range pieces {
+			if offset >= p.end {
+				continue
+			}
+			if offset <= p.start {
+				return p.outStart
+			}
+			if p.kept {
+				return p.outStart + offset - p.start
+			}
+			if isEnd {
+				return p.outEnd
+			}
+			return p.outStart
+		}
+		return length
+	}
+
+	return buf.String(), move
+}
+
+// moveSpan moves a span to the obfuscated text and replaces its text with its
+// tag.
+func moveSpan(s model.Span, move func(offset int, isEnd bool) int) model.Span {
+	s.CharacterStart, s.CharacterEnd = move(s.CharacterStart, false), move(s.CharacterEnd, true)
+	s.Text = hashText(s.Text)
+	return s
 }
