@@ -207,7 +207,7 @@ PhilterScope maintains a history of your audit runs. When using `philterscope-se
 
 - **Local Storage**: By default, audits are stored as one JSON file per audit in a `.philterscope` directory, created in the directory you run the command from. `philterscope-serve` reads that history, so audits are browsable without a database. It assumes a single user on one machine: nothing coordinates concurrent writers.
 - **Shared Storage**: Set `PHILTERSCOPE_MONGODB_CONNECTION_STRING` for a centralized audit repository across your team. It takes precedence over local storage.
-- **Privacy Mode**: When `--privacy` is enabled, the text of each labeled and detected span (both expected and actual) is replaced in the UI with a short tag, the first five hex characters of its MD5 hash. This is obfuscation for viewing a report, not protection of the data: text outside those spans is shown as it is, and the report files and stored history still hold the original text.
+- **Privacy Mode**: When `--privacy` is enabled, the text of each labeled and detected span (both expected and actual) is replaced in the UI with a short tag, the first five hex characters of its MD5 hash. In Philter's output, each detected span shows Philter's replacement and labeled text that Philter left in place shows its tag. That view is built from the original text and the replacements in Philter's explain response, so a detected span stored without a replacement shows its tag. This is obfuscation for viewing a report, not protection of the data: text outside those spans is shown as it is, and the report files and stored history still hold the original text.
 
 ### Running in Docker
 

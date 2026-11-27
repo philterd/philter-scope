@@ -352,6 +352,131 @@ func TestObfuscateAuditResult(t *testing.T) {
 	}
 }
 
+func TestObfuscatePhilterOutput(t *testing.T) {
+	// Span offsets index the original text, and Philter's output differs from
+	// it wherever a replacement is a different length from what it replaced.
+	person := model.Span{Text: "Bob Jones", CharacterStart: 11, CharacterEnd: 20, FilterType: "PERSON", Replacement: "{{{REDACTED-person}}}"}
+	firstName := model.Span{Text: "John", CharacterStart: 11, CharacterEnd: 15, FilterType: "PERSON", Replacement: "{{{REDACTED-person}}}"}
+	noReplacement := model.Span{Text: "John Doe", CharacterStart: 11, CharacterEnd: 19, FilterType: "PERSON"}
+
+	tests := []struct {
+		name         string
+		result       model.Result
+		wantExpected string
+		wantActual   string
+		hidden       []string
+	}{
+		{
+			name: "span Philter missed",
+			result: model.Result{
+				Expected: "My name is Bob Jones and I live in New York.",
+				Actual:   "My name is {{{REDACTED-person}}} and I live in New York.",
+				Spans:    []model.Span{person},
+				Overlaps: []model.Overlap{
+					{Golden: model.Span{Text: "Bob Jones", CharacterStart: 11, CharacterEnd: 20, Label: "NAME"}, Actual: person, Type: model.OverlapExact},
+					{Golden: model.Span{Text: "New York", CharacterStart: 35, CharacterEnd: 43, Label: "LOCATION"}, Type: model.OverlapNone},
+				},
+			},
+			wantExpected: "My name is " + hashText("Bob Jones") + " and I live in " + hashText("New York") + ".",
+			wantActual:   "My name is {{{REDACTED-person}}} and I live in " + hashText("New York") + ".",
+			hidden:       []string{"Bob", "Jones", "New York"},
+		},
+		{
+			name: "span Philter redacted in part",
+			result: model.Result{
+				Expected: "My name is John Doe.",
+				Actual:   "My name is {{{REDACTED-person}}} Doe.",
+				Spans:    []model.Span{firstName},
+				Overlaps: []model.Overlap{
+					{Golden: model.Span{Text: "John Doe", CharacterStart: 11, CharacterEnd: 19, Label: "NAME"}, Actual: firstName, Type: model.OverlapPartial},
+				},
+			},
+			wantExpected: "My name is " + hashText("John Doe") + ".",
+			wantActual:   "My name is {{{REDACTED-person}}}" + hashText(" Doe") + ".",
+			hidden:       []string{"John", "Doe"},
+		},
+		{
+			name: "label without its text",
+			result: model.Result{
+				Expected: "Call 555-0199 now.",
+				Actual:   "Call 555-0199 now.",
+				Overlaps: []model.Overlap{
+					{Golden: model.Span{CharacterStart: 5, CharacterEnd: 13, Label: "PHONE"}, Type: model.OverlapNone},
+				},
+			},
+			wantExpected: "Call " + hashText("555-0199") + " now.",
+			wantActual:   "Call " + hashText("555-0199") + " now.",
+			hidden:       []string{"555-0199"},
+		},
+		{
+			name: "detected span without a replacement",
+			result: model.Result{
+				Expected: "My name is John Doe.",
+				Actual:   "My name is *****.",
+				Spans:    []model.Span{noReplacement},
+				Overlaps: []model.Overlap{
+					{Golden: model.Span{Text: "John Doe", CharacterStart: 11, CharacterEnd: 19, Label: "NAME"}, Actual: noReplacement, Type: model.OverlapExact},
+				},
+			},
+			wantExpected: "My name is " + hashText("John Doe") + ".",
+			wantActual:   "My name is " + hashText("John Doe") + ".",
+			hidden:       []string{"John", "Doe"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// What each span should point at once obfuscated: a detected span
+			// at its replacement in the Philter output, a golden span at its
+			// tag in the original text.
+			var wantSpans, wantGolden []string
+			for _, s := range tt.result.Spans {
+				want := s.Replacement
+				if want == "" {
+					want = hashText(tt.result.Expected[s.CharacterStart:s.CharacterEnd])
+				}
+				wantSpans = append(wantSpans, want)
+			}
+			for _, o := range tt.result.Overlaps {
+				wantGolden = append(wantGolden, hashText(tt.result.Expected[o.Golden.CharacterStart:o.Golden.CharacterEnd]))
+			}
+
+			got := ObfuscateAuditResult(model.AuditResult{Details: []model.Result{tt.result}}).Details[0]
+
+			if got.Expected != tt.wantExpected {
+				t.Errorf("Expected = %q, want %q", got.Expected, tt.wantExpected)
+			}
+			if got.Actual != tt.wantActual {
+				t.Errorf("Actual = %q, want %q", got.Actual, tt.wantActual)
+			}
+			for _, text := range tt.hidden {
+				if strings.Contains(got.Expected, text) || strings.Contains(got.Actual, text) {
+					t.Errorf("%q is still readable: Expected %q, Actual %q", text, got.Expected, got.Actual)
+				}
+			}
+
+			for i, s := range got.Spans {
+				if at := slice(got.Actual, s); at != wantSpans[i] {
+					t.Errorf("detected span %d points at %q in the Philter output, want %q", i, at, wantSpans[i])
+				}
+			}
+			for i, o := range got.Overlaps {
+				if at := slice(got.Expected, o.Golden); at != wantGolden[i] {
+					t.Errorf("golden span %d points at %q in the original, want %q", i, at, wantGolden[i])
+				}
+			}
+		})
+	}
+}
+
+// slice returns the text a span points at, or a marker if it points outside.
+func slice(text string, s model.Span) string {
+	if s.CharacterStart < 0 || s.CharacterStart > s.CharacterEnd || s.CharacterEnd > len(text) {
+		return fmt.Sprintf("<out of range [%d, %d)>", s.CharacterStart, s.CharacterEnd)
+	}
+	return text[s.CharacterStart:s.CharacterEnd]
+}
+
 func TestPrivacyModeAPI(t *testing.T) {
 	store := &mockStorage{}
 	mux := NewServerMux(store, true) // Enable privacy mode
